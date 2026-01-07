@@ -1,0 +1,21 @@
+name = "todo-app"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production]
+SUPABASE_URL = "${SUPABASE_URL}"
+SUPABASE_ANON_KEY = "${SUPABASE_ANON_KEY}"
+SUPABASE_SERVICE_ROLE_KEY = "${SUPABASE_SERVICE_ROLE_KEY}"
+
+[env.development]
+SUPABASE_URL = "${SUPABASE_URL}"
+SUPABASE_ANON_KEY = "${SUPABASE_ANON_KEY}"
+SUPABASE_SERVICE_ROLE_KEY = "${SUPABASE_SERVICE_ROLE_KEY}"
+
+[site]
+bucket = "./dist/client"
+entry-point = "./dist/server/index.js"
+
+[[r2_buckets]]
+binding = "ASSETS_BUCKET"
+bucket_name = "todo-app-assets"
