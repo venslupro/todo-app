@@ -7,7 +7,7 @@ const router = new Hono();
 const websocketService = new WebSocketService();
 
 /**
- * WebSocket连接处理
+ * WebSocket connection handling
  * GET /ws/v1/todo/:id
  */
 router.get('/todo/:id', async (c) => {
@@ -21,10 +21,10 @@ router.get('/todo/:id', async (c) => {
   const token = authHeader.substring(7);
 
   try {
-    // 验证用户身份
+    // Verify user identity
     const user = await websocketService.authenticateConnection(token, c.env);
 
-    // 检查TODO访问权限
+    // Check TODO access permissions
     const hasAccess = await websocketService.verifyTodoAccess(todoId, user.id, c.env);
 
     if (!hasAccess) {

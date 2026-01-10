@@ -3,7 +3,7 @@ import {WebSocketErrors} from '../../shared/errors/websocket-errors';
 import {SupabaseClient} from '../../shared/supabase/client';
 
 /**
- * WebSocket消息接口
+ * WebSocket message interface
  */
 interface WebSocketMessage {
   type: string;
@@ -13,13 +13,13 @@ interface WebSocketMessage {
 }
 
 /**
- * WebSocket服务类
+ * WebSocket service class
  */
 export class WebSocketService {
   constructor() {}
 
   /**
-   * 验证WebSocket连接
+   * Authenticate WebSocket connection
    */
   async authenticateConnection(token: string, env: any): Promise<any> {
     if (!token) {

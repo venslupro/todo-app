@@ -5,7 +5,7 @@ import {SupabaseClient} from '../../shared/supabase/client';
 import {User, AuthResponse, RegisterDto, LoginDto} from '../models/user';
 
 /**
- * 认证服务类
+ * Authentication service class
  */
 export class AuthService {
   private supabase: ReturnType<typeof SupabaseClient.getClient>;
@@ -15,10 +15,10 @@ export class AuthService {
   }
 
   /**
-   * 用户注册
+   * User registration
    */
   async register(dto: RegisterDto): Promise<AuthResponse> {
-    // 验证输入
+    // Validate input
     const email = Validator.validateEmail(dto.email);
     Validator.validatePassword(dto.password);
 
@@ -62,10 +62,10 @@ export class AuthService {
   }
 
   /**
-   * 用户登录
+   * User login
    */
   async login(dto: LoginDto): Promise<AuthResponse> {
-    // 验证输入
+    // Validate input
     const email = Validator.validateEmail(dto.email);
     const password = Validator.sanitizeString(dto.password, 100);
 
@@ -103,7 +103,7 @@ export class AuthService {
   }
 
   /**
-   * 刷新令牌
+   * Refresh token
    */
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
     if (!refreshToken) {
@@ -119,7 +119,7 @@ export class AuthService {
       throw new HttpErrors.UnauthorizedError('Invalid refresh token');
     }
 
-    // 获取用户信息
+    // Get user information
     const {data: {user}} = await this.supabase.auth.getUser(data.session.access_token);
 
     if (!user) {
@@ -146,19 +146,19 @@ export class AuthService {
   }
 
   /**
-   * 用户登出
+   * User logout
    */
   async logout(): Promise<void> {
     const {error} = await this.supabase.auth.signOut();
 
     if (error) {
       console.error('Logout error:', error);
-      // 不抛出错误，登出失败不影响用户
+      // Don't throw error, logout failure doesn't affect user
     }
   }
 
   /**
-   * 获取当前用户信息
+   * Get current user information
    */
   async getCurrentUser(accessToken: string): Promise<User> {
     const {data: {user}, error} = await this.supabase.auth.getUser(accessToken);
@@ -180,7 +180,7 @@ export class AuthService {
   }
 
   /**
-   * 验证JWT令牌
+   * Verify JWT token
    */
   async verifyToken(token: string): Promise<User> {
     return this.getCurrentUser(token);

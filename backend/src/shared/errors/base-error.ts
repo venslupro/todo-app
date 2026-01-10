@@ -1,7 +1,7 @@
 // shared/errors/base-error.ts
 /**
- * 基础错误类
- * 遵循SOLID原则：单一职责原则
+ * Base error class
+ * Follows SOLID principles: Single Responsibility Principle
  */
 export abstract class BaseError extends Error {
   public readonly code: string;

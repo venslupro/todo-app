@@ -11,7 +11,7 @@ import {
 } from '../models/share';
 
 /**
- * 分享服务类
+ * Share service class
  */
 export class ShareService {
   private supabase: ReturnType<typeof SupabaseClient.getClient>;
@@ -21,7 +21,7 @@ export class ShareService {
   }
 
   /**
-   * 分享TODO给其他用户
+   * Share TODO with other users
    */
   async createShare(
     userId: string,
@@ -31,12 +31,12 @@ export class ShareService {
     Validator.validateUUID(dto.user_id, 'user_id');
     const permission = Validator.validateSharePermission(dto.permission);
 
-    // 不能分享给自己
+    // Cannot share with yourself
     if (dto.user_id === userId) {
       throw new HttpErrors.ValidationError('Cannot share with yourself');
     }
 
-    // 检查TODO是否存在且属于当前用户
+    // Check if TODO exists and belongs to current user
     const {data: todo} = await this.supabase
       .from('todos')
       .select('created_by')
@@ -52,14 +52,14 @@ export class ShareService {
       throw new HttpErrors.ForbiddenError('You can only share your own todos');
     }
 
-    // 检查目标用户是否存在
+    // Check if target user exists
     const {data: targetUser} = await this.supabase.auth.admin.getUserById(dto.user_id);
 
     if (!targetUser) {
       throw new HttpErrors.NotFoundError('Target user not found');
     }
 
-    // 检查是否已经分享过
+    // Check if already shared
     const {data: existingShare} = await this.supabase
       .from('todo_shares')
       .select('id')
@@ -71,7 +71,7 @@ export class ShareService {
       throw new HttpErrors.ConflictError('Todo already shared with this user');
     }
 
-    // 创建分享
+    // Create share
     const shareData = {
       todo_id: dto.todo_id,
       user_id: dto.user_id,
@@ -94,7 +94,7 @@ export class ShareService {
   }
 
   /**
-   * 获取分享列表
+   * Get share list
    */
   async getShares(
     userId: string,

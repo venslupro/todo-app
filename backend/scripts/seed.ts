@@ -4,12 +4,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
- * 数据库种子脚本
+ * Database seed script
  */
 async function runSeed() {
   console.log('Starting database seeding...');
 
-  // 从环境变量获取配置
+  // Get configuration from environment variables
   const env = {
     SUPABASE_URL: process.env['SUPABASE_URL'],
     SUPABASE_SERVICE_ROLE_KEY: process.env['SUPABASE_SERVICE_ROLE_KEY'],
@@ -24,7 +24,7 @@ async function runSeed() {
   const supabase = SupabaseClient.getServiceClient(env as any);
 
   try {
-    // 读取种子数据文件
+    // Read seed data file
     const seedDir = path.join(__dirname, '../database/seed');
     const seedFile = path.join(seedDir, 'initial_data.sql');
 

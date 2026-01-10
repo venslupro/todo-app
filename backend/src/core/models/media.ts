@@ -1,6 +1,6 @@
 // core/models/media.ts
 /**
- * 媒体类型枚举
+ * Media type enumeration
  */
 export enum MediaType {
   IMAGE = 'image',
@@ -8,7 +8,7 @@ export enum MediaType {
 }
 
 /**
- * 支持的MIME类型
+ * Supported MIME types
  */
 export const SUPPORTED_MIME_TYPES = {
   [MediaType.IMAGE]: [

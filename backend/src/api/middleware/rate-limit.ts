@@ -3,7 +3,7 @@ import {Context, Next} from 'hono';
 import {RateLimitService} from '../../core/services/rate-limit-service';
 
 /**
- * 速率限制中间件工厂函数
+ * Rate limiting middleware factory function
  */
 export const rateLimitMiddleware = (options: {
   limit: number;
@@ -13,21 +13,21 @@ export const rateLimitMiddleware = (options: {
   return async (c: Context, next: Next) => {
     const rateLimitService = new RateLimitService(c.env);
 
-    // 确定标识符
+    // Determine identifier
     let identifier: string;
     if (typeof options.identifier === 'function') {
       identifier = options.identifier(c);
     } else if (options.identifier) {
       identifier = options.identifier;
     } else {
-      // 默认使用IP地址
+      // Default to IP address
       identifier =
         c.req.header('cf-connecting-ip') ||
         c.req.header('x-forwarded-for') ||
         'unknown';
     }
 
-    // 检查速率限制
+    // Check rate limit
     const result = await rateLimitService.checkRateLimit(
       identifier,
       options.limit,

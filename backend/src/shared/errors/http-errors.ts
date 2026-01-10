@@ -2,7 +2,7 @@
 import {BaseError} from './base-error';
 
 /**
- * HTTP 200 OK - 成功响应
+ * HTTP 200 OK - Success response
  */
 export class OkResponse<T = unknown> {
   public readonly statusCode: number = 200;
@@ -96,7 +96,7 @@ export class InternalServerError extends BaseError {
   }
 }
 
-// 导出HTTP错误集合
+// Export HTTP error collection
 export const HttpErrors = {
   OkResponse,
   BadRequestError,

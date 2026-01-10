@@ -9,13 +9,13 @@ import {
 
 const router = new Hono();
 
-// 创建服务实例的函数
+// Function to create service instance
 function createShareService(c: any) {
   return new ShareService(c.env);
 }
 
 /**
- * 分享TODO给其他用户
+ * Share TODO with other users
  * POST /api/v1/team/shares
  */
 router.post('/shares', async (c) => {

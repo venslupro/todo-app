@@ -2,7 +2,7 @@
 import {BaseError} from './base-error';
 
 /**
- * WebSocket连接关闭错误码
+ * WebSocket connection close codes
  */
 export enum WebSocketCloseCode {
   NORMAL_CLOSURE = 1000,
@@ -23,7 +23,7 @@ export enum WebSocketCloseCode {
 }
 
 /**
- * WebSocket认证错误
+ * WebSocket authentication error
  */
 export class WebSocketAuthError extends BaseError {
   constructor(message = 'Authentication failed', details?: unknown) {

@@ -1,0 +1,113 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, dev, develop ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  # Job 1: Code Quality Check
+  lint:
+    name: 🔍 Code Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🔄 Checkout source code
+      uses: actions/checkout@v4
+      
+    - name: ⚙️ Setup Node.js environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+        
+    - name: 📦 Install project dependencies
+      run: npm ci
+      working-directory: backend
+      
+    - name: 🔍 Run ESLint code analysis
+      run: npm run lint
+      working-directory: backend
+      
+    - name: ✅ Run TypeScript type checking
+      run: npm run type-check
+      working-directory: backend
+
+  # Job 2: Build and Test
+  build-and-test:
+    name: 🏗️ Build and Test
+    runs-on: ubuntu-latest
+    needs: lint  # Depends on lint job
+    
+    steps:
+    - name: 🔄 Checkout source code
+      uses: actions/checkout@v4
+      
+    - name: ⚙️ Setup Node.js environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+        
+    - name: 📦 Install project dependencies
+      run: npm ci
+      working-directory: backend
+      
+    - name: 🏗️ Build project
+      run: npm run build
+      working-directory: backend
+      
+    - name: 🧪 Run unit tests
+      run: npm test
+      working-directory: backend
+      
+    - name: 📤 Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist-build
+        path: backend/dist/
+        retention-days: 7
+
+  # Job 3: Deployment (Manual Trigger)
+  deploy:
+    name: 🚀 Deploy to Cloudflare Workers
+    runs-on: ubuntu-latest
+    needs: build-and-test  # Depends on build-and-test job
+    if: github.event_name == 'workflow_dispatch'  # Only execute on manual trigger
+    
+    steps:
+    - name: 🔄 Checkout source code
+      uses: actions/checkout@v4
+      
+    - name: ⚙️ Setup Node.js environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+        
+    - name: 📦 Install project dependencies
+      run: npm ci
+      working-directory: backend
+      
+    - name: 🏗️ Build project
+      run: npm run build
+      working-directory: backend
+      
+    - name: 🔐 Setup Cloudflare Wrangler
+      uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        
+    - name: 🚀 Deploy application
+      run: npx wrangler deploy
+      working-directory: backend
+      
+    - name: 📋 Display deployment info
+      run: |
+        echo "✅ Deployment completed!"
+        echo "Time: $(date)"

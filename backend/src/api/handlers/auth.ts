@@ -5,13 +5,13 @@ import {AuthService} from '../../core/services/auth-service';
 
 const router = new Hono();
 
-// 创建服务实例的函数
+// Function to create service instance
 function createAuthService(c: any) {
   return new AuthService(c.env);
 }
 
 /**
- * 用户注册
+ * User registration
  * POST /api/v1/auth/register
  */
 router.post('/register', async (c) => {
@@ -24,7 +24,7 @@ router.post('/register', async (c) => {
 });
 
 /**
- * 用户登录
+ * User login
  * POST /api/v1/auth/login
  */
 router.post('/login', async (c) => {
@@ -37,7 +37,7 @@ router.post('/login', async (c) => {
 });
 
 /**
- * 刷新令牌
+ * Refresh token
  * POST /api/v1/auth/refresh
  */
 router.post('/refresh', async (c) => {
@@ -54,7 +54,7 @@ router.post('/refresh', async (c) => {
 });
 
 /**
- * 用户登出
+ * User logout
  * POST /api/v1/auth/logout
  */
 router.post('/logout', async (c) => {
@@ -65,7 +65,7 @@ router.post('/logout', async (c) => {
 });
 
 /**
- * 获取当前用户信息
+ * Get current user information
  * GET /api/v1/auth/me
  */
 router.get('/me', async (c) => {

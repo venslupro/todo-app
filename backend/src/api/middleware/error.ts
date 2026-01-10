@@ -3,7 +3,7 @@ import {Context, Next} from 'hono';
 import {BaseError} from '../../shared/errors/base-error';
 
 /**
- * 错误处理中间件
+ * Error handling middleware
  */
 export const errorMiddleware = async (c: Context, next: Next) => {
   try {
@@ -24,7 +24,7 @@ export const errorMiddleware = async (c: Context, next: Next) => {
       );
     }
 
-    // 未知错误
+    // Unknown error
     return c.json(
       {
         error: {

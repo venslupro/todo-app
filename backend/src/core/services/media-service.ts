@@ -12,7 +12,7 @@ import {
 } from '../models/media';
 
 /**
- * 媒体服务类
+ * Media service class
  */
 export class MediaService {
   private supabase: ReturnType<typeof SupabaseClient.getClient>;
@@ -22,7 +22,7 @@ export class MediaService {
   }
 
   /**
-   * 获取媒体文件列表
+   * Get media file list
    */
   async getMediaList(
     userId: string,
@@ -33,11 +33,11 @@ export class MediaService {
       .select('*')
       .order('created_at', {ascending: false});
 
-    // 应用过滤器
+    // Apply filters
     if (params.todo_id) {
       Validator.validateUUID(params.todo_id, 'todo_id');
 
-      // 检查TODO访问权限
+      // Check TODO access permissions
       const hasAccess = await this.checkTodoAccess(params.todo_id, userId);
       if (!hasAccess) {
         throw new HttpErrors.ForbiddenError('No access to this todo');
@@ -50,7 +50,7 @@ export class MediaService {
       query = query.eq('media_type', params.media_type);
     }
 
-    // 应用分页
+    // Apply pagination
     const limit = params.limit || 50;
     const offset = params.offset || 0;
     query = query.range(offset, offset + limit - 1);
@@ -66,7 +66,7 @@ export class MediaService {
   }
 
   /**
-   * 获取上传URL
+   * Get upload URL
    */
   async getUploadUrl(
     todoId: string,
@@ -75,13 +75,13 @@ export class MediaService {
   ): Promise<MediaUploadResponse> {
     Validator.validateUUID(todoId, 'todo_id');
 
-    // 检查TODO编辑权限
+    // Check TODO edit permissions
     const canEdit = await this.checkEditPermission(todoId, userId);
     if (!canEdit) {
       throw new HttpErrors.ForbiddenError('No permission to upload media to this todo');
     }
 
-    // 确定媒体类型
+    // Determine media type
     let mediaType: MediaType;
     if (SUPPORTED_MIME_TYPES[MediaType.IMAGE].includes(dto.mime_type)) {
       mediaType = MediaType.IMAGE;
@@ -91,11 +91,11 @@ export class MediaService {
       throw new HttpErrors.ValidationError(`Unsupported file type: ${dto.mime_type}`);
     }
 
-    // 验证文件大小
+    // Validate file size
     const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
     Validator.validateFileSize(dto.file_size, MAX_FILE_SIZE);
 
-    // 验证视频时长
+    // Validate video duration
     if (mediaType === MediaType.VIDEO && dto.duration) {
       Validator.validateVideoDuration(dto.duration);
     }

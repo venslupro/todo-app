@@ -13,7 +13,7 @@ import {
 } from '../models/todo';
 
 /**
- * TODO服务类
+ * TODO service class
  */
 export class TodoService {
   private supabase: ReturnType<typeof SupabaseClient.getClient>;
@@ -23,20 +23,20 @@ export class TodoService {
   }
 
   /**
-   * 获取TODO列表
+   * Get TODO list
    */
   async getTodos(
     userId: string,
     params: TodoQueryParams,
   ): Promise<TodoListResponse> {
-    // 构建查询 - 获取用户创建的和分享的TODO
+    // Build query - get user created and shared TODOs
     let query = this.supabase
       .from('todos')
       .select('*', {count: 'exact'})
       .or(`created_by.eq.${userId},shares.user_id.eq.${userId}`)
       .eq('is_deleted', false);
 
-    // 应用过滤器
+    // Apply filters
     if (params.status) {
       query = query.eq('status', params.status);
     }
@@ -62,17 +62,17 @@ export class TodoService {
       query = query.or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
     }
 
-    // 应用排序
+    // Apply sorting
     const sortBy = params.sort_by || 'created_at';
     const sortOrder = params.sort_order || 'desc';
     query = query.order(sortBy, {ascending: sortOrder === 'asc'});
 
-    // 应用分页
+    // Apply pagination
     const limit = params.limit || 50;
     const offset = params.offset || 0;
     query = query.range(offset, offset + limit - 1);
 
-    // 执行查询
+    // Execute query
     const {data, error, count} = await query;
 
     if (error) {
@@ -89,7 +89,7 @@ export class TodoService {
   }
 
   /**
-   * 创建TODO
+   * Create TODO
    */
   async createTodo(
     userId: string,
@@ -114,7 +114,7 @@ export class TodoService {
     if (dto.parent_id) {
       Validator.validateUUID(dto.parent_id, 'parent_id');
 
-      // 验证父TODO是否存在且用户有权限访问
+      // Verify parent TODO exists and user has access
       const {data: parentTodo} = await this.supabase
         .from('todos')
         .select('id')
@@ -145,7 +145,7 @@ export class TodoService {
   }
 
   /**
-   * 获取单个TODO
+   * Get single TODO
    */
   async getTodo(todoId: string, userId: string): Promise<Todo> {
     Validator.validateUUID(todoId, 'todo_id');
@@ -161,7 +161,7 @@ export class TodoService {
       throw new HttpErrors.NotFoundError('Todo not found');
     }
 
-    // 检查权限
+    // Check permissions
     const canAccess = await this.checkTodoAccess(todoId, userId);
     if (!canAccess) {
       throw new HttpErrors.ForbiddenError('No access to this todo');
@@ -171,7 +171,7 @@ export class TodoService {
   }
 
   /**
-   * 更新TODO
+   * Update TODO
    */
   async updateTodo(
     todoId: string,
@@ -180,7 +180,7 @@ export class TodoService {
   ): Promise<Todo> {
     Validator.validateUUID(todoId, 'todo_id');
 
-    // 检查编辑权限
+    // Check edit permissions
     const canEdit = await this.checkEditPermission(todoId, userId);
     if (!canEdit) {
       throw new HttpErrors.ForbiddenError('No permission to edit this todo');
@@ -227,7 +227,7 @@ export class TodoService {
       if (dto.parent_id) {
         Validator.validateUUID(dto.parent_id, 'parent_id');
 
-        // 验证父TODO是否存在且用户有权限访问
+        // Verify parent TODO exists and user has access
         const {data: parentTodo} = await this.supabase
           .from('todos')
           .select('id')
@@ -240,7 +240,7 @@ export class TodoService {
           throw new HttpErrors.NotFoundError('Parent todo not found or no access');
         }
 
-        // 检查循环引用
+        // Check for circular references
         if (dto.parent_id === todoId) {
           throw new HttpErrors.ValidationError('Cannot set todo as its own parent');
         }
@@ -267,12 +267,12 @@ export class TodoService {
   }
 
   /**
-   * 删除TODO（软删除）
+   * Delete TODO (soft delete)
    */
   async deleteTodo(todoId: string, userId: string): Promise<void> {
     Validator.validateUUID(todoId, 'todo_id');
 
-    // 检查是否是创建者
+    // Check if user is the creator
     const todoResponse = await this.supabase
       .from('todos')
       .select('created_by')
@@ -305,7 +305,7 @@ export class TodoService {
   }
 
   /**
-   * 检查TODO访问权限
+   * Check TODO access permissions
    */
   private async checkTodoAccess(
     todoId: string,
@@ -320,10 +320,10 @@ export class TodoService {
 
     if (!data) return false;
 
-    // 如果是创建者，允许访问
+    // If user is the creator, allow access
     if ((data as any).created_by === userId) return true;
 
-    // 检查是否有分享权限
+    // Check if user has share permissions
     const {data: share} = await this.supabase
       .from('todo_shares')
       .select('id')
@@ -335,7 +335,7 @@ export class TodoService {
   }
 
   /**
-   * 检查编辑权限
+   * Check edit permissions
    */
   private async checkEditPermission(
     todoId: string,
@@ -350,10 +350,10 @@ export class TodoService {
 
     if (!todo) return false;
 
-    // 如果是创建者，允许编辑
+    // If user is the creator, allow editing
     if ((todo as any).created_by === userId) return true;
 
-    // 检查是否有编辑权限的分享
+    // Check if user has edit permission through sharing
     const {data: share} = await this.supabase
       .from('todo_shares')
       .select('permission')
