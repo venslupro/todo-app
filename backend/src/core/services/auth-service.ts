@@ -148,7 +148,7 @@ export class AuthService {
   /**
    * 用户登出
    */
-  async logout(_accessToken: string): Promise<void> {
+  async logout(): Promise<void> {
     const {error} = await this.supabase.auth.signOut();
 
     if (error) {

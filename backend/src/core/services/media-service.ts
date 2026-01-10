@@ -194,7 +194,8 @@ export class MediaService {
     }
 
     // 检查权限（只有TODO创建者或媒体上传者可以删除）
-    const canDelete = (media as any).todos.created_by === userId || (media as any).created_by === userId;
+    const canDelete = (media as any).todos.created_by === userId ||
+      (media as any).created_by === userId;
 
     if (!canDelete) {
       throw new HttpErrors.ForbiddenError('No permission to delete this media');

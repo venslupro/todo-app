@@ -4,7 +4,8 @@ describe('Validator', () => {
   describe('validateEmail', () => {
     it('should validate correct email addresses', () => {
       expect(Validator.validateEmail('test@example.com')).toBe('test@example.com');
-      expect(Validator.validateEmail('user.name+tag@example.co.uk')).toBe('user.name+tag@example.co.uk');
+      expect(Validator.validateEmail('user.name+tag@example.co.uk'))
+        .toBe('user.name+tag@example.co.uk');
     });
 
     it('should throw error for invalid email addresses', () => {

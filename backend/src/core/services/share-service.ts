@@ -195,7 +195,9 @@ export class ShareService {
       .single();
 
     if (!share) {
-      throw new HttpErrors.NotFoundError('Share not found');
+      throw new HttpErrors.NotFoundError(
+        'Share not found',
+      );
     }
 
     // 检查权限
