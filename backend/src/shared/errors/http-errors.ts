@@ -1,8 +1,31 @@
-// backend/src/errors/http-errors.ts
+// shared/errors/http-errors.ts
 import {BaseError} from './base-error';
 
 /**
- * HTTP 400 Bad Request 错误
+ * HTTP 200 OK - 成功响应
+ */
+export class OkResponse<T = unknown> {
+  public readonly statusCode: number = 200;
+  public readonly code: string = 'OK';
+  public readonly data: T | undefined;
+  public readonly message: string;
+
+  constructor(data?: T, message = 'Success') {
+    this.data = data;
+    this.message = message;
+  }
+
+  public toJSON(): Record<string, unknown> {
+    return {
+      code: this.code,
+      message: this.message,
+      data: this.data,
+    };
+  }
+}
+
+/**
+ * HTTP 400 Bad Request
  */
 export class BadRequestError extends BaseError {
   constructor(message = 'Bad Request', details?: unknown) {
@@ -11,7 +34,7 @@ export class BadRequestError extends BaseError {
 }
 
 /**
- * HTTP 401 Unauthorized 错误
+ * HTTP 401 Unauthorized
  */
 export class UnauthorizedError extends BaseError {
   constructor(message = 'Unauthorized', details?: unknown) {
@@ -20,7 +43,7 @@ export class UnauthorizedError extends BaseError {
 }
 
 /**
- * HTTP 403 Forbidden 错误
+ * HTTP 403 Forbidden
  */
 export class ForbiddenError extends BaseError {
   constructor(message = 'Forbidden', details?: unknown) {
@@ -29,7 +52,7 @@ export class ForbiddenError extends BaseError {
 }
 
 /**
- * HTTP 404 Not Found 错误
+ * HTTP 404 Not Found
  */
 export class NotFoundError extends BaseError {
   constructor(message = 'Not Found', details?: unknown) {
@@ -38,7 +61,7 @@ export class NotFoundError extends BaseError {
 }
 
 /**
- * HTTP 409 Conflict 错误
+ * HTTP 409 Conflict
  */
 export class ConflictError extends BaseError {
   constructor(message = 'Conflict', details?: unknown) {
@@ -47,7 +70,7 @@ export class ConflictError extends BaseError {
 }
 
 /**
- * HTTP 422 Unprocessable Entity 错误
+ * HTTP 422 Unprocessable Entity
  */
 export class ValidationError extends BaseError {
   constructor(message = 'Validation Failed', details?: unknown) {
@@ -56,7 +79,7 @@ export class ValidationError extends BaseError {
 }
 
 /**
- * HTTP 429 Too Many Requests 错误
+ * HTTP 429 Too Many Requests
  */
 export class RateLimitError extends BaseError {
   constructor(message = 'Too Many Requests', details?: unknown) {
@@ -65,7 +88,7 @@ export class RateLimitError extends BaseError {
 }
 
 /**
- * HTTP 500 Internal Server Error 错误
+ * HTTP 500 Internal Server Error
  */
 export class InternalServerError extends BaseError {
   constructor(message = 'Internal Server Error', details?: unknown) {
@@ -73,17 +96,9 @@ export class InternalServerError extends BaseError {
   }
 }
 
-/**
- * HTTP 503 Service Unavailable 错误
- */
-export class ServiceUnavailableError extends BaseError {
-  constructor(message = 'Service Unavailable', details?: unknown) {
-    super(message, 'SERVICE_UNAVAILABLE', 503, details);
-  }
-}
-
-// 导出所有HTTP错误
+// 导出HTTP错误集合
 export const HttpErrors = {
+  OkResponse,
   BadRequestError,
   UnauthorizedError,
   ForbiddenError,
@@ -92,5 +107,4 @@ export const HttpErrors = {
   ValidationError,
   RateLimitError,
   InternalServerError,
-  ServiceUnavailableError,
 };

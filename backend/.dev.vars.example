@@ -1,0 +1,30 @@
+# 本地开发环境变量示例
+# 复制此文件为 .dev.vars 并填入实际值
+
+# Supabase 配置
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+
+# JWT 配置
+JWT_SECRET=your-jwt-secret-key-here
+JWT_EXPIRES_IN=86400
+
+# 应用配置
+NODE_ENV=development
+API_BASE_URL=http://localhost:8787
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+
+# 媒体文件配置
+MAX_FILE_SIZE=10485760
+SUPPORTED_IMAGE_TYPES=image/jpeg,image/png,image/gif,image/webp
+SUPPORTED_VIDEO_TYPES=video/mp4,video/webm,video/ogg
+MAX_VIDEO_DURATION=240
+
+# 速率限制配置
+RATE_LIMIT_REQUESTS=1000
+RATE_LIMIT_WINDOW=60
+
+# 日志配置
+LOG_LEVEL=info
+DEBUG=false

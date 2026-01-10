@@ -1,9 +1,8 @@
-// backend/src/errors/websocket-errors.ts
+// shared/errors/websocket-errors.ts
 import {BaseError} from './base-error';
 
 /**
  * WebSocket连接关闭错误码
- * 参考：https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4.1
  */
 export enum WebSocketCloseCode {
   NORMAL_CLOSURE = 1000,
@@ -24,64 +23,32 @@ export enum WebSocketCloseCode {
 }
 
 /**
- * WebSocket特定错误
+ * WebSocket认证错误
  */
-export class WebSocketError extends BaseError {
-  public readonly closeCode: number;
-
-  constructor(
-    message: string,
-    code: string,
-    closeCode: number = WebSocketCloseCode.INTERNAL_ERROR,
-    details?: unknown,
-  ) {
-    super(message, code, 0, details); // WebSocket错误没有HTTP状态码
-    this.closeCode = closeCode;
-  }
-}
-
-/**
- * 认证失败错误
- */
-export class WebSocketAuthError extends WebSocketError {
+export class WebSocketAuthError extends BaseError {
   constructor(message = 'Authentication failed', details?: unknown) {
-    super(message, 'WS_AUTH_ERROR', WebSocketCloseCode.POLICY_VIOLATION, details);
+    super(message, 'WS_AUTH_ERROR', 0, details);
+    this.closeCode = WebSocketCloseCode.POLICY_VIOLATION;
   }
+
+  public readonly closeCode: number;
 }
 
 /**
- * 无效消息格式错误
+ * WebSocket消息格式错误
  */
-export class WebSocketMessageError extends WebSocketError {
+export class WebSocketMessageError extends BaseError {
   constructor(message = 'Invalid message format', details?: unknown) {
-    super(message, 'WS_MESSAGE_ERROR', WebSocketCloseCode.UNSUPPORTED_DATA, details);
+    super(message, 'WS_MESSAGE_ERROR', 0, details);
+    this.closeCode = WebSocketCloseCode.UNSUPPORTED_DATA;
   }
+
+  public readonly closeCode: number;
 }
 
-/**
- * 房间不存在错误
- */
-export class WebSocketRoomError extends WebSocketError {
-  constructor(message = 'Room not found', details?: unknown) {
-    super(message, 'WS_ROOM_ERROR', WebSocketCloseCode.POLICY_VIOLATION, details);
-  }
-}
-
-/**
- * 权限不足错误
- */
-export class WebSocketPermissionError extends WebSocketError {
-  constructor(message = 'Insufficient permissions', details?: unknown) {
-    super(message, 'WS_PERMISSION_ERROR', WebSocketCloseCode.POLICY_VIOLATION, details);
-  }
-}
-
-// 导出所有WebSocket错误
+// 导出WebSocket错误集合
 export const WebSocketErrors = {
-  WebSocketError,
   WebSocketAuthError,
   WebSocketMessageError,
-  WebSocketRoomError,
-  WebSocketPermissionError,
   WebSocketCloseCode,
 };
