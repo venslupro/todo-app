@@ -3,8 +3,8 @@
 import {SupabaseClient} from '../../shared/supabase/client';
 
 /**
- * 速率限制服务
- * 基于Supabase实现分布式速率限制
+ * Rate limiting service
+ * Distributed rate limiting implementation based on Supabase
  */
 export class RateLimitService {
   private supabase: ReturnType<typeof SupabaseClient.getClient>;
@@ -14,7 +14,7 @@ export class RateLimitService {
   }
 
   /**
-   * 检查速率限制
+   * Check rate limit
    */
   async checkRateLimit(
     identifier: string,
@@ -25,7 +25,7 @@ export class RateLimitService {
     const windowStart = now - windowSeconds;
 
     try {
-      // 清理过期记录
+      // Clean up expired records
       await this.supabase
         .from('rate_limits')
         .delete()

@@ -1,33 +1,33 @@
 # database/README.md
 
-## 数据库结构说明
+## Database Structure Documentation
 
-### 表结构概述
+### Table Structure Overview
 
-1. **todos** - 存储TODO项的主要表
-2. **todo_shares** - 存储TODO分享关系
-3. **media** - 存储媒体文件元数据
-4. **rate_limits** - 速率限制记录
-5. **api_keys** - API密钥管理（可选）
-6. **api_key_requests** - API密钥请求日志
+1. **todos** - Main table for storing TODO items
+2. **todo_shares** - Stores TODO sharing relationships
+3. **media** - Stores media file metadata
+4. **rate_limits** - Rate limiting records
+5. **api_keys** - API key management (optional)
+6. **api_key_requests** - API key request logs
 
-### 部署到Supabase
+### Deployment to Supabase
 
-1. **方法一：使用Supabase Dashboard**
-   - 登录Supabase Dashboard
-   - 进入SQL编辑器
-   - 复制并运行 `database/migrations/001_initial_schema.sql`
-   - 运行其他迁移文件
+1. **Method 1: Using Supabase Dashboard**
+   - Log in to Supabase Dashboard
+   - Go to SQL Editor
+   - Copy and run `database/migrations/001_initial_schema.sql`
+   - Run other migration files
 
-2. **方法二：使用Supabase CLI**
+2. **Method 2: Using Supabase CLI**
    ```bash
-   # 安装Supabase CLI
+   # Install Supabase CLI
    npm install -g supabase
    
-   # 登录
+   # Login
    supabase login
    
-   # 链接项目
+   # Link project
    supabase link --project-ref your-project-ref
    
    # 推送迁移

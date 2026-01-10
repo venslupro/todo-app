@@ -9,13 +9,13 @@ import {
 
 const router = new Hono();
 
-// 创建服务实例的函数
+// Function to create service instance
 function createTodoService(c: any) {
   return new TodoService(c.env);
 }
 
 /**
- * 获取TODO列表
+ * Get TODO list
  * GET /api/v1/todos
  */
 router.get('/', async (c) => {

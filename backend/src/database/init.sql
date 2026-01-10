@@ -1,25 +1,25 @@
 -- database/init.sql
--- 完整的数据库初始化脚本
+-- Complete database initialization script
 
--- 设置搜索路径
+-- Set search path
 SET search_path TO public;
 
--- 运行所有迁移文件
+-- Run all migration files
 \i database/migrations/001_initial_schema.sql
 \i database/migrations/002_add_rate_limit_tables.sql
 \i database/migrations/003_add_indexes.sql
 
--- 运行函数和触发器
+-- Run functions and triggers
 \i database/functions/update_updated_at.sql
 \i database/triggers/auto_update_timestamp.sql
 
--- 运行行级安全策略（可选）
+-- Run row-level security policies (optional)
 -- \i database/policies/row_level_security.sql
 
--- 运行种子数据
+-- Run seed data
 \i database/seed/initial_data.sql
 
--- 验证表创建
+-- Verify table creation
 SELECT 
   table_name,
   pg_size_pretty(pg_total_relation_size(quote_ident(table_name))) as size

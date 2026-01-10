@@ -1,5 +1,5 @@
 -- database/functions/update_updated_at.sql
--- 更新updated_at字段的通用函数
+-- Generic function to update updated_at field
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$

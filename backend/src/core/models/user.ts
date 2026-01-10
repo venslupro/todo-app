@@ -1,6 +1,6 @@
 // core/models/user.ts
 /**
- * 用户角色枚举
+ * User role enumeration
  */
 export enum UserRole {
   USER = 'user',
@@ -8,7 +8,7 @@ export enum UserRole {
 }
 
 /**
- * 用户数据模型
+ * User data model
  */
 export interface User {
   id: string;
@@ -22,7 +22,7 @@ export interface User {
 }
 
 /**
- * 用户会话
+ * User session
  */
 export interface UserSession {
   id: string;

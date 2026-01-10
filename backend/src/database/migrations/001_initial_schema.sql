@@ -1,10 +1,10 @@
 -- database/migrations/001_initial_schema.sql
--- 初始数据库表结构
+-- Initial database table structure
 
--- 启用UUID扩展
+-- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- TODO表
+-- TODO table
 CREATE TABLE IF NOT EXISTS todos (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   name VARCHAR(200) NOT NULL,
@@ -20,14 +20,14 @@ CREATE TABLE IF NOT EXISTS todos (
   parent_id UUID REFERENCES todos(id) ON DELETE SET NULL,
   is_deleted BOOLEAN DEFAULT FALSE,
   
-  -- 外键约束（引用Supabase auth.users）
+  -- Foreign key constraint (references Supabase auth.users)
   CONSTRAINT fk_todos_created_by 
     FOREIGN KEY (created_by) 
     REFERENCES auth.users(id) 
     ON DELETE CASCADE
 );
 
--- TODO分享表
+-- TODO sharing table
 CREATE TABLE IF NOT EXISTS todo_shares (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   todo_id UUID NOT NULL,
@@ -37,10 +37,10 @@ CREATE TABLE IF NOT EXISTS todo_shares (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   
-  -- 唯一约束，防止重复分享
+  -- Unique constraint to prevent duplicate sharing
   UNIQUE(todo_id, user_id),
   
-  -- 外键约束
+  -- Foreign key constraints
   CONSTRAINT fk_todo_shares_todo_id 
     FOREIGN KEY (todo_id) 
     REFERENCES todos(id) 
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS todo_shares (
     ON DELETE CASCADE
 );
 
--- 媒体文件表
+-- Media files table
 CREATE TABLE IF NOT EXISTS media (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   todo_id UUID NOT NULL,
@@ -66,14 +66,14 @@ CREATE TABLE IF NOT EXISTS media (
   file_size BIGINT NOT NULL,
   mime_type VARCHAR(100) NOT NULL,
   media_type VARCHAR(10) NOT NULL CHECK (media_type IN ('image', 'video')),
-  duration INTEGER, -- 视频时长（秒）
+  duration INTEGER, -- Video duration (seconds)
   width INTEGER,
   height INTEGER,
   created_by UUID NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   
-  -- 外键约束
+  -- Foreign key constraint
   CONSTRAINT fk_media_todo_id 
     FOREIGN KEY (todo_id) 
     REFERENCES todos(id) 

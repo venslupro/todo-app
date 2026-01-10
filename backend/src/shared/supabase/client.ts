@@ -3,7 +3,7 @@ import {createClient} from '@supabase/supabase-js';
 import type {Database} from './database.types';
 
 /**
- * 环境变量类型定义
+ * Environment variable type definition
  */
 export interface Env {
   SUPABASE_URL: string;
@@ -12,22 +12,22 @@ export interface Env {
 }
 
 /**
- * Supabase客户端管理器
- * 使用缓存机制确保相同配置的客户端实例被复用
+ * Supabase client manager
+ * Uses caching mechanism to ensure client instances with same configuration are reused
  */
 export class SupabaseClient {
   private static clientCache = new Map<string, ReturnType<typeof createClient<Database>>>();
   private static serviceClientCache = new Map<string, ReturnType<typeof createClient<Database>>>();
 
   /**
-   * 生成缓存键
+   * Generate cache key
    */
   private static generateCacheKey(url: string, key: string): string {
     return `${url}-${key}`;
   }
 
   /**
-   * 获取匿名客户端（用于前端调用）
+   * Get anonymous client (for frontend calls)
    */
   public static getClient(env: Env): ReturnType<typeof createClient<Database>> {
     const cacheKey = this.generateCacheKey(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);

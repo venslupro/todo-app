@@ -1,6 +1,6 @@
 // core/models/todo.ts
 /**
- * TODO项状态枚举
+ * TODO item status enumeration
  */
 export enum TodoStatus {
   NOT_STARTED = 'not_started',
@@ -9,7 +9,7 @@ export enum TodoStatus {
 }
 
 /**
- * TODO项优先级枚举
+ * TODO item priority enumeration
  */
 export enum TodoPriority {
   LOW = 'low',
@@ -19,13 +19,13 @@ export enum TodoPriority {
 }
 
 /**
- * TODO项数据模型
+ * TODO item data model
  */
 export interface Todo {
   id: string;
   name: string;
   description: string | null;
-  due_date: string | null; // ISO 8601格式
+  due_date: string | null; // ISO 8601 format
   status: TodoStatus;
   priority: TodoPriority | null;
   tags: string[] | null;

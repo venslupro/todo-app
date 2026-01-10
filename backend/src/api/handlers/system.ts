@@ -5,7 +5,7 @@ import {HttpErrors} from '../../shared/errors/http-errors';
 const router = new Hono();
 
 /**
- * 健康检查
+ * Health check
  * GET /
  */
 router.get('/', (c) => {
@@ -19,7 +19,7 @@ router.get('/', (c) => {
 });
 
 /**
- * 健康检查
+ * Health check
  * GET /health
  */
 router.get('/health', (c) => {

@@ -4,12 +4,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
- * 数据库迁移脚本
+ * Database migration script
  */
 async function runMigrations() {
   console.log('Starting database migrations...');
 
-  // 从环境变量获取配置
+  // Get configuration from environment variables
   const env = {
     SUPABASE_URL: process.env['SUPABASE_URL'],
     SUPABASE_SERVICE_ROLE_KEY: process.env['SUPABASE_SERVICE_ROLE_KEY'],
@@ -24,10 +24,10 @@ async function runMigrations() {
   const supabase = SupabaseClient.getServiceClient(env as any);
 
   try {
-    // 创建迁移记录表（如果不存在）
+    // Create migrations table (if it doesn't exist)
     await createMigrationsTable(supabase);
 
-    // 获取已运行的迁移
+    // Get executed migrations
     const {data: runMigrations} = await (supabase as any)
       .from('migrations')
       .select('name')

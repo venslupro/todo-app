@@ -4,7 +4,7 @@ import {HttpErrors} from '../../shared/errors/http-errors';
 import {AuthService} from '../../core/services/auth-service';
 
 /**
- * 认证中间件
+ * Authentication middleware
  */
 export const authMiddleware = async (c: Context, next: Next) => {
   const authHeader = c.req.header('Authorization');
@@ -16,11 +16,11 @@ export const authMiddleware = async (c: Context, next: Next) => {
   const token = authHeader.substring(7);
 
   try {
-    // 使用认证服务验证令牌
+    // Use authentication service to verify token
     const authService = new AuthService(c.env);
     const user = await authService.verifyToken(token);
 
-    // 将用户信息添加到上下文
+    // Add user information to context
     c.set('user', user);
 
     await next();

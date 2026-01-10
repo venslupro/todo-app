@@ -1,6 +1,6 @@
 // core/models/share.ts
 /**
- * 分享权限枚举
+ * Share permission enumeration
  */
 export enum SharePermission {
   VIEW = 'view',
@@ -8,7 +8,7 @@ export enum SharePermission {
 }
 
 /**
- * TODO分享关系
+ * TODO share relationship
  */
 export interface TodoShare {
   id: string;
@@ -21,7 +21,7 @@ export interface TodoShare {
 }
 
 /**
- * 创建分享DTO
+ * Create share DTO
  */
 export interface CreateShareDto {
   todo_id: string;
