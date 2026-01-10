@@ -7,9 +7,9 @@ on:
     branches: [ main, dev ]
 
 jobs:
-  # 代码质量检查
-  lint-and-typecheck:
-    name: Lint and Type Check
+  # 合并所有CI/CD步骤到一个job中
+  ci-pipeline:
+    name: CI/CD Pipeline
     runs-on: ubuntu-latest
     
     steps:
@@ -33,27 +33,6 @@ jobs:
       
     - name: Run TypeScript type check
       run: npm run type-check
-      working-directory: backend
-
-  # 构建和测试
-  build-and-test:
-    name: Build and Test
-    runs-on: ubuntu-latest
-    needs: lint-and-typecheck
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: backend/package-lock.json
-        
-    - name: Install dependencies
-      run: npm ci
       working-directory: backend
       
     - name: Build project
