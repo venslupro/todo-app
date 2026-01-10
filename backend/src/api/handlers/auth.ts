@@ -58,14 +58,8 @@ router.post('/refresh', async (c) => {
  * POST /api/v1/auth/logout
  */
 router.post('/logout', async (c) => {
-  const body = await c.req.json();
-
-  if (!body.access_token) {
-    throw new HttpErrors.ValidationError('Access token is required');
-  }
-
   const authService = createAuthService(c);
-  await authService.logout(body.access_token);
+  await authService.logout();
 
   return c.json(new HttpErrors.OkResponse({success: true}));
 });

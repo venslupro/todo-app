@@ -43,14 +43,14 @@ router.post('/upload-url', async (c) => {
   const user = c.get('user') as any;
   const body = await c.req.json();
 
-  const {todo_id, ...uploadData} = body;
+  const {todoId, ...uploadData} = body;
 
-  if (!todo_id) {
-    throw new HttpErrors.ValidationError('todo_id is required');
+  if (!todoId) {
+    throw new HttpErrors.ValidationError('todoId is required');
   }
 
   const mediaService = createMediaService(c);
-  const result = await mediaService.getUploadUrl(todo_id, user.id, uploadData);
+  const result = await mediaService.getUploadUrl(todoId, user.id, uploadData);
 
   return c.json(new HttpErrors.OkResponse(result));
 });
