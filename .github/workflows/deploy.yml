@@ -1,58 +1,65 @@
-name: Deploy to Cloudflare Workers
+name: Manual Deployment
 
 on:
-  push:
-    branches: [ main ]
-    paths-ignore:
-      - 'README.md'
-      - '**.md'
+  workflow_dispatch:  # 手动触发
+    inputs:
+      environment:
+        description: '选择部署环境'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+        - development
+        - production
+      version:
+        description: '部署版本（可选）'
+        required: false
+        type: string
 
 jobs:
   deploy:
-    name: Deploy
+    name: 🚀 Deploy to Cloudflare Workers
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
+    # 阶段1: 准备环境
+    - name: 🔄 Checkout source code
       uses: actions/checkout@v4
       
-    - name: Setup Node.js
+    - name: ⚙️ Setup Node.js environment
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
         cache-dependency-path: backend/package-lock.json
         
-    - name: Install dependencies
+    - name: 📦 Install project dependencies
       run: npm ci
       working-directory: backend
       
-    - name: Build project
+    - name: 🏗️ Build project
       run: npm run build
       working-directory: backend
       
-    - name: Deploy to Cloudflare Workers
+    # 阶段2: 部署到不同环境
+    - name: 🔐 Setup Cloudflare Wrangler
       uses: cloudflare/wrangler-action@v3
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        workingDirectory: backend
-        command: deploy --env production
-      
-    - name: Run database migrations
-      run: |
-        npm run db:migrate
-      working-directory: backend
-      env:
-        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         
-    - name: Notify deployment status
-      if: always()
-      uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        text: Deployment ${{ job.status }} for ${{ github.repository }}
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-      env:
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+    - name: 🚀 Deploy to ${{ github.event.inputs.environment }}
+      run: |
+        if [ "${{ github.event.inputs.environment }}" = "production" ]; then
+          npx wrangler deploy --env production
+        else
+          npx wrangler deploy --env development
+        fi
+      working-directory: backend
+      
+    - name: 📋 Display deployment info
+      run: |
+        echo "✅ 部署完成！"
+        echo "环境: ${{ github.event.inputs.environment }}"
+        echo "版本: ${{ github.event.inputs.version || 'latest' }}"
+        echo "时间: $(date)"
