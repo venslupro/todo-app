@@ -13,11 +13,11 @@ import {
 } from '../../core/models/share';
 
 /**
- * 验证工具类
+ * Validation utility class
  */
 export class Validator {
   /**
-   * 验证UUID格式
+   * Validate UUID format
    */
   static validateUUID(id: string, fieldName = 'id'): void {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -27,7 +27,7 @@ export class Validator {
   }
 
   /**
-   * 验证TODO状态
+   * Validate TODO status
    */
   static validateTodoStatus(status: string): TodoStatus {
     if (!Object.values(TodoStatus).includes(status as TodoStatus)) {
@@ -37,7 +37,7 @@ export class Validator {
   }
 
   /**
-   * 验证TODO优先级
+   * Validate TODO priority
    */
   static validateTodoPriority(priority: string): TodoPriority {
     if (!Object.values(TodoPriority).includes(priority as TodoPriority)) {
@@ -47,7 +47,7 @@ export class Validator {
   }
 
   /**
-   * 验证分享权限
+   * Validate share permissions
    */
   static validateSharePermission(permission: string): SharePermission {
     if (!Object.values(SharePermission).includes(permission as SharePermission)) {
@@ -57,7 +57,7 @@ export class Validator {
   }
 
   /**
-   * 验证日期格式
+   * Validate date format
    */
   static validateDate(dateString: string, fieldName = 'date'): Date {
     const date = new Date(dateString);
@@ -68,7 +68,7 @@ export class Validator {
   }
 
   /**
-   * 验证文件大小
+   * Validate file size
    */
   static validateFileSize(fileSize: number, maxSizeBytes: number): void {
     if (fileSize > maxSizeBytes) {
@@ -78,7 +78,7 @@ export class Validator {
   }
 
   /**
-   * 验证媒体文件类型
+   * Validate media file type
    */
   static validateMediaType(mimeType: string, mediaType: MediaType): void {
     const supportedTypes = SUPPORTED_MIME_TYPES[mediaType];
@@ -91,17 +91,17 @@ export class Validator {
   }
 
   /**
-   * 验证视频时长
+   * Validate video duration
    */
   static validateVideoDuration(durationSeconds: number): void {
-    const MAX_VIDEO_DURATION = 4 * 60; // 4分钟
+    const MAX_VIDEO_DURATION = 4 * 60; // 4 minutes
     if (durationSeconds > MAX_VIDEO_DURATION) {
       throw new HttpErrors.ValidationError('Video duration exceeds limit of 4 minutes');
     }
   }
 
   /**
-   * 清理和验证输入字符串
+   * Sanitize and validate input string
    */
   static sanitizeString(input: string, maxLength: number): string {
     if (!input || typeof input !== 'string') {
@@ -123,7 +123,7 @@ export class Validator {
   }
 
   /**
-   * 验证分页参数
+   * Validate pagination parameters
    */
   static validatePagination(limit?: number, offset?: number): {
     limit: number;
@@ -147,7 +147,7 @@ export class Validator {
   }
 
   /**
-   * 验证邮箱格式
+   * Validate email format
    */
   static validateEmail(email: string): string {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -161,7 +161,7 @@ export class Validator {
   }
 
   /**
-   * 验证密码强度
+   * Validate password strength
    */
   static validatePassword(password: string): void {
     if (password.length < 8) {
