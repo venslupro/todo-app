@@ -9,13 +9,13 @@ import {
 
 const router = new Hono();
 
-// 创建服务实例的函数
+// Function to create service instance
 function createMediaService(c: any) {
   return new MediaService(c.env);
 }
 
 /**
- * 获取媒体文件列表
+ * Get media file list
  * GET /api/v1/media
  */
 router.get('/', async (c) => {
@@ -36,7 +36,7 @@ router.get('/', async (c) => {
 });
 
 /**
- * 获取上传URL
+ * Get upload URL
  * POST /api/v1/media/upload-url
  */
 router.post('/upload-url', async (c) => {
