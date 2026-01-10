@@ -7,13 +7,12 @@ on:
     branches: [ main, dev ]
 
 jobs:
-  # 合并所有CI/CD步骤到一个job中
-  ci-pipeline:
-    name: CI/CD Pipeline
+  # Job 1: 代码质量检查
+  lint:
+    name: 🔍 Code Quality Check
     runs-on: ubuntu-latest
     
     steps:
-    # 阶段1: 环境准备
     - name: 🔄 Checkout source code
       uses: actions/checkout@v4
       
@@ -28,7 +27,6 @@ jobs:
       run: npm ci
       working-directory: backend
       
-    # 阶段2: 代码质量检查
     - name: 🔍 Run ESLint code analysis
       run: npm run lint
       working-directory: backend
@@ -36,20 +34,80 @@ jobs:
     - name: ✅ Run TypeScript type checking
       run: npm run type-check
       working-directory: backend
+
+  # Job 2: 构建和测试
+  build-and-test:
+    name: 🏗️ Build and Test
+    runs-on: ubuntu-latest
+    needs: lint  # 依赖lint job
+    
+    steps:
+    - name: 🔄 Checkout source code
+      uses: actions/checkout@v4
       
-    # 阶段3: 构建和测试
-    - name: 🏗️ Build project for production
+    - name: ⚙️ Setup Node.js environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+        
+    - name: 📦 Install project dependencies
+      run: npm ci
+      working-directory: backend
+      
+    - name: 🏗️ Build project
       run: npm run build
       working-directory: backend
       
-    - name: 🧪 Run unit tests with coverage
+    - name: 🧪 Run unit tests
       run: npm test
       working-directory: backend
       
-    # 阶段4: 产物处理
     - name: 📤 Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: dist-build
         path: backend/dist/
         retention-days: 7
+
+  # Job 3: 部署（手动触发）
+  deploy:
+    name: 🚀 Deploy to Cloudflare Workers
+    runs-on: ubuntu-latest
+    needs: build-and-test  # 依赖build-and-test job
+    if: github.event_name == 'workflow_dispatch'  # 仅手动触发时执行
+    
+    steps:
+    - name: 🔄 Checkout source code
+      uses: actions/checkout@v4
+      
+    - name: ⚙️ Setup Node.js environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+        
+    - name: 📦 Install project dependencies
+      run: npm ci
+      working-directory: backend
+      
+    - name: 🏗️ Build project
+      run: npm run build
+      working-directory: backend
+      
+    - name: 🔐 Setup Cloudflare Wrangler
+      uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        
+    - name: 🚀 Deploy application
+      run: npx wrangler deploy
+      working-directory: backend
+      
+    - name: 📋 Display deployment info
+      run: |
+        echo "✅ 部署完成！"
+        echo "时间: $(date)"
