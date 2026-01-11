@@ -29,19 +29,21 @@ infra/
 │       ├── main.tf            # Main Supabase configuration
 │       └── outputs.tf         # Module outputs
 ├── environments/               # Environment-specific configurations
-│   └── production/            # Production environment
+│   ├── production/            # Production environment
+│   │   ├── versions.tf        # Environment version requirements
+│   │   ├── providers.tf       # Environment provider config
+│   │   ├── variables.tf       # Environment variables
+│   │   ├── locals.tf          # Environment-specific locals
+│   │   ├── main.tf            # Environment main configuration
+│   │   └── outputs.tf         # Environment outputs
+│   └── staging/               # Staging environment
 │       ├── versions.tf        # Environment version requirements
 │       ├── providers.tf       # Environment provider config
 │       ├── variables.tf       # Environment variables
 │       ├── locals.tf          # Environment-specific locals
 │       ├── main.tf            # Environment main configuration
 │       └── outputs.tf         # Environment outputs
-├── scripts/                   # Utility scripts
-│   ├── terraform-init.sh      # Terraform initialization script
-│   ├── validate-config.sh     # Full configuration validation
-│   ├── simple-validate.sh     # Quick configuration check
-│   ├── deploy-production.sh   # Production deployment script
-│   └── validate-structure.sh  # Directory structure validation
+
 ├── versions.tf                # Root Terraform version requirements
 ├── providers.tf               # Root provider configurations
 ├── variables.tf               # Root input variables
@@ -62,7 +64,8 @@ The infrastructure is organized into logical modules following Google's Terrafor
 
 ### Environment Separation
 - **Production Environment**: Complete configuration for production deployment
-- **Modular Design**: Easy to add staging/development environments
+- **Staging Environment**: Pre-production testing environment with different configurations
+- **Modular Design**: Easy to add additional environments (development, testing, etc.)
 
 ## 🚀 Quick Start
 
@@ -107,13 +110,12 @@ The infrastructure is organized into logical modules following Google's Terrafor
 
 4. **Validate configuration:**
    ```bash
-   ./scripts/validate-structure.sh
-   ./scripts/simple-validate.sh
+   terraform validate
    ```
 
 5. **Initialize Terraform:**
    ```bash
-   ./scripts/terraform-init.sh
+   terraform init
    ```
 
 6. **Plan deployment:**
@@ -126,7 +128,21 @@ The infrastructure is organized into logical modules following Google's Terrafor
    terraform apply
    ```
 
-#### Option 2: GitHub Actions Deployment
+#### Option 2: Environment-Specific Deployment
+
+**Production Environment:**
+```bash
+cd environments/production
+terraform init && terraform plan && terraform apply
+```
+
+**Staging Environment:**
+```bash
+cd environments/staging
+terraform init && terraform plan && terraform apply
+```
+
+#### Option 3: GitHub Actions Deployment
 
 1. **Configure GitHub Secrets** (Settings → Secrets and variables → Actions):
    ```
@@ -145,8 +161,9 @@ The infrastructure is organized into logical modules following Google's Terrafor
    ```
 
 3. **Trigger workflow:**
-   - Push to `main` or `dev` branch with changes in `infra/` directory
-   - Or manually trigger via GitHub Actions → Terraform Infrastructure → Run workflow
+   - **Staging**: Push to any branch except `main` with changes in `infra/` directory
+   - **Production**: Push to `main` branch or manual trigger via GitHub Actions
+   - Or manually trigger via GitHub Actions → Backend CI/CD Pipeline → Run workflow
 
 ## 🔧 Module Details
 
@@ -172,11 +189,21 @@ Handles Supabase infrastructure including:
 
 ### Production Environment
 Located in `environments/production/` with:
-- Production-specific domain configurations
-- Enhanced security settings and resource tagging
-- Production-grade resource sizing (Pro plan for Supabase)
-- Comprehensive monitoring and logging setup
-- Standardized naming conventions
+- **Domain**: `api.todoapp.com`, `app.todoapp.com`
+- **Region**: `us-east-1` (北美地区)
+- **Security**: Enhanced security settings and resource tagging
+- **Resources**: Production-grade resource sizing (Pro plan for Supabase)
+- **Monitoring**: Comprehensive monitoring and logging setup
+- **Naming**: Standardized naming conventions
+
+### Staging Environment
+Located in `environments/staging/` with:
+- **Domain**: `staging.api.todoapp.com`, `staging.app.todoapp.com`
+- **Region**: `ap-southeast-1` (亚太地区，与生产环境隔离)
+- **Security**: Staging-specific security settings
+- **Resources**: Development-grade resource sizing (Free plan for Supabase)
+- **Testing**: Pre-production testing environment
+- **Naming**: Environment-specific naming with `-staging` suffix
 
 ### Environment Configuration
 Each environment includes:
@@ -186,6 +213,10 @@ Each environment includes:
 - **locals.tf**: Local variables and naming conventions
 - **main.tf**: Module integration and resource configuration
 - **outputs.tf**: Environment-specific outputs
+
+### Deployment Commands
+- **Production**: `terraform apply` - 手动确认的生产环境部署
+- **Staging**: `terraform apply` - 预发布环境部署，用于测试
 
 ## 🔧 GitHub Actions 配置
 
@@ -264,35 +295,29 @@ Each module provides specific outputs for integration:
 - **Cloudflare Module**: Worker IDs, Pages project details, namespace IDs
 - **Supabase Module**: Project details, API URLs, authentication keys
 
-## 🛠️ Utility Scripts
+## 🛠️ Terraform Commands
 
-The `scripts/` directory contains comprehensive utility scripts:
+### Validation Commands
+- **`terraform validate`**: Validates Terraform configuration syntax and structure
+- **`terraform plan`**: Generates execution plan to preview changes
 
-### Validation Scripts
-- **validate-structure.sh**: Validates directory structure and file organization
-- **validate-config.sh**: Comprehensive configuration validation with detailed checks
-- **simple-validate.sh**: Quick configuration check for basic validation
-
-### Deployment Scripts
-- **terraform-init.sh**: Automated Terraform initialization with backend configuration
-- **deploy-production.sh**: Production deployment automation with validation
+### Deployment Commands
+- **`terraform init`**: Initializes Terraform with backend configuration
+- **`terraform apply`**: Applies infrastructure changes with confirmation
 
 ### Usage Examples
 ```bash
-# Quick validation
-./scripts/simple-validate.sh
+# Validate configuration
+terraform validate
 
-# Full structure validation
-./scripts/validate-structure.sh
-
-# Complete configuration validation
-./scripts/validate-config.sh
+# Generate deployment plan
+terraform plan
 
 # Initialize Terraform
-./scripts/terraform-init.sh
+terraform init
 
-# Deploy to production
-./scripts/deploy-production.sh
+# Deploy infrastructure
+terraform apply
 ```
 
 ## 🔄 CI/CD Integration
@@ -327,8 +352,7 @@ jobs:
       - name: Validate Infrastructure
         run: |
           cd infra
-          ./scripts/validate-structure.sh
-          ./scripts/validate-config.sh
+          terraform validate
 ```
 
 ## 📈 Monitoring and Logging

@@ -1,15 +1,6 @@
 # Main Cloudflare module configuration.
 # This file integrates all Cloudflare resources for the Todo application.
 
-# KV namespace for caching and rate limiting.
-# This is an account-level resource and doesn't require a zone
-resource "cloudflare_workers_kv_namespace" "todo_kv" {
-  account_id = var.account_id
-  title      = local.kv_name
-
-  depends_on = [data.cloudflare_account.current]
-}
-
 # Worker script for the API.
 # In Cloudflare provider v5.x, we create the Worker resource but defer script upload to Wrangler
 # This is an account-level resource and doesn't require a zone
@@ -36,14 +27,11 @@ resource "cloudflare_workers_script" "todo_api" {
   compatibility_flags = ["nodejs_compat"]
   
   depends_on = [
-    cloudflare_workers_kv_namespace.todo_kv,
     data.cloudflare_account.current
   ]
 }
 
-# KV namespace binding for Worker
-# In Cloudflare provider v5.x, KV bindings are configured within the Worker script resource
-# The actual binding will be handled by Wrangler during deployment
+
 
 # Cloudflare zone creation is currently disabled due to Cloudflare provider v5.15.0 requirements
 # Zone creation requires specific account object format and permissions

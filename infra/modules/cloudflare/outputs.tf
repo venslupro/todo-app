@@ -20,13 +20,6 @@ output "frontend_url" {
   value       = var.web_domain != "" ? "https://${var.web_domain}" : "https://${local.pages_name}.pages.dev"
 }
 
-output "kv_namespace_id" {
-  description = "ID of the KV namespace for caching."
-  value       = cloudflare_workers_kv_namespace.todo_kv.id
-}
-
-
-
 output "pages_project_name" {
   description = "Name of the Pages project."
   value       = cloudflare_pages_project.todo_frontend.name

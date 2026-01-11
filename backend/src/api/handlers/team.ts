@@ -1,5 +1,6 @@
 // api/handlers/team.ts
 import {Hono} from 'hono';
+import {HonoAppType} from '../../shared/types/hono-types';
 import {HttpErrors} from '../../shared/errors/http-errors';
 import {ShareService} from '../../core/services/share-service';
 import {
@@ -7,7 +8,7 @@ import {
   // ShareQueryParams,
 } from '../../core/models/share';
 
-const router = new Hono();
+const router = new Hono<HonoAppType>();
 
 // Function to create service instance
 function createShareService(c: any) {

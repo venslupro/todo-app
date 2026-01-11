@@ -1,5 +1,6 @@
 // api/handlers/todo.ts
 import {Hono} from 'hono';
+import {HonoAppType} from '../../shared/types/hono-types';
 import {HttpErrors} from '../../shared/errors/http-errors';
 import {TodoService} from '../../core/services/todo-service';
 import {
@@ -7,7 +8,7 @@ import {
   TodoPriority,
 } from '../../core/models/todo';
 
-const router = new Hono();
+const router = new Hono<HonoAppType>();
 
 // Function to create service instance
 function createTodoService(c: any) {

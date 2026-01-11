@@ -1,21 +1,15 @@
-name: CI/CD Pipeline
+name: Backend CI/CD Pipeline
 
-# CI/CD Pipeline for Production Environment
-# This workflow handles application deployment to production environment only
-# Note: This workflow does NOT run on pull requests to prevent unnecessary executions
+# Backend CI/CD Pipeline for Staging and Production Environments
+# Staging: Runs automatically on all branches except main
+# Production: Runs only on main branch, deployment is manual
 
 on:
-  # Trigger on push to main branch only
+  # Trigger on push to any branch
   push:
-    branches: [ main, dev ]
+    branches: ['**']
     paths-ignore:
       - 'infra/**'
-  
-  # Disable pull_request trigger to prevent unnecessary executions
-  # pull_request:
-  #   branches: [ main ]
-  #   paths-ignore:
-  #     - 'infra/**'
   
   # Manual trigger for production deployment
   workflow_dispatch:
@@ -93,12 +87,12 @@ jobs:
         path: backend/dist/
         retention-days: 7
 
-  # Job 3: Deployment (Manual Trigger)
-  deploy:
-    name: 🚀 Deploy to Cloudflare Workers
+  # Job 3: Staging Deployment (Auto on non-main branches)
+  deploy-staging:
+    name: 🚀 Deploy to Staging
     runs-on: ubuntu-latest
     needs: build-and-test  # Depends on build-and-test job
-    if: github.event_name == 'workflow_dispatch'  # Only execute on manual trigger
+    if: github.ref != 'refs/heads/main' && github.event_name != 'workflow_dispatch'  # Only run on non-main branches and not manual trigger
     
     steps:
     - name: 🔄 Checkout source code
@@ -119,17 +113,60 @@ jobs:
       run: npm run build
       working-directory: backend
       
-    - name: 🔐 Setup Cloudflare Wrangler
+    - name: 🔐 Setup Cloudflare Wrangler for Staging
       uses: cloudflare/wrangler-action@v3
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         
-    - name: 🚀 Deploy application
-      run: npx wrangler deploy
+    - name: 🚀 Deploy to Staging Environment
+      run: npx wrangler deploy --env staging
       working-directory: backend
       
-    - name: 📋 Display deployment info
+    - name: 📋 Display staging deployment info
       run: |
-        echo "✅ Deployment completed!"
+        echo "✅ Staging deployment completed!"
+        echo "Branch: ${{ github.ref }}"
+        echo "Time: $(date)"
+
+  # Job 4: Production Deployment (Manual on main branch only)
+  deploy-production:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build-and-test  # Depends on build-and-test job
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'  # Manual trigger on main only
+    
+    steps:
+    - name: 🔄 Checkout source code
+      uses: actions/checkout@v4
+      
+    - name: ⚙️ Setup Node.js environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+        
+    - name: 📦 Install project dependencies
+      run: npm ci
+      working-directory: backend
+      
+    - name: 🏗️ Build project
+      run: npm run build
+      working-directory: backend
+      
+    - name: 🔐 Setup Cloudflare Wrangler for Production
+      uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        
+    - name: 🚀 Deploy to Production Environment
+      run: npx wrangler deploy --env production
+      working-directory: backend
+      
+    - name: 📋 Display production deployment info
+      run: |
+        echo "✅ Production deployment completed!"
+        echo "Branch: ${{ github.ref }}"
         echo "Time: $(date)"

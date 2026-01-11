@@ -2,7 +2,15 @@
 import {Hono} from 'hono';
 import {HttpErrors} from '../../shared/errors/http-errors';
 
-const router = new Hono();
+const router = new Hono<{
+  Bindings: {
+    SUPABASE_URL: string;
+    SUPABASE_SERVICE_ROLE_KEY: string;
+    SUPABASE_ANON_KEY: string;
+    ENVIRONMENT: 'development' | 'production' | 'staging';
+  };
+  Variables: {};
+}>();
 
 /**
  * Health check

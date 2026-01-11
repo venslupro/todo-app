@@ -1,5 +1,6 @@
 // index.ts
 import {Hono} from 'hono';
+import {HonoAppType} from './shared/types/hono-types';
 
 // 导入中间件
 import {errorMiddleware} from './api/middleware/error';
@@ -16,23 +17,7 @@ import teamRoutes from './api/handlers/team';
 import websocketRoutes from './api/handlers/websocket';
 
 // 创建Hono应用
-const app = new Hono<{
-  Bindings: {
-    SUPABASE_URL: string;
-    SUPABASE_SERVICE_ROLE_KEY: string;
-    SUPABASE_ANON_KEY: string;
-    ENVIRONMENT: 'development' | 'production' | 'staging';
-  };
-  Variables: {
-    user: {
-      id: string;
-      email: string;
-      username?: string;
-      full_name?: string;
-      avatar_url?: string;
-    };
-  };
-}>();
+const app = new Hono<HonoAppType>();
 
 // 全局中间件
 app.use('*', corsMiddleware);
