@@ -3,7 +3,7 @@
 locals {
   # Resource naming conventions.
   worker_name = "${var.project_name}-${var.environment}"
-  pages_name  = "${var.project_name}-frontend-${var.environment}"
+  pages_name  = "${var.project_name}-frontend-tf-${var.environment}"
   
   # Account subdomain for Workers default domain.
   # This is typically the account name, but we'll use a default value.
