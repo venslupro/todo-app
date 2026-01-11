@@ -144,8 +144,10 @@ jobs:
           echo "🔍 Validating Configuration Variables..."
           echo "========================================"
           
-          # Check if required secrets are set
-          echo "🔧 Checking Cloudflare Secrets:"
+          # Check if all required variables are properly set
+          echo "🔧 Checking Required Variables:"
+          
+          # Check if all secrets are not empty
           if [ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then
             echo "   ❌ CLOUDFLARE_ACCOUNT_ID is empty or not set"
             exit 1
@@ -160,8 +162,6 @@ jobs:
             echo "   ✅ CLOUDFLARE_API_TOKEN: *** (valid)"
           fi
           
-          echo ""
-          echo "🏢 Checking Supabase Secrets:"
           if [ -z "${{ secrets.SUPABASE_ACCESS_TOKEN }}" ]; then
             echo "   ❌ SUPABASE_ACCESS_TOKEN is empty or not set"
             exit 1
@@ -247,67 +247,7 @@ jobs:
           path: ${{ env.WORKING_DIRECTORY }}/terraform.tfplan
           retention-days: 30
 
-      - name: "� Validate Configuration Variables (Apply)"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        if: github.event.inputs.operation == 'apply'
-        run: |
-          echo "🔍 Validating Configuration Variables for Apply..."
-          echo "=============================================="
-          
-          # Check if required secrets are set
-          echo "🔧 Checking Cloudflare Secrets:"
-          if [ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then
-            echo "   ❌ CLOUDFLARE_ACCOUNT_ID is empty or not set"
-            exit 1
-          else
-            echo "   ✅ CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
-          fi
-          
-          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
-            echo "   ❌ CLOUDFLARE_API_TOKEN is empty or not set"
-            exit 1
-          else
-            echo "   ✅ CLOUDFLARE_API_TOKEN: *** (valid)"
-          fi
-          
-          echo ""
-          echo "🏢 Checking Supabase Secrets:"
-          if [ -z "${{ secrets.SUPABASE_ACCESS_TOKEN }}" ]; then
-            echo "   ❌ SUPABASE_ACCESS_TOKEN is empty or not set"
-            exit 1
-          else
-            echo "   ✅ SUPABASE_ACCESS_TOKEN: *** (valid)"
-          fi
-          
-          if [ -z "${{ secrets.SUPABASE_ORGANIZATION_ID }}" ]; then
-            echo "   ❌ SUPABASE_ORGANIZATION_ID is empty or not set"
-            exit 1
-          else
-            echo "   ✅ SUPABASE_ORGANIZATION_ID: ${{ secrets.SUPABASE_ORGANIZATION_ID }}"
-          fi
-          
-          if [ -z "${{ secrets.SUPABASE_DATABASE_PASSWORD }}" ]; then
-            echo "   ❌ SUPABASE_DATABASE_PASSWORD is empty or not set"
-            exit 1
-          else
-            echo "   ✅ SUPABASE_DATABASE_PASSWORD: *** (valid)"
-          fi
-          
-          echo ""
-          echo "🌐 Checking Domain Variables:"
-          echo "   - API Domain: ${{ vars.API_DOMAIN || 'api.todoapp.com' }}"
-          echo "   - Web Domain: ${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}"
-          echo "   - Zone Name: ${{ vars.ZONE_NAME || 'todoapp.com' }}"
-          
-          echo ""
-          echo "📦 Checking Storage Configuration:"
-          echo "   - Existing Bucket Name: ${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}"
-          
-          echo ""
-          echo "✅ All required variables are properly configured!"
-          echo "=============================================="
-
-      - name: "� Print Configuration Variables (Apply)"
+      - name: "📋 Print Configuration Variables (Apply)"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         if: github.event.inputs.operation == 'apply'
         run: |
@@ -348,66 +288,6 @@ jobs:
             -var=\"zone_name=${{ vars.ZONE_NAME || 'todoapp.com' }}\" \
             -var=\"existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}\" \
             -auto-approve
-
-      - name: "🔍 Validate Configuration Variables (Destroy)"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        if: github.event.inputs.operation == 'destroy'
-        run: |
-          echo "🔍 Validating Configuration Variables for Destroy..."
-          echo "================================================"
-          
-          # Check if required secrets are set
-          echo "🔧 Checking Cloudflare Secrets:"
-          if [ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then
-            echo "   ❌ CLOUDFLARE_ACCOUNT_ID is empty or not set"
-            exit 1
-          else
-            echo "   ✅ CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
-          fi
-          
-          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
-            echo "   ❌ CLOUDFLARE_API_TOKEN is empty or not set"
-            exit 1
-          else
-            echo "   ✅ CLOUDFLARE_API_TOKEN: *** (valid)"
-          fi
-          
-          echo ""
-          echo "🏢 Checking Supabase Secrets:"
-          if [ -z "${{ secrets.SUPABASE_ACCESS_TOKEN }}" ]; then
-            echo "   ❌ SUPABASE_ACCESS_TOKEN is empty or not set"
-            exit 1
-          else
-            echo "   ✅ SUPABASE_ACCESS_TOKEN: *** (valid)"
-          fi
-          
-          if [ -z "${{ secrets.SUPABASE_ORGANIZATION_ID }}" ]; then
-            echo "   ❌ SUPABASE_ORGANIZATION_ID is empty or not set"
-            exit 1
-          else
-            echo "   ✅ SUPABASE_ORGANIZATION_ID: ${{ secrets.SUPABASE_ORGANIZATION_ID }}"
-          fi
-          
-          if [ -z "${{ secrets.SUPABASE_DATABASE_PASSWORD }}" ]; then
-            echo "   ❌ SUPABASE_DATABASE_PASSWORD is empty or not set"
-            exit 1
-          else
-            echo "   ✅ SUPABASE_DATABASE_PASSWORD: *** (valid)"
-          fi
-          
-          echo ""
-          echo "🌐 Checking Domain Variables:"
-          echo "   - API Domain: ${{ vars.API_DOMAIN || 'api.todoapp.com' }}"
-          echo "   - Web Domain: ${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}"
-          echo "   - Zone Name: ${{ vars.ZONE_NAME || 'todoapp.com' }}"
-          
-          echo ""
-          echo "📦 Checking Storage Configuration:"
-          echo "   - Existing Bucket Name: ${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}"
-          
-          echo ""
-          echo "✅ All required variables are properly configured!"
-          echo "================================================"
 
       - name: "📋 Print Configuration Variables (Destroy)"
         working-directory: ${{ env.WORKING_DIRECTORY }}
