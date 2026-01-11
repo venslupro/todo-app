@@ -2,37 +2,29 @@
 
 # Supabase project resource for the Todo application.
 resource "supabase_project" "todo_app" {
-  name   = local.project_name
-  region = var.region
-  plan   = var.plan
+  organization_id   = var.organization_id
+  name              = local.project_name
+  database_password = var.database_password
+  region            = var.region
 
-  database = {
-    version = "15"
+  lifecycle {
+    ignore_changes = [database_password]
   }
-
-  # Authentication configuration with frontend domain.
-  auth = {
-    site_url = "https://${var.web_domain}"
-  }
-
-  # Storage configuration for file uploads.
-  storage = {
-    file_size_limit = 50 # MB
-  }
-
-  tags = local.tags
 }
 
-# Supabase API configuration to enable required features.
-resource "supabase_api" "todo_api" {
-  project_id = supabase_project.todo_app.id
+# Supabase settings configuration for the project
+resource "supabase_settings" "todo_settings" {
+  project_ref = supabase_project.todo_app.id
 
-  # Enable REST API for standard HTTP requests.
-  rest = true
+  # API configuration
+  api = jsonencode({
+    db_schema            = "public,storage,graphql_public"
+    db_extra_search_path = "public,extensions"
+    max_rows             = 1000
+  })
 
-  # Enable Realtime API for WebSocket support.
-  realtime = true
-
-  # Enable Storage API for file uploads and management.
-  storage = true
+  # Authentication configuration
+  auth = jsonencode({
+    site_url = "https://${var.web_domain}"
+  })
 }

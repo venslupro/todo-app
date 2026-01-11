@@ -26,3 +26,14 @@ variable "web_domain" {
   type        = string
   description = "Web domain for authentication configuration."
 }
+
+variable "organization_id" {
+  type        = string
+  description = "Supabase organization ID for the project."
+}
+
+variable "database_password" {
+  type        = string
+  description = "Database password for the Supabase project."
+  sensitive   = true
+}
