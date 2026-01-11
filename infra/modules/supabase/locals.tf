@@ -10,8 +10,8 @@ locals {
   # Storage configuration
   storage_config = {
     bucket_name = local.existing_bucket_name
-    public_url  = "https://${supabase_project.todo_app.id}.supabase.co/storage/v1/object/public/${local.existing_bucket_name}"
-    api_url     = "https://${supabase_project.todo_app.id}.supabase.co/storage/v1"
+    public_url  = var.existing_project_id != "" ? "https://${var.existing_project_id}.supabase.co/storage/v1/object/public/${local.existing_bucket_name}" : (length(supabase_project.todo_app) > 0 ? "https://${supabase_project.todo_app[0].id}.supabase.co/storage/v1/object/public/${local.existing_bucket_name}" : "")
+    api_url     = var.existing_project_id != "" ? "https://${var.existing_project_id}.supabase.co/storage/v1" : (length(supabase_project.todo_app) > 0 ? "https://${supabase_project.todo_app[0].id}.supabase.co/storage/v1" : "")
   }
   
   # Standard tags.

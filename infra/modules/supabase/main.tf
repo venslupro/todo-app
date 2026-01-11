@@ -1,7 +1,10 @@
 # Supabase infrastructure configuration for the Todo application.
 
 # Supabase project resource for the Todo application.
+# Only create new project if no existing project ID is provided
 resource "supabase_project" "todo_app" {
+  count = var.existing_project_id == "" ? 1 : 0
+  
   organization_id   = var.organization_id
   name              = local.project_name
   database_password = var.database_password
@@ -12,9 +15,14 @@ resource "supabase_project" "todo_app" {
   }
 }
 
+# Local value for project reference (either created or existing)
+locals {
+  project_ref = var.existing_project_id != "" ? var.existing_project_id : (length(supabase_project.todo_app) > 0 ? supabase_project.todo_app[0].id : "")
+}
+
 # Supabase settings configuration for the project
 resource "supabase_settings" "todo_settings" {
-  project_ref = supabase_project.todo_app.id
+  project_ref = local.project_ref
 
   # API configuration
   api = jsonencode({
@@ -32,17 +40,17 @@ resource "supabase_settings" "todo_settings" {
 # Output variables for Cloudflare module
 output "supabase_url" {
   description = "Supabase project URL"
-  value       = supabase_project.todo_app.id
+  value       = var.existing_project_id != "" ? "https://${var.existing_project_id}.supabase.co" : (length(supabase_project.todo_app) > 0 ? "https://${supabase_project.todo_app[0].id}.supabase.co" : "")
 }
 
 output "supabase_anon_key" {
   description = "Supabase anonymous API key"
-  value       = supabase_project.todo_app.id
+  value       = ""
 }
 
 output "supabase_service_key" {
   description = "Supabase service role API key"
-  value       = supabase_project.todo_app.id
+  value       = ""
   sensitive   = true
 }
 
