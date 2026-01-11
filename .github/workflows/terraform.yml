@@ -20,9 +20,6 @@ on:
         options:
           - production
   push:
-    branches:
-      - main
-      - dev
 
 env:
   WORKING_DIRECTORY: infra
@@ -90,9 +87,9 @@ jobs:
 
       - name: "� Terraform Apply"
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        if: github.event.inputs.operation == 'apply'
+        if: github.event.inputs.operation == 'apply' && github.event.inputs.environment == 'production'
         run: |
-          echo "🚀 Applying infrastructure changes..."
+          echo "🚀 Applying infrastructure changes to production..."
           terraform apply \
             -input=false \
             -var="cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
@@ -110,13 +107,20 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         if: github.event.inputs.operation == 'destroy'
         run: |
-          echo "📋 Terraform Configuration Variables for Destroy:"
-          echo "=============================================="
+          echo "⚠️  WARNING: This will DESTROY all infrastructure resources!"
+          echo "⚠️  Confirm this action is intentional before proceeding."
 
       - name: "🧹 Terraform Destroy"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         if: github.event.inputs.operation == 'destroy'
         run: |
+          # Safety check for production environment
+          if [ "${{ github.event.inputs.environment || 'production' }}" = "production" ]; then
+            echo "❌ ERROR: Destroy operation is not allowed in production environment!"
+            echo "   Use a different environment for testing destroy operations."
+            exit 1
+          fi
+          
           echo "🧹 Destroying infrastructure resources..."
           terraform destroy \
             -input=false \
