@@ -117,16 +117,13 @@ jobs:
       working-directory: backend
       
     - name: 🔐 Setup Cloudflare Wrangler for Staging
-      run: |
-        npm ci
-        npx wrangler whoami
-      working-directory: backend
-      env:
-        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      uses: cloudflare/wrangler-action@v4
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         
     - name: 🚀 Deploy to Staging Environment
-      run: npx wrangler@4 deploy --env staging
+      run: npx wrangler deploy src/index.ts --env staging 
       working-directory: backend
       
     - name: 📋 Display staging deployment info
@@ -162,16 +159,13 @@ jobs:
       working-directory: backend
       
     - name: 🔐 Setup Cloudflare Wrangler for Production
-      run: |
-        npm ci
-        npx wrangler whoami
-      working-directory: backend
-      env:
-        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      uses: cloudflare/wrangler-action@v4
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         
     - name: 🚀 Deploy to Production Environment
-      run: npx wrangler@4 deploy --env production
+      run: npx wrangler deploy src/index.ts --env production
       working-directory: backend
       
     - name: 📋 Display production deployment info
