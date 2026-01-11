@@ -156,7 +156,17 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
-      - name: "📋 Terraform Init"
+      - name: "� Cache Terraform"
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/.terraform
+            ${{ env.WORKING_DIRECTORY }}/terraform.tfstate
+          key: ${{ runner.os }}-terraform-${{ hashFiles('**/terraform.lock.hcl') }}
+          restore-keys: |
+            ${{ runner.os }}-terraform-
+
+      - name: "� Terraform Init"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           echo "🔧 Initializing Terraform..."
@@ -232,11 +242,15 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
-      - name: "🔧 Initialize Terraform Backend"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "🔧 Initializing Terraform backend..."
-          terraform init -reconfigure
+      - name: "� Cache Terraform"
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/.terraform
+            ${{ env.WORKING_DIRECTORY }}/terraform.tfstate
+          key: ${{ runner.os }}-terraform-${{ hashFiles('**/terraform.lock.hcl') }}
+          restore-keys: |
+            ${{ runner.os }}-terraform-
 
       - name: "📊 Terraform Plan"
         working-directory: ${{ env.WORKING_DIRECTORY }}
