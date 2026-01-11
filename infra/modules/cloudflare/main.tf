@@ -79,7 +79,7 @@ resource "cloudflare_dns_record" "web" {
   zone_id = data.cloudflare_zone.main.id
   name    = var.web_domain
   type    = "CNAME"
-  content = cloudflare_pages_project.todo_frontend.subdomain
+  content = length(cloudflare_pages_project.todo_frontend) > 0 ? cloudflare_pages_project.todo_frontend[0].subdomain : ""
   proxied = true
   ttl     = 1
 

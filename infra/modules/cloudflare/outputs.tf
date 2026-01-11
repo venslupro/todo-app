@@ -29,10 +29,10 @@ output "kv_namespace_id" {
 
 output "pages_project_name" {
   description = "Name of the Pages project."
-  value       = cloudflare_pages_project.todo_frontend.name
+  value       = length(cloudflare_pages_project.todo_frontend) > 0 ? cloudflare_pages_project.todo_frontend[0].name : ""
 }
 
 output "pages_project_id" {
   description = "ID of the Pages project."
-  value       = cloudflare_pages_project.todo_frontend.id
+  value       = length(cloudflare_pages_project.todo_frontend) > 0 ? cloudflare_pages_project.todo_frontend[0].id : ""
 }

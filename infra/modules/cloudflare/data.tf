@@ -1,7 +1,7 @@
 # Data sources for Cloudflare module.
 
 data "cloudflare_zone" "main" {
-  name = var.zone_name
+  zone_id = var.zone_id
 }
 
 # Validate Cloudflare account access

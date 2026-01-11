@@ -43,7 +43,7 @@ module "cloudflare" {
   environment        = local.environment
   api_domain         = local.api_domain
   web_domain         = local.web_domain
-  zone_name          = var.zone_name
+  zone_id            = var.zone_id
   
   # Supabase configuration from the supabase module
   supabase_url             = module.supabase.supabase_url
