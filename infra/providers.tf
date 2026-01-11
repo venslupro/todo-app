@@ -14,9 +14,9 @@ provider "cloudflare" {
   # - Account:Cloudflare Pages:Edit
   # - Zone:Zone:Read (if using custom domains)
   
-  # Optional: Explicitly set API token and account ID if not using environment variables
-  # api_token   = var.cloudflare_api_token
-  # account_id  = var.cloudflare_account_id
+  # Explicitly set API token and account ID for better reliability
+  api_token   = var.cloudflare_api_token
+  account_id  = var.cloudflare_account_id
 }
 
 # Supabase provider configuration for managing Supabase resources.
