@@ -117,7 +117,7 @@ jobs:
       working-directory: backend
       
     - name: 🔐 Setup Cloudflare Wrangler for Staging
-      uses: cloudflare/wrangler-action@v4
+      uses: cloudflare/wrangler-action@v3
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -159,7 +159,7 @@ jobs:
       working-directory: backend
       
     - name: 🔐 Setup Cloudflare Wrangler for Production
-      uses: cloudflare/wrangler-action@v4
+      uses: cloudflare/wrangler-action@v3
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
