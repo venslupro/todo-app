@@ -7,7 +7,7 @@ name: CI/CD Pipeline
 on:
   # Trigger on push to main branch only
   push:
-    branches: [ main ]
+    branches: [ main, dev ]
     paths-ignore:
       - 'infra/**'
   
