@@ -1,5 +1,6 @@
 // api/handlers/media.ts
 import {Hono} from 'hono';
+import {HonoAppType} from '../../shared/types/hono-types';
 import {HttpErrors} from '../../shared/errors/http-errors';
 import {MediaService} from '../../core/services/media-service';
 import {
@@ -7,7 +8,7 @@ import {
   // MediaQueryParams,
 } from '../../core/models/media';
 
-const router = new Hono();
+const router = new Hono<HonoAppType>();
 
 // Function to create service instance
 function createMediaService(c: any) {
