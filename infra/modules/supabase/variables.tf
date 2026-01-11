@@ -37,3 +37,9 @@ variable "database_password" {
   description = "Database password for the Supabase project."
   sensitive   = true
 }
+
+variable "existing_bucket_name" {
+  type        = string
+  description = "Name of the existing storage bucket in Supabase Dashboard."
+  default     = "todo-app-storage"
+}
