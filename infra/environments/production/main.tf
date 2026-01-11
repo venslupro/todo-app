@@ -10,7 +10,7 @@ module "cloudflare" {
   api_domain         = var.api_domain
   web_domain         = var.web_domain
   zone_name          = var.zone_name
-  worker_script_path = "../../dist/index.js"
+  worker_script_path = "${path.module}/../../../dist/index.js"
 }
 
 # Supabase module for database and backend services.
