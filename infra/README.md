@@ -43,13 +43,7 @@ infra/
 │       ├── locals.tf          # Environment-specific locals
 │       ├── main.tf            # Environment main configuration
 │       └── outputs.tf         # Environment outputs
-├── scripts/                   # Utility scripts
-│   ├── terraform-init.sh      # Terraform initialization script
-│   ├── validate-config.sh     # Full configuration validation
-│   ├── simple-validate.sh     # Quick configuration check
-│   ├── deploy-production.sh   # Production deployment script
-│   ├── deploy-staging.sh      # Staging deployment script
-│   └── validate-structure.sh  # Directory structure validation
+
 ├── versions.tf                # Root Terraform version requirements
 ├── providers.tf               # Root provider configurations
 ├── variables.tf               # Root input variables
@@ -116,13 +110,12 @@ The infrastructure is organized into logical modules following Google's Terrafor
 
 4. **Validate configuration:**
    ```bash
-   ./scripts/validate-structure.sh
-   ./scripts/simple-validate.sh
+   terraform validate
    ```
 
 5. **Initialize Terraform:**
    ```bash
-   ./scripts/terraform-init.sh
+   terraform init
    ```
 
 6. **Plan deployment:**
@@ -141,16 +134,12 @@ The infrastructure is organized into logical modules following Google's Terrafor
 ```bash
 cd environments/production
 terraform init && terraform plan && terraform apply
-# 或使用部署脚本
-./scripts/deploy-production.sh
 ```
 
 **Staging Environment:**
 ```bash
 cd environments/staging
 terraform init && terraform plan && terraform apply
-# 或使用部署脚本
-./scripts/deploy-staging.sh
 ```
 
 #### Option 3: GitHub Actions Deployment
@@ -225,9 +214,9 @@ Each environment includes:
 - **main.tf**: Module integration and resource configuration
 - **outputs.tf**: Environment-specific outputs
 
-### Deployment Scripts
-- **Production**: `./scripts/deploy-production.sh` - 手动确认的生产环境部署
-- **Staging**: `./scripts/deploy-staging.sh` - 预发布环境部署，用于测试
+### Deployment Commands
+- **Production**: `terraform apply` - 手动确认的生产环境部署
+- **Staging**: `terraform apply` - 预发布环境部署，用于测试
 
 ## 🔧 GitHub Actions 配置
 
@@ -306,35 +295,29 @@ Each module provides specific outputs for integration:
 - **Cloudflare Module**: Worker IDs, Pages project details, namespace IDs
 - **Supabase Module**: Project details, API URLs, authentication keys
 
-## 🛠️ Utility Scripts
+## 🛠️ Terraform Commands
 
-The `scripts/` directory contains comprehensive utility scripts:
+### Validation Commands
+- **`terraform validate`**: Validates Terraform configuration syntax and structure
+- **`terraform plan`**: Generates execution plan to preview changes
 
-### Validation Scripts
-- **validate-structure.sh**: Validates directory structure and file organization
-- **validate-config.sh**: Comprehensive configuration validation with detailed checks
-- **simple-validate.sh**: Quick configuration check for basic validation
-
-### Deployment Scripts
-- **terraform-init.sh**: Automated Terraform initialization with backend configuration
-- **deploy-production.sh**: Production deployment automation with validation
+### Deployment Commands
+- **`terraform init`**: Initializes Terraform with backend configuration
+- **`terraform apply`**: Applies infrastructure changes with confirmation
 
 ### Usage Examples
 ```bash
-# Quick validation
-./scripts/simple-validate.sh
+# Validate configuration
+terraform validate
 
-# Full structure validation
-./scripts/validate-structure.sh
-
-# Complete configuration validation
-./scripts/validate-config.sh
+# Generate deployment plan
+terraform plan
 
 # Initialize Terraform
-./scripts/terraform-init.sh
+terraform init
 
-# Deploy to production
-./scripts/deploy-production.sh
+# Deploy infrastructure
+terraform apply
 ```
 
 ## 🔄 CI/CD Integration
@@ -369,8 +352,7 @@ jobs:
       - name: Validate Infrastructure
         run: |
           cd infra
-          ./scripts/validate-structure.sh
-          ./scripts/validate-config.sh
+          terraform validate
 ```
 
 ## 📈 Monitoring and Logging
