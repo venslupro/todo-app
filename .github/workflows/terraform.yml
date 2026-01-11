@@ -160,7 +160,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           echo "🔧 Initializing Terraform..."
-          terraform init -backend=false
+          terraform init -reconfigure
 
       - name: "📄 Init Summary"
         working-directory: ${{ env.WORKING_DIRECTORY }}
@@ -231,6 +231,12 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
+
+      - name: "🔧 Initialize Terraform Backend"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          echo "🔧 Initializing Terraform backend..."
+          terraform init -reconfigure
 
       - name: "📊 Terraform Plan"
         working-directory: ${{ env.WORKING_DIRECTORY }}
