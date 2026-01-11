@@ -123,7 +123,7 @@ jobs:
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         
     - name: 🚀 Deploy to Staging Environment
-      run: npx wrangler@4 deploy --env staging
+      run: npx wrangler@4 deploy src/index.ts --env staging
       working-directory: backend
       
     - name: 📋 Display staging deployment info
@@ -165,7 +165,7 @@ jobs:
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         
     - name: 🚀 Deploy to Production Environment
-      run: npx wrangler@4 deploy --env production
+      run: npx wrangler@4 deploy src/index.ts --env production
       working-directory: backend
       
     - name: 📋 Display production deployment info
