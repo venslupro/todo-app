@@ -52,7 +52,7 @@ jobs:
   # Validates directory structure and configuration files
   # ============================================================================
   
-  terraform-validation:
+  infrastructure-validation:
     name: "🔍 Infrastructure Validation"
     description: "Validates infrastructure directory structure and configuration"
     runs-on: ubuntu-latest
@@ -89,18 +89,18 @@ jobs:
           echo "📁 All infrastructure files are properly structured" >> $GITHUB_STEP_SUMMARY
 
   # ============================================================================
-  # Terraform Plan Job
-  # Generates Terraform plan for validation and review
+  # Terraform Setup Job
+  # Sets up Terraform and configures credentials
   # ============================================================================
   
-  terraform-plan:
-    name: "📋 Terraform Plan"
-    description: "Generates Terraform execution plan for infrastructure changes"
+  terraform-setup:
+    name: "� Terraform Setup"
+    description: "Sets up Terraform and configures required credentials"
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'production' }}
-    needs: terraform-validation
+    needs: infrastructure-validation
     
-    # Only run plan on main branch or when manually triggered
+    # Only run on main branch or when manually triggered
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     
     steps:
@@ -125,17 +125,117 @@ jobs:
           echo "🔑 Configuring Supabase credentials..."
           echo "SUPABASE_ACCESS_TOKEN=${{ secrets.SUPABASE_ACCESS_TOKEN }}" >> $GITHUB_ENV
 
+      - name: "📋 Setup Summary"
+        run: |
+          echo "## Terraform Setup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "### Environment: ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Terraform version ${{ env.TF_VERSION }} configured" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Cloudflare credentials configured" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Supabase credentials configured" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # Terraform Initialization Job
+  # Initializes Terraform backend and modules
+  # ============================================================================
+  
+  terraform-init:
+    name: "📋 Terraform Initialization"
+    description: "Initializes Terraform backend and downloads required modules"
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    needs: terraform-setup
+    
+    # Only run on main branch or when manually triggered
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: "📥 Checkout repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "🔧 Setup Terraform"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
       - name: "📋 Terraform Init"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           echo "🔧 Initializing Terraform..."
           terraform init -backend=false
 
+      - name: "📄 Init Summary"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          echo "## Terraform Initialization Summary" >> $GITHUB_STEP_SUMMARY
+          echo "### Environment: ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Terraform initialized successfully" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # Terraform Validation Job
+  # Validates Terraform configuration syntax
+  # ============================================================================
+  
+  terraform-validate:
+    name: "🔍 Terraform Validation"
+    description: "Validates Terraform configuration syntax and structure"
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    needs: terraform-init
+    
+    # Only run on main branch or when manually triggered
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: "📥 Checkout repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "🔧 Setup Terraform"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
       - name: "🔍 Terraform Validate"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           echo "🔍 Validating Terraform configuration..."
           terraform validate
+
+      - name: "📋 Validation Summary"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          echo "## Terraform Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "### Environment: ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Terraform configuration validation passed" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # Terraform Plan Job
+  # Generates Terraform plan for validation and review
+  # ============================================================================
+  
+  terraform-plan:
+    name: "📊 Terraform Plan"
+    description: "Generates Terraform execution plan for infrastructure changes"
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    needs: terraform-validate
+    
+    # Only run on main branch or when manually triggered
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: "📥 Checkout repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "🔧 Setup Terraform"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
 
       - name: "📊 Terraform Plan"
         working-directory: ${{ env.WORKING_DIRECTORY }}
@@ -195,28 +295,11 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
-      - name: "🔑 Configure Cloudflare credentials"
-        run: |
-          echo "🔑 Configuring Cloudflare credentials..."
-          echo "CLOUDFLARE_API_TOKEN=${{ secrets.CLOUDFLARE_API_TOKEN }}" >> $GITHUB_ENV
-          echo "CLOUDFLARE_ACCOUNT_ID=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" >> $GITHUB_ENV
-
-      - name: "🔑 Configure Supabase credentials"
-        run: |
-          echo "🔑 Configuring Supabase credentials..."
-          echo "SUPABASE_ACCESS_TOKEN=${{ secrets.SUPABASE_ACCESS_TOKEN }}" >> $GITHUB_ENV
-
-      - name: "📥 Download Terraform Plan"
+      - name: " Download Terraform Plan"
         uses: actions/download-artifact@v4
         with:
           name: terraform-plan-${{ github.event.inputs.environment || 'production' }}
           path: ${{ env.WORKING_DIRECTORY }}
-
-      - name: "📋 Terraform Init"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "🔧 Initializing Terraform..."
-          terraform init -backend=false
 
       - name: "🚀 Terraform Apply"
         working-directory: ${{ env.WORKING_DIRECTORY }}
@@ -248,6 +331,7 @@ jobs:
     description: "Destroys infrastructure resources - requires manual approval"
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'production' }}
+    needs: terraform-setup
     
     # Only run on manual triggers for safety
     if: github.event_name == 'workflow_dispatch'
@@ -364,23 +448,22 @@ jobs:
         run: |
           echo "📊 Generating Terraform execution plan (dry run)..."
           terraform plan \
-            -var="cloudflare_account_id=$CLOUDFLARE_ACCOUNT_ID" \
-            -var="cloudflare_api_token=$CLOUDFLARE_API_TOKEN" \
-            -var="supabase_access_token=$SUPABASE_ACCESS_TOKEN" \
-            -var="api_domain=api.todoapp.com" \
-            -var="web_domain=app.todoapp.com" \
+            -var="cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
+            -var="cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -var="supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}" \
+            -var="api_domain=dev-api.todoapp.com" \
+            -var="web_domain=dev-app.todoapp.com" \
             -var="zone_name=todoapp.com" \
-            -input=false \
-            -lock=false
+            -out=dev-terraform.tfplan
 
-      - name: "📋 Dev Branch Summary"
+      - name: "📄 Dev Validation Summary"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
-          echo "## 🔬 Dev Branch Validation Complete" >> $GITHUB_STEP_SUMMARY
+          echo "📄 Generating dev branch validation summary..."
+          terraform show -no-color dev-terraform.tfplan > dev-plan-summary.txt
+          echo "## 🔬 Dev Branch Validation Summary" >> $GITHUB_STEP_SUMMARY
           echo "### Branch: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Directory structure validation passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Quick configuration check completed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Terraform configuration validated" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Terraform plan generated successfully" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Note:** This is a validation-only run on dev branch. No resources will be created." >> $GITHUB_STEP_SUMMARY
-          echo "To deploy infrastructure, merge changes to main branch and trigger manual deployment." >> $GITHUB_STEP_SUMMARY
+          echo "### Environment: dev" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Infrastructure validation completed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "📊 Terraform plan generated (dry run only)" >> $GITHUB_STEP_SUMMARY
+          echo "🚀 Ready for deployment to main branch" >> $GITHUB_STEP_SUMMARY
