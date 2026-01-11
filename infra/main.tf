@@ -1,6 +1,12 @@
 # Main Terraform configuration for Todo App infrastructure.
 # This file orchestrates the deployment of all infrastructure components.
 
+# Import existing Supabase project if provided (to avoid free tier limits)
+import {
+  to = module.supabase.supabase_project.todo_app
+  id = var.supabase_existing_project_id
+}
+
 # Supabase module for database and backend services.
 # This should be deployed first as it provides configuration for Cloudflare.
 module "supabase" {
@@ -13,6 +19,7 @@ module "supabase" {
   database_password     = var.supabase_database_password
   web_domain            = local.web_domain
   existing_bucket_name  = var.existing_bucket_name
+  existing_project_id   = var.supabase_existing_project_id
 }
 
 # Cloudflare module for Worker and Pages deployment.
