@@ -76,7 +76,10 @@ jobs:
             -var="web_domain=${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}" \
             -var="zone_name=${{ vars.ZONE_NAME || 'todoapp.com' }}" \
             -var="existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}" \
-            -out=terraform.tfplan
+            -out=terraform.tfplan \
+            > /dev/null 2>&1
+          
+          echo "✅ Plan generated and saved to terraform.tfplan"
 
       - name: "📤 Upload Terraform Plan"
         if: github.event.inputs.operation == 'plan' || github.event_name == 'push'

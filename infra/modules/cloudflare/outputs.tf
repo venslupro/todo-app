@@ -2,12 +2,12 @@
 
 output "worker_name" {
   description = "Name of the deployed Worker script."
-  value       = cloudflare_workers_script.todo_api.script_name
+  value       = length(cloudflare_workers_script.todo_api) > 0 ? cloudflare_workers_script.todo_api[0].script_name : ""
 }
 
 output "worker_id" {
   description = "ID of the deployed Worker script."
-  value       = cloudflare_workers_script.todo_api.id
+  value       = length(cloudflare_workers_script.todo_api) > 0 ? cloudflare_workers_script.todo_api[0].id : ""
 }
 
 output "worker_url" {
@@ -22,7 +22,7 @@ output "frontend_url" {
 
 output "kv_namespace_id" {
   description = "ID of the KV namespace for caching."
-  value       = cloudflare_workers_kv_namespace.todo_kv.id
+  value       = length(cloudflare_workers_kv_namespace.todo_kv) > 0 ? cloudflare_workers_kv_namespace.todo_kv[0].id : ""
 }
 
 

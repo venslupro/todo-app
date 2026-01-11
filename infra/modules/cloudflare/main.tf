@@ -2,7 +2,10 @@
 # This file integrates all Cloudflare resources for the Todo application.
 
 # KV namespace for caching and rate limiting.
+# Only create if zone exists and API token has proper permissions
 resource "cloudflare_workers_kv_namespace" "todo_kv" {
+  count = length(data.cloudflare_zone.main.*.id) > 0 ? 1 : 0
+  
   account_id = var.account_id
   title      = local.kv_name
 }
@@ -10,6 +13,8 @@ resource "cloudflare_workers_kv_namespace" "todo_kv" {
 # Worker script for the API.
 # In Cloudflare provider v5.x, we create the Worker resource but defer script upload to Wrangler
 resource "cloudflare_workers_script" "todo_api" {
+  count = length(data.cloudflare_zone.main.*.id) > 0 ? 1 : 0
+  
   account_id  = var.account_id
   script_name = local.worker_name
 
@@ -30,7 +35,7 @@ resource "cloudflare_workers_script" "todo_api" {
   compatibility_flags = ["nodejs_compat"]
 
   depends_on = [
-    cloudflare_workers_kv_namespace.todo_kv
+    cloudflare_workers_kv_namespace.todo_kv[0]
   ]
 }
 
@@ -40,6 +45,8 @@ resource "cloudflare_workers_script" "todo_api" {
 
 # Cloudflare Pages project for frontend deployment.
 resource "cloudflare_pages_project" "todo_frontend" {
+  count = length(data.cloudflare_zone.main.*.id) > 0 ? 1 : 0
+  
   account_id = var.account_id
   name       = local.pages_name
 
