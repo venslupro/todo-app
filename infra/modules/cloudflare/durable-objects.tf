@@ -1,13 +1,5 @@
 # Durable Objects configuration for WebSocket support.
 
-# Durable Object class for WebSocket connections.
-resource "cloudflare_durable_object_namespace" "todo_websocket" {
-  account_id = var.account_id
-  name       = "${local.worker_name}-websocket"
-  
-  tags = local.tags
-}
-
 # Durable Object binding for the Worker script.
 resource "cloudflare_worker_durable_object_binding" "todo_websocket_binding" {
   account_id = var.account_id
