@@ -26,7 +26,6 @@ module "cloudflare" {
   api_domain         = local.api_domain
   web_domain         = local.web_domain
   zone_name          = var.zone_name
-  worker_script_path = "../dist/index.js"
   
   # Supabase configuration from the supabase module
   supabase_url             = module.supabase.supabase_url

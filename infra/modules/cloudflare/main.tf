@@ -8,25 +8,35 @@ resource "cloudflare_workers_kv_namespace" "todo_kv" {
 }
 
 # Worker script for the API.
+# In Cloudflare provider v5.x, we create the Worker resource but defer script upload to Wrangler
 resource "cloudflare_workers_script" "todo_api" {
   account_id  = var.account_id
   script_name = local.worker_name
 
-  # Worker script content loaded from the built distribution.
-  content = file(var.worker_script_path)
+  # Use a minimal placeholder script - actual deployment via Wrangler
+  content = <<-EOT
+    export default {
+      async fetch(request, env, ctx) {
+        return new Response('Todo API Worker - Deploy with Wrangler for full functionality', {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain' }
+        });
+      }
+    }
+  EOT
 
   # Compatibility settings for modern Worker features
   compatibility_date  = "2024-01-01"
   compatibility_flags = ["nodejs_compat"]
 
-  # Environment variables for Supabase configuration
-  # Note: In Cloudflare provider v5.x, environment variables are set differently
-  # They are typically configured via wrangler.toml or directly in the Worker script
-
   depends_on = [
     cloudflare_workers_kv_namespace.todo_kv
   ]
 }
+
+# KV namespace binding for Worker
+# In Cloudflare provider v5.x, KV bindings are configured within the Worker script resource
+# The actual binding will be handled by Wrangler during deployment
 
 # Cloudflare Pages project for frontend deployment.
 resource "cloudflare_pages_project" "todo_frontend" {
@@ -45,34 +55,37 @@ resource "cloudflare_pages_project" "todo_frontend" {
   }
 }
 
-# DNS record for API domain
+# DNS record for API domain (using custom domain for Worker)
 resource "cloudflare_dns_record" "api" {
   zone_id = data.cloudflare_zone.main.id
   name    = var.api_domain
-  content = "${local.worker_name}.workers.dev"
   type    = "CNAME"
+  content = "${local.worker_name}.${data.cloudflare_zone.main.name}"
   proxied = true
   ttl     = 1
 
   depends_on = [cloudflare_workers_script.todo_api]
 }
 
-# DNS record for web domain
+# DNS record for web domain (Pages deployment)
 resource "cloudflare_dns_record" "web" {
   zone_id = data.cloudflare_zone.main.id
   name    = var.web_domain
-  content = cloudflare_pages_project.todo_frontend.subdomain
   type    = "CNAME"
+  content = cloudflare_pages_project.todo_frontend.subdomain
   proxied = true
   ttl     = 1
 
   depends_on = [cloudflare_pages_project.todo_frontend]
 }
 
-# Worker route for API domain
+# Worker route for API domain - route to custom domain
 resource "cloudflare_workers_route" "api" {
   zone_id     = data.cloudflare_zone.main.id
   pattern     = "${var.api_domain}/*"
 
-  depends_on = [cloudflare_workers_script.todo_api]
+  depends_on = [
+    cloudflare_workers_script.todo_api,
+    cloudflare_dns_record.api
+  ]
 }
