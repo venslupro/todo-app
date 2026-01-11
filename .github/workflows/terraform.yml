@@ -9,7 +9,7 @@ name: "🔧 Terraform Infrastructure"
 on:
   # Trigger on push to main branch only when infrastructure files change
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - 'infra/**'
       - '.github/workflows/terraform.yml'

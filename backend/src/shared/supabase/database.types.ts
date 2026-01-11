@@ -159,37 +159,12 @@ export interface Database {
           created_at?: string;
         };
       };
-      migrations: {
-        Row: {
-          id: string;
-          name: string;
-          executed_at: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          executed_at?: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          executed_at?: string;
-          created_at?: string;
-        };
-      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      exec_sql: {
-        Args: {
-          sql: string;
-        };
-        Returns: void;
-      };
+      [_ in never]: never;
     };
     Enums: {
       [_ in never]: never;
@@ -200,7 +175,7 @@ export interface Database {
 /**
  * Supabase客户端类型
  */
-export type SupabaseClientType = ReturnType<typeof import('./client').SupabaseClient.getServiceClient>;
+export type SupabaseClient = any;
 
 /**
  * 数据库查询结果类型
