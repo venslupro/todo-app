@@ -17,6 +17,17 @@ variable "supabase_access_token" {
   sensitive   = true
 }
 
+variable "supabase_organization_id" {
+  type        = string
+  description = "Supabase organization ID for staging environment."
+}
+
+variable "supabase_database_password" {
+  type        = string
+  description = "Supabase database password for staging environment."
+  sensitive   = true
+}
+
 variable "api_domain" {
   type        = string
   description = "API domain for staging environment."
@@ -33,15 +44,4 @@ variable "zone_name" {
   type        = string
   description = "Cloudflare zone name for staging environment."
   default     = "todoapp.com"
-}
-
-variable "supabase_organization_id" {
-  type        = string
-  description = "Supabase organization ID for staging environment."
-}
-
-variable "supabase_database_password" {
-  type        = string
-  description = "Database password for Supabase project in staging."
-  sensitive   = true
 }
