@@ -4,7 +4,7 @@
 # KV namespace for caching and rate limiting.
 resource "cloudflare_workers_kv_namespace" "todo_kv" {
   account_id = var.account_id
-  title      = "${local.worker_name}-kv"
+  title      = local.kv_name
   
   tags = local.tags
 }
@@ -47,6 +47,10 @@ resource "cloudflare_worker_script" "todo_api" {
   # Enable logging for monitoring and debugging.
   logpush = true
 
+  # Compatibility settings for modern Worker features
+  compatibility_date = "2024-01-01"
+  compatibility_flags = ["nodejs_compat"]
+
   tags = local.tags
 
   depends_on = [
@@ -68,6 +72,12 @@ resource "cloudflare_pages_project" "todo_frontend" {
     production {
       compatibility_date = "2024-01-01"
       compatibility_flags = ["nodejs_compat"]
+      
+      # Environment variables for frontend build
+      env_vars = {
+        NODE_VERSION = "18"
+        API_BASE_URL = "https://${var.api_domain}"
+      }
     }
   }
 
@@ -94,4 +104,13 @@ resource "cloudflare_record" "web" {
   proxied = true
 
   depends_on = [cloudflare_pages_project.todo_frontend]
+}
+
+# Worker route for API domain
+resource "cloudflare_worker_route" "api" {
+  zone_id     = data.cloudflare_zone.main.id
+  pattern     = "${var.api_domain}/*"
+  script_name = cloudflare_worker_script.todo_api.name
+
+  depends_on = [cloudflare_worker_script.todo_api]
 }
