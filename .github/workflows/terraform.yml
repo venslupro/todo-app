@@ -1,24 +1,25 @@
 # Terraform Infrastructure Deployment Workflow
-# This workflow manages infrastructure deployment using Terraform with branch-based validation.
-# It ensures safe deployments by validating changes on all branches and only applying on main.
+# This workflow manages infrastructure deployment using Terraform for production environment only.
+# It ensures safe deployments by validating changes and only applying on main branch.
+# Note: This workflow does NOT run on pull requests to prevent unnecessary executions
 
 name: "🔧 Terraform Infrastructure"
 
 # Trigger configuration for infrastructure changes
 on:
-  # Trigger on push to any branch when infrastructure files change
+  # Trigger on push to main branch only when infrastructure files change
   push:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - 'infra/**'
       - '.github/workflows/terraform.yml'
   
-  # Trigger on pull requests targeting main or dev branches
-  pull_request:
-    branches: [main, dev]
-    paths:
-      - 'infra/**'
-      - '.github/workflows/terraform.yml'
+  # Disable pull_request trigger to prevent unnecessary executions
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     - 'infra/**'
+  #     - '.github/workflows/terraform.yml'
   
   # Manual trigger for deployment operations
   workflow_dispatch:
