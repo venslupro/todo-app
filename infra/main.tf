@@ -27,6 +27,11 @@ module "cloudflare" {
   zone_name          = var.zone_name
   worker_script_path = "../dist/index.js"
   
+  # Supabase configuration from the supabase module
+  supabase_url             = module.supabase.supabase_url
+  supabase_anon_key        = module.supabase.supabase_anon_key
+  supabase_service_key     = module.supabase.supabase_service_key
+  
   # Dependencies
   depends_on = [module.supabase]
 }
