@@ -88,12 +88,12 @@ jobs:
           echo "📁 All infrastructure files are properly structured" >> $GITHUB_STEP_SUMMARY
 
   # ============================================================================
-  # Terraform Setup Job
-  # Sets up Terraform and configures credentials
+  # Terraform Operations Job
+  # Single job that handles all Terraform operations to avoid state sharing issues
   # ============================================================================
   
-  terraform-setup:
-    name: "� Terraform Setup"
+  terraform-ops:
+    name: "🔧 Terraform Operations"
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'production' }}
     needs: infrastructure-validation
@@ -123,217 +123,100 @@ jobs:
           echo "🔑 Configuring Supabase credentials..."
           echo "SUPABASE_ACCESS_TOKEN=${{ secrets.SUPABASE_ACCESS_TOKEN }}" >> $GITHUB_ENV
 
-      - name: "📋 Setup Summary"
-        run: |
-          echo "## Terraform Setup Summary" >> $GITHUB_STEP_SUMMARY
-          echo "### Environment: ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Terraform version ${{ env.TF_VERSION }} configured" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Cloudflare credentials configured" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Supabase credentials configured" >> $GITHUB_STEP_SUMMARY
-
-  # ============================================================================
-  # Terraform Initialization Job
-  # Initializes Terraform backend and modules
-  # ============================================================================
-  
-  terraform-init:
-    name: "📋 Terraform Initialization"
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'production' }}
-    needs: terraform-setup
-    
-    # Only run on main branch or when manually triggered
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
-    
-    steps:
-      - name: "📥 Checkout repository"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: "🔧 Setup Terraform"
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: " Terraform Init"
+      - name: "� Terraform Init"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           echo "🔧 Initializing Terraform..."
           terraform init -reconfigure
 
-      - name: "📄 Init Summary"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "## Terraform Initialization Summary" >> $GITHUB_STEP_SUMMARY
-          echo "### Environment: ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Terraform initialized successfully" >> $GITHUB_STEP_SUMMARY
-
-  # ============================================================================
-  # Terraform Validation Job
-  # Validates Terraform configuration syntax
-  # ============================================================================
-  
-  terraform-validate:
-    name: "🔍 Terraform Validation"
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'production' }}
-    needs: terraform-init
-    
-    # Only run on main branch or when manually triggered
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
-    
-    steps:
-      - name: "📥 Checkout repository"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: "🔧 Setup Terraform"
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: "🔍 Terraform Validate"
+      - name: "� Terraform Validate"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           echo "🔍 Validating Terraform configuration..."
           terraform validate
 
-      - name: "📋 Validation Summary"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "## Terraform Validation Summary" >> $GITHUB_STEP_SUMMARY
-          echo "### Environment: ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Terraform configuration validation passed" >> $GITHUB_STEP_SUMMARY
-
-  # ============================================================================
-  # Terraform Plan Job
-  # Generates Terraform plan for validation and review
-  # ============================================================================
-  
-  terraform-plan:
-    name: "📊 Terraform Plan"
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'production' }}
-    needs: terraform-validate
-    
-    # Only run on main branch or when manually triggered
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
-    
-    steps:
-      - name: "📥 Checkout repository"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: "🔧 Setup Terraform"
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: " Terraform Init"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "🔧 Initializing Terraform..."
-          terraform init -reconfigure
-
       - name: "📊 Terraform Plan"
         working-directory: ${{ env.WORKING_DIRECTORY }}
+        if: github.event.inputs.operation == 'plan' || github.event_name == 'push'
         run: |
-          echo "📊 Generating Terraform execution plan..."
+          echo "� Generating Terraform execution plan..."
           terraform plan \
-            -var="cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
-            -var="cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-            -var="supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}" \
-            -var="api_domain=api.todoapp.com" \
-            -var="web_domain=app.todoapp.com" \
-            -var="zone_name=todoapp.com" \
+            -var=\"cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}\" \
+            -var=\"cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}\" \
+            -var=\"supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}\" \
+            -var=\"api_domain=api.todoapp.com\" \
+            -var=\"web_domain=app.todoapp.com\" \
+            -var=\"zone_name=todoapp.com\" \
             -out=terraform.tfplan
 
-      - name: "💾 Upload Terraform Plan"
+      - name: "� Upload Terraform Plan"
+        if: github.event.inputs.operation == 'plan' || github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: terraform-plan-${{ github.event.inputs.environment || 'production' }}
           path: ${{ env.WORKING_DIRECTORY }}/terraform.tfplan
           retention-days: 30
 
-      - name: "📄 Generate Plan Summary"
+      - name: "� Terraform Apply"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        if: github.event.inputs.operation == 'apply'
+        run: |
+          echo "� Applying infrastructure changes..."
+          terraform apply \
+            -var=\"cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}\" \
+            -var=\"cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}\" \
+            -var=\"supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}\" \
+            -var=\"api_domain=api.todoapp.com\" \
+            -var=\"web_domain=app.todoapp.com\" \
+            -var=\"zone_name=todoapp.com\" \
+            -auto-approve
+
+      - name: "🧹 Terraform Destroy"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        if: github.event.inputs.operation == 'destroy'
+        run: |
+          echo "🧹 Destroying infrastructure resources..."
+          terraform destroy \
+            -var=\"cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}\" \
+            -var=\"cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}\" \
+            -var=\"supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}\" \
+            -var=\"api_domain=api.todoapp.com\" \
+            -var=\"web_domain=app.todoapp.com\" \
+            -var=\"zone_name=todoapp.com\" \
+            -auto-approve
+
+      - name: "� Operations Summary"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
-          echo "📄 Generating plan summary..."
-          terraform show -no-color terraform.tfplan > plan-summary.txt
-          echo "## Terraform Plan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Terraform Operations Summary" >> $GITHUB_STEP_SUMMARY
           echo "### Branch: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
           echo "### Environment: ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat plan-summary.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "### Operation: ${{ github.event.inputs.operation || 'plan' }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ github.event.inputs.operation }}" = "plan" ] || [ "${{ github.event_name }}" = "push" ]; then
+            echo "✅ Terraform initialized successfully" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Terraform configuration validated" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Terraform plan generated" >> $GITHUB_STEP_SUMMARY
+            terraform show -no-color terraform.tfplan >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ github.event.inputs.operation }}" = "apply" ]; then
+            echo "✅ Infrastructure changes applied successfully" >> $GITHUB_STEP_SUMMARY
+            terraform output -json >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ github.event.inputs.operation }}" = "destroy" ]; then
+            echo "✅ Infrastructure resources destroyed" >> $GITHUB_STEP_SUMMARY
+          fi
 
   # ============================================================================
-  # Terraform Apply Job
-  # Applies infrastructure changes (manual trigger only for main branch)
+  # Terraform Apply with Plan (Alternative approach using plan file)
   # ============================================================================
   
-  terraform-apply:
-    name: "🚀 Terraform Apply"
+  terraform-apply-with-plan:
+    name: "🚀 Terraform Apply (with Plan)"
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'production' }}
-    needs: terraform-plan
+    needs: terraform-ops
     
     # Only run on main branch with manual trigger for safety
-    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
-    
-    steps:
-      - name: "📥 Checkout repository"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: "🔧 Setup Terraform"
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: " Download Terraform Plan"
-        uses: actions/download-artifact@v4
-        with:
-          name: terraform-plan-${{ github.event.inputs.environment || 'production' }}
-          path: ${{ env.WORKING_DIRECTORY }}
-
-      - name: "🚀 Terraform Apply"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "🚀 Applying infrastructure changes..."
-          terraform apply -auto-approve terraform.tfplan
-
-      - name: "📄 Generate Apply Summary"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "📄 Generating apply summary..."
-          terraform output -json > outputs.json
-          echo "## Terraform Apply Summary" >> $GITHUB_STEP_SUMMARY
-          echo "### Branch: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
-          echo "### Environment: ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
-          echo "### Infrastructure Outputs" >> $GITHUB_STEP_SUMMARY
-          echo '```json' >> $GITHUB_STEP_SUMMARY
-          cat outputs.json >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "🎉 Infrastructure deployment completed successfully!" >> $GITHUB_STEP_SUMMARY
-
-  # ============================================================================
-  # Terraform Destroy Job
-  # Destroys infrastructure (manual trigger only for safety)
-  # ============================================================================
-  
-  terraform-destroy:
-    name: "🧹 Terraform Destroy"
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'production' }}
-    needs: terraform-setup
-    
-    # Only run on manual triggers for safety
-    if: github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && github.event.inputs.operation == 'apply'
     
     steps:
       - name: "📥 Checkout repository"
@@ -357,111 +240,34 @@ jobs:
           echo "🔑 Configuring Supabase credentials..."
           echo "SUPABASE_ACCESS_TOKEN=${{ secrets.SUPABASE_ACCESS_TOKEN }}" >> $GITHUB_ENV
 
-      - name: "📋 Terraform Init"
+      - name: "� Terraform Init"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           echo "🔧 Initializing Terraform..."
-          terraform init -backend=false
+          terraform init -reconfigure
 
-      - name: "⚠️ Confirm Destruction"
-        run: |
-          echo "⚠️ Confirming infrastructure destruction..."
-          echo "## ⚠️ Infrastructure Destruction Warning" >> $GITHUB_STEP_SUMMARY
-          echo "This will DESTROY all infrastructure in ${{ github.event.inputs.environment || 'production' }} environment" >> $GITHUB_STEP_SUMMARY
-          echo "**This action cannot be undone!**" >> $GITHUB_STEP_SUMMARY
+      - name: "📥 Download Terraform Plan"
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan-${{ github.event.inputs.environment || 'production' }}
+          path: ${{ env.WORKING_DIRECTORY }}
 
-      - name: "🧹 Terraform Destroy"
+      - name: "� Terraform Apply"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
-          echo "🧹 Destroying infrastructure resources..."
-          terraform destroy \
-            -var="cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
-            -var="cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-            -var="supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}" \
-            -var="api_domain=api.todoapp.com" \
-            -var="web_domain=app.todoapp.com" \
-            -var="zone_name=todoapp.com" \
-            -auto-approve
+          echo "� Applying infrastructure changes using plan file..."
+          terraform apply -auto-approve terraform.tfplan
 
-      - name: "📄 Destruction Summary"
+      - name: "📄 Apply Summary"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
-          echo "📄 Generating destruction summary..."
-          echo "## 🧹 Infrastructure Destruction Complete" >> $GITHUB_STEP_SUMMARY
+          echo "📄 Generating apply summary..."
+          terraform output -json > outputs.json
+          echo "## Terraform Apply Summary" >> $GITHUB_STEP_SUMMARY
           echo "### Branch: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
           echo "### Environment: ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
-          echo "All infrastructure resources have been destroyed." >> $GITHUB_STEP_SUMMARY
-          echo "⚠️ Make sure to update any application configurations that depend on these resources." >> $GITHUB_STEP_SUMMARY
-
-  # ============================================================================
-  # Dev Branch Validation Job
-  # Validates infrastructure changes on dev branch without creating resources
-  # ============================================================================
-  
-  dev-branch-validation:
-    name: "🔬 Dev Branch Validation"
-    runs-on: ubuntu-latest
-    
-    # Only run on dev branch
-    if: github.ref == 'refs/heads/dev'
-    
-    steps:
-      - name: "📥 Checkout repository"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: "📁 Validate Directory Structure"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "🔍 Validating infrastructure directory structure..."
-          chmod +x scripts/validate-structure.sh
-          ./scripts/validate-structure.sh
-
-      - name: "⚡ Quick Configuration Check"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "🔍 Performing quick configuration validation..."
-          chmod +x scripts/simple-validate.sh
-          ./scripts/simple-validate.sh
-
-      - name: "🔧 Setup Terraform"
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: "📋 Terraform Init"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "🔧 Initializing Terraform..."
-          terraform init -backend=false
-
-      - name: "🔍 Terraform Validate"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "🔍 Validating Terraform configuration..."
-          terraform validate
-
-      - name: "📊 Terraform Plan (Dry Run)"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "📊 Generating Terraform execution plan (dry run)..."
-          terraform plan \
-            -var="cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
-            -var="cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-            -var="supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}" \
-            -var="api_domain=dev-api.todoapp.com" \
-            -var="web_domain=dev-app.todoapp.com" \
-            -var="zone_name=todoapp.com" \
-            -out=dev-terraform.tfplan
-
-      - name: "📄 Dev Validation Summary"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "📄 Generating dev branch validation summary..."
-          terraform show -no-color dev-terraform.tfplan > dev-plan-summary.txt
-          echo "## 🔬 Dev Branch Validation Summary" >> $GITHUB_STEP_SUMMARY
-          echo "### Branch: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
-          echo "### Environment: dev" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Infrastructure validation completed successfully" >> $GITHUB_STEP_SUMMARY
-          echo "📊 Terraform plan generated (dry run only)" >> $GITHUB_STEP_SUMMARY
-          echo "🚀 Ready for deployment to main branch" >> $GITHUB_STEP_SUMMARY
+          echo "### Infrastructure Outputs" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          cat outputs.json >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "🎉 Infrastructure deployment completed successfully!" >> $GITHUB_STEP_SUMMARY
