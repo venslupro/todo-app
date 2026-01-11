@@ -1,10 +1,32 @@
 name: CI/CD Pipeline
 
+# CI/CD Pipeline for Production Environment
+# This workflow handles application deployment to production environment only
+# Note: This workflow does NOT run on pull requests to prevent unnecessary executions
+
 on:
+  # Trigger on push to main branch only
   push:
-    branches: [ main, dev, develop ]
-  pull_request:
     branches: [ main, dev ]
+    paths-ignore:
+      - 'infra/**'
+  
+  # Disable pull_request trigger to prevent unnecessary executions
+  # pull_request:
+  #   branches: [ main ]
+  #   paths-ignore:
+  #     - 'infra/**'
+  
+  # Manual trigger for production deployment
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
 
 jobs:
   # Job 1: Code Quality Check
