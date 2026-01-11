@@ -28,8 +28,8 @@ variable "supabase_access_token" {
 
 variable "supabase_region" {
   type        = string
-  description = "Supabase deployment region (e.g., us-east-1, eu-central-1)."
-  default     = "us-east-1"
+  description = "Supabase deployment region (e.g., ap-southeast-1, us-east-1, eu-central-1)."
+  default     = "ap-southeast-1"
 }
 
 variable "supabase_plan" {

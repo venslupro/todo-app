@@ -75,11 +75,14 @@ The infrastructure is organized into logical modules following Google's Terrafor
 
 2. **Supabase Account** with:
    - Access token for API access
+   - Organization ID for project creation
    - Appropriate plan for required resources
 
 3. **Terraform** (>= 1.0.0) installed locally
 
 ### Setup
+
+#### Option 1: Local Development
 
 1. **Clone the repository:**
    ```bash
@@ -98,6 +101,8 @@ The infrastructure is organized into logical modules following Google's Terrafor
    export CLOUDFLARE_API_TOKEN="your-api-token"
    export CLOUDFLARE_ACCOUNT_ID="your-account-id"
    export SUPABASE_ACCESS_TOKEN="your-access-token"
+   export SUPABASE_ORGANIZATION_ID="your-organization-id"
+   export SUPABASE_DATABASE_PASSWORD="your-database-password"
    ```
 
 4. **Validate configuration:**
@@ -121,6 +126,28 @@ The infrastructure is organized into logical modules following Google's Terrafor
    terraform apply
    ```
 
+#### Option 2: GitHub Actions Deployment
+
+1. **Configure GitHub Secrets** (Settings → Secrets and variables → Actions):
+   ```
+   CLOUDFLARE_ACCOUNT_ID = "your-cloudflare-account-id"
+   CLOUDFLARE_API_TOKEN = "your-cloudflare-api-token"
+   SUPABASE_ACCESS_TOKEN = "your-supabase-access-token"
+   SUPABASE_ORGANIZATION_ID = "your-supabase-organization-id"
+   SUPABASE_DATABASE_PASSWORD = "your-supabase-database-password"
+   ```
+
+2. **Configure GitHub Variables** (Settings → Secrets and variables → Variables):
+   ```
+   API_DOMAIN = "api.yourdomain.com"
+   WEB_DOMAIN = "app.yourdomain.com"
+   ZONE_NAME = "yourdomain.com"
+   ```
+
+3. **Trigger workflow:**
+   - Push to `main` or `dev` branch with changes in `infra/` directory
+   - Or manually trigger via GitHub Actions → Terraform Infrastructure → Run workflow
+
 ## 🔧 Module Details
 
 ### Cloudflare Module
@@ -134,11 +161,12 @@ Manages all Cloudflare resources including:
 
 ### Supabase Module
 Handles Supabase infrastructure including:
-- **Project Creation**: Database and authentication setup with region selection
+- **Project Creation**: Database and authentication setup with region selection (默认亚太地区 ap-southeast-1)
 - **API Configuration**: REST, Realtime, and Storage APIs enabled
 - **Authentication**: Site URL configuration for OAuth and security
-- **Storage**: File upload limits and management configuration
+- **Storage**: File upload limits and management configuration (50MB 文件大小限制)
 - **Database**: PostgreSQL database with version management
+- **Environment Variables**: 自动配置 Supabase URL 和 API 密钥供 Cloudflare Worker 使用
 
 ## 🌍 Environment Management
 
@@ -158,6 +186,55 @@ Each environment includes:
 - **locals.tf**: Local variables and naming conventions
 - **main.tf**: Module integration and resource configuration
 - **outputs.tf**: Environment-specific outputs
+
+## 🔧 GitHub Actions 配置
+
+### 必需的 Secrets 配置
+在 GitHub 仓库的 Settings → Secrets and variables → Actions 中配置：
+
+| Secret 名称 | 描述 | 获取方式 |
+|------------|------|----------|
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 账户 ID | Cloudflare 控制台 → 账户概览 |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API 令牌 | Cloudflare 控制台 → 我的个人资料 → API 令牌 |
+| `SUPABASE_ACCESS_TOKEN` | Supabase 访问令牌 | Supabase 控制台 → 设置 → API |
+| `SUPABASE_ORGANIZATION_ID` | Supabase 组织 ID | Supabase 控制台 → 组织设置 |
+| `SUPABASE_DATABASE_PASSWORD` | Supabase 数据库密码 | 创建 Supabase 项目时设置 |
+
+### 可选的 Variables 配置
+在 GitHub 仓库的 Settings → Secrets and variables → Variables 中配置：
+
+| 变量名称 | 描述 | 默认值 |
+|----------|------|--------|
+| `API_DOMAIN` | API 域名 | `api.todoapp.com` |
+| `WEB_DOMAIN` | Web 域名 | `app.todoapp.com` |
+| `ZONE_NAME` | Cloudflare 区域名称 | `todoapp.com` |
+
+### 工作流触发方式
+- **自动触发**: 当 `infra/` 目录有变更时自动运行
+- **手动触发**: 通过 GitHub Actions 界面手动选择操作 (plan/apply/destroy)
+- **分支限制**: 仅在 `main` 和 `dev` 分支上执行
+
+## 🌏 Supabase 亚太地区配置
+
+### 默认区域
+- **默认区域**: `ap-southeast-1` (亚太东南地区)
+- **支持的区域**: ap-southeast-1, us-east-1, eu-central-1 等
+- **配置方法**: 通过 `supabase_region` 变量配置
+
+### 亚太地区优势
+- **更低的延迟**: 为亚太地区用户提供更好的访问体验
+- **数据合规性**: 满足亚太地区的数据存储要求
+- **性能优化**: 优化的网络连接和响应时间
+
+### 区域配置示例
+```terraform
+# 使用默认亚太地区
+supabase_region = "ap-southeast-1"
+
+# 或指定其他区域
+supabase_region = "us-east-1"  # 北美东部
+supabase_region = "eu-central-1"  # 欧洲中部
+```
 
 ## 🔒 Security Considerations
 

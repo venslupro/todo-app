@@ -36,3 +36,21 @@ variable "worker_script_path" {
   description = "Path to the compiled Worker script."
   default     = "../dist/index.js"
 }
+
+# Supabase configuration variables
+variable "supabase_url" {
+  type        = string
+  description = "Supabase project URL"
+}
+
+variable "supabase_anon_key" {
+  type        = string
+  description = "Supabase anonymous API key"
+  sensitive   = true
+}
+
+variable "supabase_service_key" {
+  type        = string
+  description = "Supabase service role API key"
+  sensitive   = true
+}
