@@ -5,20 +5,13 @@ name: Backend CI/CD Pipeline
 # Production: Runs only on main branch, deployment is manual
 
 on:
-  # Trigger on push to any branch except main (staging environment)
+  # Trigger on push to any branch
   push:
-    branches-ignore: 
-      - main
+    branches: ['**']
     paths-ignore:
       - 'infra/**'
   
-  # Trigger on push to main branch only (production environment)
-  push:
-    branches: [main]
-    paths-ignore:
-      - 'infra/**'
-  
-  # Manual trigger for production deployment (only on main branch)
+  # Manual trigger for production deployment
   workflow_dispatch:
     inputs:
       environment:
@@ -99,7 +92,7 @@ jobs:
     name: 🚀 Deploy to Staging
     runs-on: ubuntu-latest
     needs: build-and-test  # Depends on build-and-test job
-    if: github.ref != 'refs/heads/main'  # Only run on non-main branches
+    if: github.ref != 'refs/heads/main' && github.event_name != 'workflow_dispatch'  # Only run on non-main branches and not manual trigger
     
     steps:
     - name: 🔄 Checkout source code
