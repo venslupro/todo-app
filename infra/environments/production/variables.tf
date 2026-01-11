@@ -34,3 +34,14 @@ variable "zone_name" {
   description = "Cloudflare zone name for production environment."
   default     = "todoapp.com"
 }
+
+variable "supabase_organization_id" {
+  type        = string
+  description = "Supabase organization ID for production environment."
+}
+
+variable "supabase_database_password" {
+  type        = string
+  description = "Database password for Supabase project in production."
+  sensitive   = true
+}

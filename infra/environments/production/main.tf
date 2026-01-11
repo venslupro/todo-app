@@ -17,9 +17,10 @@ module "cloudflare" {
 module "supabase" {
   source = "../../modules/supabase"
   
-  project_name = local.project_name
-  environment  = local.environment
-  region       = "us-east-1"
-  plan         = "pro"
-  web_domain   = var.web_domain
+  organization_id   = var.supabase_organization_id
+  project_name      = local.project_name
+  environment       = local.environment
+  region            = "us-east-1"
+  database_password = var.supabase_database_password
+  web_domain        = var.web_domain
 }
