@@ -17,16 +17,18 @@ resource "cloudflare_workers_script" "todo_api" {
   account_id  = var.account_id
   script_name = local.worker_name
   
-  # Use a minimal placeholder script - actual deployment via Wrangler
+  # Use a minimal placeholder script in correct Worker format
   content = <<-EOT
-    export default {
-      async fetch(request, env, ctx) {
-        return new Response('Todo API Worker - Deploy with Wrangler for full functionality', {
-          status: 200,
-          headers: { 'Content-Type': 'text/plain' }
-        });
-      }
-    }
+  addEventListener('fetch', event => {
+    event.respondWith(handleRequest(event.request))
+  })
+  
+  async function handleRequest(request) {
+    return new Response('Todo API Worker - Deploy with Wrangler for full functionality', {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain' }
+    })
+  }
   EOT
   
   # Compatibility settings for modern Worker features
@@ -56,11 +58,17 @@ resource "cloudflare_pages_project" "todo_frontend" {
   # Production branch configuration
   production_branch = "main"
 
-  # Deployment configuration
+  # Deployment configuration - must be consistent for production and preview
   deployment_configs = {
     production = {
       compatibility_date  = "2024-01-01"
       compatibility_flags = ["nodejs_compat"]
+      fail_open           = true
+    }
+    preview = {
+      compatibility_date  = "2024-01-01"
+      compatibility_flags = ["nodejs_compat"]
+      fail_open           = true
     }
   }
 
