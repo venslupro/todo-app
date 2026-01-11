@@ -137,7 +137,32 @@ jobs:
           echo "🔍 Validating Terraform configuration..."
           terraform validate
 
-      - name: "📊 Terraform Plan"
+      - name: "� Print Configuration Variables"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        if: github.event.inputs.operation == 'plan' || github.event_name == 'push'
+        run: |
+          echo "📋 Terraform Configuration Variables:"
+          echo "===================================="
+          echo "🔧 Cloudflare Configuration:"
+          echo "   - Account ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          echo "   - API Token: ********"
+          echo ""
+          echo "🏢 Supabase Configuration:"
+          echo "   - Access Token: ********"
+          echo "   - Organization ID: ${{ secrets.SUPABASE_ORGANIZATION_ID }}"
+          echo "   - Database Password: ********"
+          echo ""
+          echo "🌐 Domain Configuration:"
+          echo "   - API Domain: ${{ vars.API_DOMAIN || 'api.todoapp.com' }}"
+          echo "   - Web Domain: ${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}"
+          echo "   - Zone Name: ${{ vars.ZONE_NAME || 'todoapp.com' }}"
+          echo ""
+          echo "📦 Storage Configuration:"
+          echo "   - Existing Bucket Name: ${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}"
+          echo ""
+          echo "===================================="
+
+      - name: "� Terraform Plan"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         if: github.event.inputs.operation == 'plan' || github.event_name == 'push'
         run: |
@@ -162,6 +187,31 @@ jobs:
           path: ${{ env.WORKING_DIRECTORY }}/terraform.tfplan
           retention-days: 30
 
+      - name: "📋 Print Configuration Variables (Apply)"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        if: github.event.inputs.operation == 'apply'
+        run: |
+          echo "📋 Terraform Configuration Variables for Apply:"
+          echo "============================================"
+          echo "🔧 Cloudflare Configuration:"
+          echo "   - Account ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          echo "   - API Token: ********"
+          echo ""
+          echo "🏢 Supabase Configuration:"
+          echo "   - Access Token: ********"
+          echo "   - Organization ID: ${{ secrets.SUPABASE_ORGANIZATION_ID }}"
+          echo "   - Database Password: ********"
+          echo ""
+          echo "🌐 Domain Configuration:"
+          echo "   - API Domain: ${{ vars.API_DOMAIN || 'api.todoapp.com' }}"
+          echo "   - Web Domain: ${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}"
+          echo "   - Zone Name: ${{ vars.ZONE_NAME || 'todoapp.com' }}"
+          echo ""
+          echo "📦 Storage Configuration:"
+          echo "   - Existing Bucket Name: ${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}"
+          echo ""
+          echo "============================================"
+
       - name: "� Terraform Apply"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         if: github.event.inputs.operation == 'apply'
@@ -178,6 +228,31 @@ jobs:
             -var=\"zone_name=${{ vars.ZONE_NAME || 'todoapp.com' }}\" \
             -var=\"existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}\" \
             -auto-approve
+
+      - name: "📋 Print Configuration Variables (Destroy)"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        if: github.event.inputs.operation == 'destroy'
+        run: |
+          echo "📋 Terraform Configuration Variables for Destroy:"
+          echo "=============================================="
+          echo "🔧 Cloudflare Configuration:"
+          echo "   - Account ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          echo "   - API Token: ********"
+          echo ""
+          echo "🏢 Supabase Configuration:"
+          echo "   - Access Token: ********"
+          echo "   - Organization ID: ${{ secrets.SUPABASE_ORGANIZATION_ID }}"
+          echo "   - Database Password: ********"
+          echo ""
+          echo "🌐 Domain Configuration:"
+          echo "   - API Domain: ${{ vars.API_DOMAIN || 'api.todoapp.com' }}"
+          echo "   - Web Domain: ${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}"
+          echo "   - Zone Name: ${{ vars.ZONE_NAME || 'todoapp.com' }}"
+          echo ""
+          echo "📦 Storage Configuration:"
+          echo "   - Existing Bucket Name: ${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}"
+          echo ""
+          echo "=============================================="
 
       - name: "🧹 Terraform Destroy"
         working-directory: ${{ env.WORKING_DIRECTORY }}
