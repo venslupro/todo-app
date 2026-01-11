@@ -12,12 +12,12 @@ output "worker_id" {
 
 output "worker_url" {
   description = "URL of the Worker API."
-  value       = "https://${var.api_domain}"
+  value       = var.api_domain != "" ? "https://${var.api_domain}" : "https://${local.worker_name}.${local.account_subdomain}.workers.dev"
 }
 
 output "frontend_url" {
   description = "URL of the frontend application."
-  value       = "https://${var.web_domain}"
+  value       = var.web_domain != "" ? "https://${var.web_domain}" : "https://${local.pages_name}.pages.dev"
 }
 
 output "kv_namespace_id" {

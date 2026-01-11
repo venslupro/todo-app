@@ -25,6 +25,12 @@ variable "web_domain" {
   description = "Web domain for Pages deployment."
 }
 
+variable "zone_id" {
+  type        = string
+  description = "Cloudflare zone ID."
+  default     = ""
+}
+
 variable "zone_name" {
   type        = string
   description = "Cloudflare zone name."

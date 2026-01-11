@@ -13,6 +13,12 @@ variable "cloudflare_api_token" {
   sensitive   = true
 }
 
+variable "zone_id" {
+  type        = string
+  description = "Cloudflare zone ID for DNS configuration."
+  default     = ""
+}
+
 variable "zone_name" {
   type        = string
   description = "Cloudflare zone name for DNS configuration."
