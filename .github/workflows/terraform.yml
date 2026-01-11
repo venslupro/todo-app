@@ -50,7 +50,13 @@ jobs:
         with:
           node-version: "20"
 
-      - name: "🔍 Validate Terraform configuration"
+      - name: "� Initialize Terraform"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          echo "🔧 Initializing Terraform modules and providers..."
+          terraform init -input=false
+
+      - name: "�🔍 Validate Terraform configuration"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           echo "� Validating Terraform configuration..."
