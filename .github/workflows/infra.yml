@@ -15,21 +15,25 @@ on:
       environment:
         description: "Environment to deploy to"
         required: true
-        default: "production"
+        default: "staging"
         type: choice
         options:
+          - staging
           - production
   push:
+    branches:
+      - main
+      - '**'
 
 env:
   WORKING_DIRECTORY: infra
   TF_CLI_ARGS: "-no-color"
 
 jobs:
-  terraform:
-    name: "Terraform ${{ github.event.inputs.operation || 'plan' }}"
+  terraform-plan:
+    name: "Terraform Plan"
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'production' }}
+    environment: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
 
     steps:
       - name: "📥 Checkout repository"
@@ -85,13 +89,88 @@ jobs:
         if: github.event.inputs.operation == 'plan' || github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
-          name: terraform-plan-${{ github.event.inputs.environment || 'production' }}
+          name: terraform-plan-${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
           path: ${{ env.WORKING_DIRECTORY }}/terraform.tfplan
           retention-days: 30
 
+  terraform-destroy:
+    name: "Terraform Destroy"
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    environment: staging
+    if: github.event_name == 'push' && github.ref != 'refs/heads/main'
+
+    steps:
+      - name: "📥 Checkout repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "🔧 Setup Terraform"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.0
+
+      - name: "� Setup Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: "� Initialize Terraform"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          echo "� Initializing Terraform modules and providers..."
+          terraform init -input=false
+
+      - name: "🧹 Terraform Destroy"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          echo "🧹 Destroying infrastructure resources for staging environment..."
+          terraform destroy \
+            -input=false \
+            -var="cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
+            -var="cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -var="supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}" \
+            -var="supabase_organization_id=${{ secrets.SUPABASE_ORGANIZATION_ID }}" \
+            -var="supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}" \
+            -var="supabase_existing_project_id=${{ vars.SUPABASE_EXISTING_PROJECT_ID || secrets.SUPABASE_EXISTING_PROJECT_ID || '' }}" \
+            -var="api_domain=${{ vars.API_DOMAIN || '' }}" \
+            -var="web_domain=${{ vars.WEB_DOMAIN || '' }}" \
+            -var="zone_id=${{ vars.ZONE_ID || secrets.ZONE_ID || '' }}" \
+            -var="existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}" \
+            -auto-approve
+
+  terraform-apply-main:
+    name: "Terraform Apply (Main Branch)"
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    environment: production
+    if: github.event.inputs.operation == 'apply' && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: "📥 Checkout repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "🔧 Setup Terraform"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.0
+
+      - name: "� Setup Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: "� Initialize Terraform"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          echo "🔧 Initializing Terraform modules and providers..."
+          terraform init -input=false
+
       - name: "� Terraform Apply"
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        if: github.event.inputs.operation == 'apply' && github.event.inputs.environment == 'production'
         run: |
           echo "🚀 Applying infrastructure changes to production..."
           terraform apply \
@@ -108,26 +187,40 @@ jobs:
             -var="existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}" \
             -auto-approve
 
-      - name: "📋 Print Configuration Variables (Destroy)"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        if: github.event.inputs.operation == 'destroy'
-        run: |
-          echo "⚠️  WARNING: This will DESTROY all infrastructure resources!"
-          echo "⚠️  Confirm this action is intentional before proceeding."
+  terraform-apply-non-main:
+    name: "Terraform Apply (Non-Main Branch)"
+    runs-on: ubuntu-latest
+    needs: [terraform-plan, terraform-destroy]
+    environment: staging
+    if: github.event_name == 'push' && github.ref != 'refs/heads/main'
 
-      - name: "🧹 Terraform Destroy"
+    steps:
+      - name: "📥 Checkout repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "🔧 Setup Terraform"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.0
+
+      - name: "� Setup Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: "� Initialize Terraform"
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        if: github.event.inputs.operation == 'destroy'
         run: |
-          # Safety check for production environment
-          if [ "${{ github.event.inputs.environment || 'production' }}" = "production" ]; then
-            echo "❌ ERROR: Destroy operation is not allowed in production environment!"
-            echo "   Use a different environment for testing destroy operations."
-            exit 1
-          fi
-          
-          echo "🧹 Destroying infrastructure resources..."
-          terraform destroy \
+          echo "🔧 Initializing Terraform modules and providers..."
+          terraform init -input=false
+
+      - name: "� Terraform Apply"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          echo "🚀 Applying infrastructure changes to staging..."
+          terraform apply \
             -input=false \
             -var="cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
             -var="cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" \
@@ -140,20 +233,6 @@ jobs:
             -var="zone_id=${{ vars.ZONE_ID || secrets.ZONE_ID || '' }}" \
             -var="existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}" \
             -auto-approve
-
-      - name: "📊 Operations Summary"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "## Terraform Operations Summary" >> $GITHUB_STEP_SUMMARY
-          echo "### Branch: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
-          echo "### Environment: ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
-          echo "### Operation: ${{ github.event.inputs.operation || 'plan' }}" >> $GITHUB_STEP_SUMMARY
-          
-          if [ "${{ github.event.inputs.operation }}" = "plan" ] || [ "${{ github.event_name }}" = "push" ]; then
-            echo "### Plan Status: Generated successfully" >> $GITHUB_STEP_SUMMARY
-            echo "### Artifact: terraform-plan-${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ github.event.inputs.operation }}" = "apply" ]; then
-            echo "### Apply Status: Completed successfully" >> $GITHUB_STEP_SUMMARY
           elif [ "${{ github.event.inputs.operation }}" = "destroy" ]; then
             echo "### Destroy Status: Completed successfully" >> $GITHUB_STEP_SUMMARY
           fi
