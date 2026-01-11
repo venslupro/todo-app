@@ -73,6 +73,12 @@ variable "web_domain" {
   default     = "app.example.com"
 }
 
+variable "supabase_existing_project_id" {
+  type        = string
+  description = "Existing Supabase project ID to import (optional). Use this to avoid creating new projects when free tier limits are reached."
+  default     = ""
+}
+
 variable "supabase_organization_id" {
   type        = string
   description = "Supabase organization ID for project creation."
