@@ -54,7 +54,6 @@ jobs:
   
   infrastructure-validation:
     name: "🔍 Infrastructure Validation"
-    description: "Validates infrastructure directory structure and configuration"
     runs-on: ubuntu-latest
     
     # Run on all branches and pull requests
@@ -95,7 +94,6 @@ jobs:
   
   terraform-setup:
     name: "� Terraform Setup"
-    description: "Sets up Terraform and configures required credentials"
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'production' }}
     needs: infrastructure-validation
@@ -140,7 +138,6 @@ jobs:
   
   terraform-init:
     name: "📋 Terraform Initialization"
-    description: "Initializes Terraform backend and downloads required modules"
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'production' }}
     needs: terraform-setup
@@ -179,7 +176,6 @@ jobs:
   
   terraform-validate:
     name: "🔍 Terraform Validation"
-    description: "Validates Terraform configuration syntax and structure"
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'production' }}
     needs: terraform-init
@@ -218,7 +214,6 @@ jobs:
   
   terraform-plan:
     name: "📊 Terraform Plan"
-    description: "Generates Terraform execution plan for infrastructure changes"
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'production' }}
     needs: terraform-validate
@@ -276,7 +271,6 @@ jobs:
   
   terraform-apply:
     name: "🚀 Terraform Apply"
-    description: "Applies infrastructure changes - requires manual approval"
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'production' }}
     needs: terraform-plan
@@ -328,7 +322,6 @@ jobs:
   
   terraform-destroy:
     name: "🧹 Terraform Destroy"
-    description: "Destroys infrastructure resources - requires manual approval"
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'production' }}
     needs: terraform-setup
@@ -400,7 +393,6 @@ jobs:
   
   dev-branch-validation:
     name: "🔬 Dev Branch Validation"
-    description: "Validates infrastructure changes on dev branch without deployment"
     runs-on: ubuntu-latest
     
     # Only run on dev branch
