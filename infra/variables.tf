@@ -72,3 +72,14 @@ variable "web_domain" {
   description = "Web domain for Pages deployment."
   default     = "app.example.com"
 }
+
+variable "supabase_organization_id" {
+  type        = string
+  description = "Supabase organization ID for project creation."
+}
+
+variable "supabase_database_password" {
+  type        = string
+  description = "Database password for Supabase project."
+  sensitive   = true
+}
