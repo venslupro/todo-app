@@ -20,31 +20,8 @@ resource "cloudflare_workers_script" "todo_api" {
   compatibility_flags = ["nodejs_compat"]
 
   # Environment variables for Supabase configuration
-  plain_text_bindings {
-    name = "SUPABASE_URL"
-    text = var.supabase_url
-  }
-
-  plain_text_bindings {
-    name = "SUPABASE_ANON_KEY"
-    text = var.supabase_anon_key
-  }
-
-  plain_text_bindings {
-    name = "SUPABASE_SERVICE_ROLE_KEY"
-    text = var.supabase_service_key
-  }
-
-  plain_text_bindings {
-    name = "ENVIRONMENT"
-    text = var.environment
-  }
-
-  # KV namespace binding for caching and rate limiting
-  kv_namespace_bindings {
-    name         = "TODO_KV"
-    namespace_id = cloudflare_workers_kv_namespace.todo_kv.id
-  }
+  # Note: In Cloudflare provider v5.x, environment variables are set differently
+  # They are typically configured via wrangler.toml or directly in the Worker script
 
   depends_on = [
     cloudflare_workers_kv_namespace.todo_kv

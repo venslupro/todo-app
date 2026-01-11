@@ -122,6 +122,8 @@ jobs:
         run: |
           echo "🔑 Configuring Supabase credentials..."
           echo "SUPABASE_ACCESS_TOKEN=${{ secrets.SUPABASE_ACCESS_TOKEN }}" >> $GITHUB_ENV
+          echo "SUPABASE_ORGANIZATION_ID=${{ secrets.SUPABASE_ORGANIZATION_ID }}" >> $GITHUB_ENV
+          echo "SUPABASE_DATABASE_PASSWORD=${{ secrets.SUPABASE_DATABASE_PASSWORD }}" >> $GITHUB_ENV
 
       - name: "� Terraform Init"
         working-directory: ${{ env.WORKING_DIRECTORY }}
@@ -139,14 +141,17 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         if: github.event.inputs.operation == 'plan' || github.event_name == 'push'
         run: |
-          echo "� Generating Terraform execution plan..."
+          echo "📊 Generating Terraform execution plan..."
           terraform plan \
             -var=\"cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}\" \
             -var=\"cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}\" \
             -var=\"supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}\" \
-            -var=\"api_domain=api.todoapp.com\" \
-            -var=\"web_domain=app.todoapp.com\" \
-            -var=\"zone_name=todoapp.com\" \
+            -var=\"supabase_organization_id=${{ secrets.SUPABASE_ORGANIZATION_ID }}\" \
+            -var=\"supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}\" \
+            -var=\"api_domain=${{ vars.API_DOMAIN || 'api.todoapp.com' }}\" \
+            -var=\"web_domain=${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}\" \
+            -var=\"zone_name=${{ vars.ZONE_NAME || 'todoapp.com' }}\" \
+            -var=\"existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}\" \
             -out=terraform.tfplan
 
       - name: "� Upload Terraform Plan"
@@ -166,9 +171,12 @@ jobs:
             -var=\"cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}\" \
             -var=\"cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}\" \
             -var=\"supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}\" \
-            -var=\"api_domain=api.todoapp.com\" \
-            -var=\"web_domain=app.todoapp.com\" \
-            -var=\"zone_name=todoapp.com\" \
+            -var=\"supabase_organization_id=${{ secrets.SUPABASE_ORGANIZATION_ID }}\" \
+            -var=\"supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}\" \
+            -var=\"api_domain=${{ vars.API_DOMAIN || 'api.todoapp.com' }}\" \
+            -var=\"web_domain=${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}\" \
+            -var=\"zone_name=${{ vars.ZONE_NAME || 'todoapp.com' }}\" \
+            -var=\"existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}\" \
             -auto-approve
 
       - name: "🧹 Terraform Destroy"
@@ -180,9 +188,12 @@ jobs:
             -var=\"cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}\" \
             -var=\"cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}\" \
             -var=\"supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}\" \
-            -var=\"api_domain=api.todoapp.com\" \
-            -var=\"web_domain=app.todoapp.com\" \
-            -var=\"zone_name=todoapp.com\" \
+            -var=\"supabase_organization_id=${{ secrets.SUPABASE_ORGANIZATION_ID }}\" \
+            -var=\"supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}\" \
+            -var=\"api_domain=${{ vars.API_DOMAIN || 'api.todoapp.com' }}\" \
+            -var=\"web_domain=${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}\" \
+            -var=\"zone_name=${{ vars.ZONE_NAME || 'todoapp.com' }}\" \
+            -var=\"existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}\" \
             -auto-approve
 
       - name: "� Operations Summary"

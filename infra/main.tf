@@ -6,12 +6,13 @@
 module "supabase" {
   source = "./modules/supabase"
   
-  organization_id   = var.supabase_organization_id
-  project_name      = local.project_name
-  environment       = local.environment
-  region            = var.supabase_region
-  database_password = var.supabase_database_password
-  web_domain        = local.web_domain
+  organization_id       = var.supabase_organization_id
+  project_name          = local.project_name
+  environment           = local.environment
+  region                = var.supabase_region
+  database_password     = var.supabase_database_password
+  web_domain            = local.web_domain
+  existing_bucket_name  = var.existing_bucket_name
 }
 
 # Cloudflare module for Worker and Pages deployment.
