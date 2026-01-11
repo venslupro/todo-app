@@ -15,16 +15,9 @@ resource "supabase_project" "todo_app" {
   }
 }
 
-# Data source to reference existing project if provided
-data "supabase_project" "existing_todo_app" {
-  count = var.existing_project_id != "" ? 1 : 0
-  
-  id = var.existing_project_id
-}
-
 # Local value for project reference (either created or existing)
 locals {
-  project_ref = var.existing_project_id != "" ? data.supabase_project.existing_todo_app[0].id : (length(supabase_project.todo_app) > 0 ? supabase_project.todo_app[0].id : "")
+  project_ref = var.existing_project_id != "" ? var.existing_project_id : (length(supabase_project.todo_app) > 0 ? supabase_project.todo_app[0].id : "")
 }
 
 # Supabase settings configuration for the project
@@ -47,17 +40,17 @@ resource "supabase_settings" "todo_settings" {
 # Output variables for Cloudflare module
 output "supabase_url" {
   description = "Supabase project URL"
-  value       = supabase_project.todo_app.id
+  value       = var.existing_project_id != "" ? "https://${var.existing_project_id}.supabase.co" : (length(supabase_project.todo_app) > 0 ? "https://${supabase_project.todo_app[0].id}.supabase.co" : "")
 }
 
 output "supabase_anon_key" {
   description = "Supabase anonymous API key"
-  value       = supabase_project.todo_app.id
+  value       = ""
 }
 
 output "supabase_service_key" {
   description = "Supabase service role API key"
-  value       = supabase_project.todo_app.id
+  value       = ""
   sensitive   = true
 }
 
