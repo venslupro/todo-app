@@ -72,8 +72,8 @@ jobs:
             -var="supabase_organization_id=${{ secrets.SUPABASE_ORGANIZATION_ID }}" \
             -var="supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}" \
             -var="supabase_existing_project_id=${{ vars.SUPABASE_EXISTING_PROJECT_ID || secrets.SUPABASE_EXISTING_PROJECT_ID || '' }}" \
-            -var="api_domain=${{ vars.API_DOMAIN || 'api.todoapp.com' }}" \
-            -var="web_domain=${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}" \
+            -var="api_domain=${{ vars.API_DOMAIN || '' }}" \
+            -var="web_domain=${{ vars.WEB_DOMAIN || '' }}" \
             -var="zone_id=${{ vars.ZONE_ID || secrets.ZONE_ID || '' }}" \
             -var="existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}" \
             -out=terraform.tfplan \
@@ -102,8 +102,8 @@ jobs:
             -var="supabase_organization_id=${{ secrets.SUPABASE_ORGANIZATION_ID }}" \
             -var="supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}" \
             -var="supabase_existing_project_id=${{ vars.SUPABASE_EXISTING_PROJECT_ID || secrets.SUPABASE_EXISTING_PROJECT_ID || '' }}" \
-            -var="api_domain=${{ vars.API_DOMAIN || 'api.todoapp.com' }}" \
-            -var="web_domain=${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}" \
+            -var="api_domain=${{ vars.API_DOMAIN || '' }}" \
+            -var="web_domain=${{ vars.WEB_DOMAIN || '' }}" \
             -var="zone_id=${{ vars.ZONE_ID || secrets.ZONE_ID || '' }}" \
             -var="existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}" \
             -auto-approve
@@ -134,8 +134,9 @@ jobs:
             -var="supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}" \
             -var="supabase_organization_id=${{ secrets.SUPABASE_ORGANIZATION_ID }}" \
             -var="supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}" \
-            -var="api_domain=${{ vars.API_DOMAIN || 'api.todoapp.com' }}" \
-            -var="web_domain=${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}" \
+            -var="supabase_existing_project_id=${{ vars.SUPABASE_EXISTING_PROJECT_ID || secrets.SUPABASE_EXISTING_PROJECT_ID || '' }}" \
+            -var="api_domain=${{ vars.API_DOMAIN || '' }}" \
+            -var="web_domain=${{ vars.WEB_DOMAIN || '' }}" \
             -var="zone_id=${{ vars.ZONE_ID || secrets.ZONE_ID || '' }}" \
             -var="existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}" \
             -auto-approve

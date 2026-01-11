@@ -1,6 +1,8 @@
 # Data sources for Cloudflare module.
 
-data "cloudflare_zone" "main" {
+# Use existing zone if zone_id is provided, otherwise create new zone
+data "cloudflare_zone" "existing" {
+  count   = var.zone_id != "" ? 1 : 0
   zone_id = var.zone_id
 }
 
