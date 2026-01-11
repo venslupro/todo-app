@@ -156,21 +156,27 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
-      - name: "� Cache Terraform"
+      - name: "💾 Cache Terraform"
         uses: actions/cache@v4
+        id: terraform-cache
         with:
           path: |
             ${{ env.WORKING_DIRECTORY }}/.terraform
             ${{ env.WORKING_DIRECTORY }}/terraform.tfstate
-          key: ${{ runner.os }}-terraform-${{ hashFiles('**/terraform.lock.hcl') }}
+          key: ${{ runner.os }}-terraform-${{ hashFiles('${{ env.WORKING_DIRECTORY }}/.terraform.lock.hcl') }}
           restore-keys: |
             ${{ runner.os }}-terraform-
 
-      - name: "� Terraform Init"
+      - name: "📋 Terraform Init"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           echo "🔧 Initializing Terraform..."
-          terraform init -reconfigure
+          # Only run init if cache was not restored
+          if [ "${{ steps.terraform-cache.outputs.cache-hit }}" != 'true' ]; then
+            terraform init -reconfigure
+          else
+            echo "✅ Terraform cache restored, skipping init"
+          fi
 
       - name: "📄 Init Summary"
         working-directory: ${{ env.WORKING_DIRECTORY }}
@@ -242,15 +248,27 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
-      - name: "� Cache Terraform"
+      - name: "💾 Cache Terraform"
         uses: actions/cache@v4
+        id: terraform-cache
         with:
           path: |
             ${{ env.WORKING_DIRECTORY }}/.terraform
             ${{ env.WORKING_DIRECTORY }}/terraform.tfstate
-          key: ${{ runner.os }}-terraform-${{ hashFiles('**/terraform.lock.hcl') }}
+          key: ${{ runner.os }}-terraform-${{ hashFiles('${{ env.WORKING_DIRECTORY }}/.terraform.lock.hcl') }}
           restore-keys: |
             ${{ runner.os }}-terraform-
+
+      - name: "📋 Terraform Init"
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          echo "🔧 Initializing Terraform..."
+          # Only run init if cache was not restored
+          if [ "${{ steps.terraform-cache.outputs.cache-hit }}" != 'true' ]; then
+            terraform init -reconfigure
+          else
+            echo "✅ Terraform cache restored, skipping init"
+          fi
 
       - name: "📊 Terraform Plan"
         working-directory: ${{ env.WORKING_DIRECTORY }}
