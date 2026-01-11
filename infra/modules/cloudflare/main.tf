@@ -6,6 +6,8 @@
 resource "cloudflare_workers_kv_namespace" "todo_kv" {
   account_id = var.account_id
   title      = local.kv_name
+
+  depends_on = [data.cloudflare_account.current]
 }
 
 # Worker script for the API.
@@ -32,7 +34,8 @@ resource "cloudflare_workers_script" "todo_api" {
   compatibility_flags = ["nodejs_compat"]
   
   depends_on = [
-    cloudflare_workers_kv_namespace.todo_kv
+    cloudflare_workers_kv_namespace.todo_kv,
+    data.cloudflare_account.current
   ]
 }
 
@@ -60,6 +63,8 @@ resource "cloudflare_pages_project" "todo_frontend" {
       compatibility_flags = ["nodejs_compat"]
     }
   }
+
+  depends_on = [data.cloudflare_account.current]
 }
 
 # DNS record for API domain (using custom domain for Worker)
