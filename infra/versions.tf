@@ -7,7 +7,7 @@ terraform {
   required_providers {
     cloudflare = {
       source  = "cloudflare/cloudflare"
-      version = ">= 4.0"
+      version = "~> 5.0"
     }
     supabase = {
       source  = "supabase/supabase"
@@ -15,12 +15,8 @@ terraform {
     }
   }
 
-  # Remote backend configuration for state storage.
-  backend "remote" {
-    organization = "your-org-name"
-
-    workspaces {
-      name = "todo-api-production"
-    }
+  # Local backend configuration for state storage.
+  backend "local" {
+    path = "terraform.tfstate"
   }
 }

@@ -38,11 +38,6 @@ output "supabase_database_url" {
   sensitive   = true
 }
 
-output "websocket_namespace_id" {
-  description = "ID of the Durable Object namespace for WebSocket support."
-  value       = module.cloudflare.websocket_namespace_id
-}
-
 output "kv_namespace_id" {
   description = "ID of the KV namespace for caching and rate limiting."
   value       = module.cloudflare.kv_namespace_id
