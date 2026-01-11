@@ -229,15 +229,15 @@ jobs:
           echo "📊 Generating Terraform execution plan..."
           terraform plan \
             -input=false \
-            -var=\"cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}\" \
-            -var=\"cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}\" \
-            -var=\"supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}\" \
-            -var=\"supabase_organization_id=${{ secrets.SUPABASE_ORGANIZATION_ID }}\" \
-            -var=\"supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}\" \
-            -var=\"api_domain=${{ vars.API_DOMAIN || 'api.todoapp.com' }}\" \
-            -var=\"web_domain=${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}\" \
-            -var=\"zone_name=${{ vars.ZONE_NAME || 'todoapp.com' }}\" \
-            -var=\"existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}\" \
+            -var="cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
+            -var="cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -var="supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}" \
+            -var="supabase_organization_id=${{ secrets.SUPABASE_ORGANIZATION_ID }}" \
+            -var="supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}" \
+            -var="api_domain=${{ vars.API_DOMAIN || 'api.todoapp.com' }}" \
+            -var="web_domain=${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}" \
+            -var="zone_name=${{ vars.ZONE_NAME || 'todoapp.com' }}" \
+            -var="existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}" \
             -out=terraform.tfplan
 
       - name: "� Upload Terraform Plan"
@@ -280,15 +280,15 @@ jobs:
           echo "� Applying infrastructure changes..."
           terraform apply \
             -input=false \
-            -var=\"cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}\" \
-            -var=\"cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}\" \
-            -var=\"supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}\" \
-            -var=\"supabase_organization_id=${{ secrets.SUPABASE_ORGANIZATION_ID }}\" \
-            -var=\"supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}\" \
-            -var=\"api_domain=${{ vars.API_DOMAIN || 'api.todoapp.com' }}\" \
-            -var=\"web_domain=${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}\" \
-            -var=\"zone_name=${{ vars.ZONE_NAME || 'todoapp.com' }}\" \
-            -var=\"existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}\" \
+            -var="cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
+            -var="cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -var="supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}" \
+            -var="supabase_organization_id=${{ secrets.SUPABASE_ORGANIZATION_ID }}" \
+            -var="supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}" \
+            -var="api_domain=${{ vars.API_DOMAIN || 'api.todoapp.com' }}" \
+            -var="web_domain=${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}" \
+            -var="zone_name=${{ vars.ZONE_NAME || 'todoapp.com' }}" \
+            -var="existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}" \
             -auto-approve
 
       - name: "📋 Print Configuration Variables (Destroy)"
@@ -323,15 +323,15 @@ jobs:
           echo "🧹 Destroying infrastructure resources..."
           terraform destroy \
             -input=false \
-            -var=\"cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}\" \
-            -var=\"cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}\" \
-            -var=\"supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}\" \
-            -var=\"supabase_organization_id=${{ secrets.SUPABASE_ORGANIZATION_ID }}\" \
-            -var=\"supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}\" \
-            -var=\"api_domain=${{ vars.API_DOMAIN || 'api.todoapp.com' }}\" \
-            -var=\"web_domain=${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}\" \
-            -var=\"zone_name=${{ vars.ZONE_NAME || 'todoapp.com' }}\" \
-            -var=\"existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}\" \
+            -var="cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
+            -var="cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -var="supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}" \
+            -var="supabase_organization_id=${{ secrets.SUPABASE_ORGANIZATION_ID }}" \
+            -var="supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}" \
+            -var="api_domain=${{ vars.API_DOMAIN || 'api.todoapp.com' }}" \
+            -var="web_domain=${{ vars.WEB_DOMAIN || 'app.todoapp.com' }}" \
+            -var="zone_name=${{ vars.ZONE_NAME || 'todoapp.com' }}" \
+            -var="existing_bucket_name=${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}" \
             -auto-approve
 
       - name: "� Operations Summary"
