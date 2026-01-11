@@ -5,8 +5,9 @@
 # Credentials can be provided via environment variables or terraform.tfvars.
 provider "cloudflare" {
   # Configuration options:
-  # - Set via environment variables: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
-  # - Or via terraform.tfvars: cloudflare_api_token, cloudflare_account_id
+  # - Set via environment variables: CLOUDFLARE_API_TOKEN
+  # - Or via terraform.tfvars: cloudflare_api_token
+  # - Account ID is provided per resource (not at provider level)
   
   # Required permissions for Cloudflare resources:
   # - Account:Workers Scripts:Edit
@@ -14,9 +15,8 @@ provider "cloudflare" {
   # - Account:Cloudflare Pages:Edit
   # - Zone:Zone:Read (if using custom domains)
   
-  # Explicitly set API token and account ID for better reliability
-  api_token   = var.cloudflare_api_token
-  account_id  = var.cloudflare_account_id
+  # Set API token explicitly for better reliability
+  api_token = var.cloudflare_api_token
 }
 
 # Supabase provider configuration for managing Supabase resources.
