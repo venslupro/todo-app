@@ -137,20 +137,20 @@ jobs:
           echo "🔍 Validating Terraform configuration..."
           terraform validate
 
-      - name: "� Print Configuration Variables"
+      - name: "� Print Configuration Variables (TEST MODE)"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         if: github.event.inputs.operation == 'plan' || github.event_name == 'push'
         run: |
-          echo "📋 Terraform Configuration Variables:"
-          echo "===================================="
+          echo "📋 Terraform Configuration Variables (TEST MODE - SHOWING REAL VALUES):"
+          echo "===================================================================="
           echo "🔧 Cloudflare Configuration:"
           echo "   - Account ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
-          echo "   - API Token: ********"
+          echo "   - API Token: ${{ secrets.CLOUDFLARE_API_TOKEN }}"
           echo ""
           echo "🏢 Supabase Configuration:"
-          echo "   - Access Token: ********"
+          echo "   - Access Token: ${{ secrets.SUPABASE_ACCESS_TOKEN }}"
           echo "   - Organization ID: ${{ secrets.SUPABASE_ORGANIZATION_ID }}"
-          echo "   - Database Password: ********"
+          echo "   - Database Password: ${{ secrets.SUPABASE_DATABASE_PASSWORD }}"
           echo ""
           echo "🌐 Domain Configuration:"
           echo "   - API Domain: ${{ vars.API_DOMAIN || 'api.todoapp.com' }}"
@@ -160,7 +160,7 @@ jobs:
           echo "📦 Storage Configuration:"
           echo "   - Existing Bucket Name: ${{ vars.EXISTING_BUCKET_NAME || 'todo-app-storage' }}"
           echo ""
-          echo "===================================="
+          echo "===================================================================="
 
       - name: "� Terraform Plan"
         working-directory: ${{ env.WORKING_DIRECTORY }}
