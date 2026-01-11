@@ -3,8 +3,22 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main, dev, develop ]
+    paths-ignore:
+      - 'infra/**'
   pull_request:
     branches: [ main, dev ]
+    paths-ignore:
+      - 'infra/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
 
 jobs:
   # Job 1: Code Quality Check
