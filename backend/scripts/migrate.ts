@@ -1,41 +1,75 @@
 // scripts/migrate.ts
-import {SupabaseClient} from '../src/shared/supabase/client';
+import {SupabaseClient, type Env} from '../src/shared/supabase/client';
 import * as fs from 'fs';
 import * as path from 'path';
+
+// Types for better type safety
+interface MigrationRecord {
+  id?: string;
+  name: string;
+  executed_at?: string;
+  created_at?: string;
+}
+
+// Safe type for Supabase operations to avoid any
+interface SupabaseMigrationClient {
+  rpc: (name: string, args: Record<string, unknown>) => Promise<{error?: Error}>;
+  from: (table: string) => {
+    select: (columns: string) => {
+      order: (column: string, options: {ascending: boolean}) => Promise<{data?: MigrationRecord[]}>;
+    };
+    insert: (data: Record<string, unknown>) => Promise<{error?: Error}>;
+  };
+}
+
+// Custom logger to replace console statements
+class MigrationLogger {
+  static log(message: string): void {
+    process.stdout.write(`[INFO] ${message}\n`);
+  }
+
+  static error(message: string, error?: unknown): void {
+    process.stderr.write(`[ERROR] ${message}${error ? `: ${error}` : ''}\n`);
+  }
+
+  static info(message: string): void {
+    process.stdout.write(`[INFO] ${message}\n`);
+  }
+}
 
 /**
  * Database migration script
  */
-async function runMigrations() {
-  console.log('Starting database migrations...');
+async function runMigrations(): Promise<void> {
+  MigrationLogger.info('Starting database migrations...');
 
   // Get configuration from environment variables
-  const env = {
-    SUPABASE_URL: process.env['SUPABASE_URL'],
-    SUPABASE_SERVICE_ROLE_KEY: process.env['SUPABASE_SERVICE_ROLE_KEY'],
-    SUPABASE_ANON_KEY: process.env['SUPABASE_ANON_KEY'],
+  const env: Env = {
+    SUPABASE_URL: process.env['SUPABASE_URL'] || '',
+    SUPABASE_SERVICE_ROLE_KEY: process.env['SUPABASE_SERVICE_ROLE_KEY'] || '',
+    SUPABASE_ANON_KEY: process.env['SUPABASE_ANON_KEY'] || '',
   };
 
   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.error('Missing required environment variables');
+    MigrationLogger.error('Missing required environment variables');
     process.exit(1);
   }
 
-  const supabase = SupabaseClient.getServiceClient(env as any);
+  const supabase = SupabaseClient.getServiceClient(env);
 
   try {
     // Create migrations table (if it doesn't exist)
     await createMigrationsTable(supabase);
 
     // Get executed migrations
-    const {data: runMigrations} = await (supabase as any)
+    const {data: runMigrations} = await supabase
       .from('migrations')
       .select('name')
       .order('executed_at', {ascending: true});
 
-    const runMigrationNames = new Set(runMigrations?.map((m: any) => m.name) || []);
+    const runMigrationNames = new Set(runMigrations?.map((m: MigrationRecord) => m.name) || []);
 
-    // 获取迁移文件
+    // Get migration files
     const migrationsDir = path.join(__dirname, '../database/migrations');
     const migrationFiles = fs.readdirSync(migrationsDir)
       .filter((file) => file.endsWith('.sql'))
@@ -43,42 +77,46 @@ async function runMigrations() {
 
     for (const migrationFile of migrationFiles) {
       if (!runMigrationNames.has(migrationFile)) {
-        console.log(`Running migration: ${migrationFile}`);
+        MigrationLogger.info(`Running migration: ${migrationFile}`);
 
-        // 读取SQL文件
+        // Read SQL file
         const sqlPath = path.join(migrationsDir, migrationFile);
         const sql = fs.readFileSync(sqlPath, 'utf-8');
 
-        // 执行SQL - 使用rpc方法执行原始SQL
-        const {error} = await (supabase as any).rpc('exec_sql', {sql});
+        // Execute SQL - using rpc method to execute raw SQL
+        const {error} = await (
+          supabase as unknown as SupabaseMigrationClient
+        ).rpc('exec_sql', {sql});
 
         if (error) {
-          console.error(`Migration ${migrationFile} failed:`, error);
+          MigrationLogger.error(`Migration ${migrationFile} failed`, error);
           throw error;
         }
 
-        // 记录迁移
-        await (supabase as any).from('migrations').insert({
+        // Record migration
+        await (supabase as unknown as SupabaseMigrationClient).from('migrations').insert({
           name: migrationFile,
           executed_at: new Date().toISOString(),
         });
 
-        console.log(`Migration ${migrationFile} completed successfully`);
+        MigrationLogger.info(`Migration ${migrationFile} completed successfully`);
       }
     }
 
-    console.log('All migrations completed successfully');
+    MigrationLogger.info('All migrations completed successfully');
     process.exit(0);
   } catch (error) {
-    console.error('Migration failed:', error);
+    MigrationLogger.error('Migration failed', error);
     process.exit(1);
   }
 }
 
 /**
- * 创建迁移记录表
+ * Create migrations table
  */
-async function createMigrationsTable(supabase: any): Promise<void> {
+async function createMigrationsTable(
+  supabase: ReturnType<typeof SupabaseClient.getServiceClient>,
+): Promise<void> {
   const createTableSQL = `
     CREATE TABLE IF NOT EXISTS migrations (
       id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -90,10 +128,10 @@ async function createMigrationsTable(supabase: any): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_migrations_name ON migrations(name);
   `;
 
-  await (supabase as any).rpc('exec_sql', {sql: createTableSQL});
+  await (supabase as unknown as SupabaseMigrationClient).rpc('exec_sql', {sql: createTableSQL});
 }
 
-// 运行迁移
+// Run migrations
 if (require.main === module) {
   runMigrations();
 }
