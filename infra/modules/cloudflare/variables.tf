@@ -31,12 +31,6 @@ variable "zone_name" {
   default     = "example.com"
 }
 
-variable "worker_script_path" {
-  type        = string
-  description = "Path to the compiled Worker script."
-  default     = "../dist/index.js"
-}
-
 # Supabase configuration variables
 variable "supabase_url" {
   type        = string
