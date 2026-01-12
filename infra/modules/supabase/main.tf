@@ -23,12 +23,12 @@ locals {
 # Supabase API key resources for the project
 resource "supabase_apikey" "anon_key" {
   project_ref = local.project_ref
-  name        = "${var.environment}-${var.project_name}-anon-key"
+  name        = local.anon_key_name
 }
 
 resource "supabase_apikey" "service_key" {
   project_ref = local.project_ref
-  name        = "${var.environment}-${var.project_name}-service-key"
+  name        = local.service_key_name
 }
 
 # Supabase settings configuration for the project
@@ -57,6 +57,6 @@ resource "supabase_settings" "settings" {
 }
 
 # Supabase pooler data source for connection pool management
-data "supabase_pooler" "connection_pool" {
+data "supabase_pooler" "pooler" {
   project_ref = local.project_ref
 }

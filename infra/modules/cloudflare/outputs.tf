@@ -2,12 +2,12 @@
 
 output "worker_name" {
   description = "Name of the deployed Worker script."
-  value       = cloudflare_workers_script.api.script_name
+  value       = cloudflare_workers_script.worker.script_name
 }
 
 output "worker_id" {
   description = "ID of the deployed Worker script."
-  value       = cloudflare_workers_script.api.id
+  value       = cloudflare_workers_script.worker.id
 }
 
 output "worker_url" {
@@ -30,12 +30,12 @@ output "frontend_default_url" {
   value       = "https://${local.pages_default_domain}"
 }
 
-output "pages_project_name" {
-  description = "Name of the Pages project."
-  value       = cloudflare_pages_project.frontend.name
+output "page_name" {
+  description = "Name of the deployed Pages project."
+  value       = cloudflare_pages_project.page.name
 }
 
-output "pages_project_id" {
-  description = "ID of the Pages project."
-  value       = cloudflare_pages_project.frontend.id
+output "page_id" {
+  description = "ID of the deployed Pages project."
+  value       = cloudflare_pages_project.page.id
 }

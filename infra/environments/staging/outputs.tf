@@ -10,7 +10,7 @@ output "frontend_url" {
   value       = "https://${var.web_domain}"
 }
 
-output "supabase_api_url" {
+output "supabase_url" {
   description = "Supabase API URL for application integration."
   value       = module.supabase.supabase_url
   sensitive   = true
@@ -19,5 +19,11 @@ output "supabase_api_url" {
 output "supabase_anon_key" {
   description = "Supabase anon key for client-side authentication."
   value       = module.supabase.supabase_anon_key
+  sensitive   = true
+}
+
+output "supabase_service_key" {
+  description = "Supabase service key for server-side authentication."
+  value       = module.supabase.supabase_service_key
   sensitive   = true
 }
