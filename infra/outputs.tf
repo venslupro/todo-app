@@ -15,15 +15,9 @@ output "supabase_url" {
   value       = module.supabase.supabase_url
 }
 
-output "supabase_anon_key" {
-  description = "Anon key for Supabase authentication."
-  value       = module.supabase.supabase_anon_key
-  sensitive   = true
-}
-
-output "supabase_service_key" {
-  description = "Service key for Supabase server operations."
-  value       = module.supabase.supabase_service_key
+output "supabase_api_key" {
+  description = "API key for Supabase authentication (contains both anon and service keys)."
+  value       = module.supabase.supabase_api_key
   sensitive   = true
 }
 

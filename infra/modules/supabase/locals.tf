@@ -6,11 +6,8 @@ locals {
   # Supabase项目命名: stg-todo-project / prd-todo-project
   project_name = "${var.environment}-${var.project_name}-project"
   
-  # API密钥资源命名: stg-todo-anon-key / prd-todo-anon-key
-  anon_key_name = "${var.environment}-${var.project_name}-anon-key"
-  
-  # 服务密钥资源命名: stg-todo-service-key / prd-todo-service-key
-  service_key_name = "${var.environment}-${var.project_name}-service-key"
+  # API密钥资源命名: stg_todo_api_key / prd_todo_api_key
+  api_key_name = "${var.environment}_${var.project_name}_api_key"
   
   # 设置资源命名: stg-todo-settings / prd-todo-settings
   settings_name = "${var.environment}-${var.project_name}-settings"

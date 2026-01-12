@@ -4,15 +4,9 @@ output "supabase_url" {
   value       = var.existing_project_id != "" ? "https://${var.existing_project_id}.supabase.co" : (length(supabase_project.project) > 0 ? "https://${supabase_project.project[0].id}.supabase.co" : "")
 }
 
-output "supabase_anon_key" {
-  description = "Supabase anonymous API key"
-  value       = supabase_apikey.anon_key.api_key
-  sensitive   = true
-}
-
-output "supabase_service_key" {
-  description = "Supabase service role API key"
-  value       = supabase_apikey.service_key.api_key
+output "supabase_api_key" {
+  description = "Supabase API key (contains both anon and service keys)"
+  value       = supabase_apikey.api_key.api_key
   sensitive   = true
 }
 
