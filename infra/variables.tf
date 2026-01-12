@@ -53,7 +53,7 @@ variable "supabase_plan" {
 variable "project_name" {
   type        = string
   description = "Project name used for resource naming and tagging."
-  default     = "todo-api"
+  default     = "todo"
 }
 
 variable "environment" {
