@@ -33,21 +33,7 @@ output "supabase_service_key" {
 #   value       = ""
 # }
 
-# Storage bucket outputs (for existing bucket)
-output "storage_bucket_name" {
-  description = "Existing storage bucket name"
-  value       = local.existing_bucket_name
-}
 
-output "storage_bucket_url" {
-  description = "Storage bucket public URL"
-  value       = local.storage_config.public_url
-}
-
-output "storage_api_url" {
-  description = "Storage API URL"
-  value       = local.storage_config.api_url
-}
 
 # Project information outputs
 output "project_id" {

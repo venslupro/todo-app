@@ -13,7 +13,6 @@ locals {
     region            = var.supabase_region
     database_password = var.supabase_database_password
     web_domain        = local.web_domain
-    existing_bucket_name = var.existing_bucket_name
     existing_project_id = var.supabase_existing_project_id
   }
 }
@@ -29,7 +28,6 @@ module "supabase" {
   region                = var.supabase_region
   database_password     = var.supabase_database_password
   web_domain            = local.web_domain
-  existing_bucket_name  = var.existing_bucket_name
   existing_project_id   = var.supabase_existing_project_id
 }
 

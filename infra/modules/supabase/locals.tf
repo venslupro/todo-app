@@ -18,16 +18,6 @@ locals {
   # 连接池资源命名: stg-todo-pooler / prd-todo-pooler
   pooler_name = "${var.environment}-${var.project_name}-pooler"
   
-  # 存储桶配置 (假设桶存在于Dashboard中)
-  existing_bucket_name = var.existing_bucket_name
-  
-  # 存储配置
-  storage_config = {
-    bucket_name = local.existing_bucket_name
-    public_url  = var.existing_project_id != "" ? "https://${var.existing_project_id}.supabase.co/storage/v1/object/public/${local.existing_bucket_name}" : (length(supabase_project.project) > 0 ? "https://${supabase_project.project[0].id}.supabase.co/storage/v1/object/public/${local.existing_bucket_name}" : "")
-    api_url     = var.existing_project_id != "" ? "https://${var.existing_project_id}.supabase.co/storage/v1" : (length(supabase_project.project) > 0 ? "https://${supabase_project.project[0].id}.supabase.co/storage/v1" : "")
-  }
-  
   # 标准标签
   tags = {
     Project     = var.project_name

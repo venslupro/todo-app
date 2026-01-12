@@ -38,12 +38,6 @@ variable "database_password" {
   sensitive   = true
 }
 
-variable "existing_bucket_name" {
-  type        = string
-  description = "Name of the existing storage bucket in Supabase Dashboard."
-  default     = "todo-app-storage"
-}
-
 variable "existing_project_id" {
   type        = string
   description = "Existing Supabase project ID to import (optional). Use this to avoid creating new projects when free tier limits are reached."

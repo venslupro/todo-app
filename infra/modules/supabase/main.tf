@@ -25,7 +25,7 @@ resource "supabase_apikey" "anon_key" {
   project_ref = local.project_ref
   name        = local.anon_key_name
   
-  # Ensure project exists before creating API keys
+  # Ensure project is fully initialized before creating API keys
   depends_on = [supabase_project.project]
 }
 
@@ -33,7 +33,7 @@ resource "supabase_apikey" "service_key" {
   project_ref = local.project_ref
   name        = local.service_key_name
   
-  # Ensure project exists before creating API keys
+  # Ensure project is fully initialized before creating API keys
   depends_on = [supabase_project.project]
 }
 
@@ -41,8 +41,9 @@ resource "supabase_apikey" "service_key" {
 resource "supabase_settings" "settings" {
   project_ref = local.project_ref
   
-  # Ensure project exists before configuring settings
-  depends_on = [supabase_project.project]
+  # Ensure project is fully initialized before configuring settings
+  # Also wait for API keys to be created as they may be needed for settings
+  depends_on = [supabase_project.project, supabase_apikey.anon_key, supabase_apikey.service_key]
 
   # API configuration
   api = jsonencode({
