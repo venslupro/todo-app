@@ -120,32 +120,24 @@ jobs:
       run: |
         npm ci
         # Verify Cloudflare API token is available
-        if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-          echo "❌ CLOUDFLARE_API_TOKEN is not set"
+        if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+          echo "❌ CLOUDFLARE_API_TOKEN is not set in GitHub Secrets"
           exit 1
         fi
         # Test authentication
-        npx wrangler whoami
+        CLOUDFLARE_API_TOKEN="${{ secrets.CLOUDFLARE_API_TOKEN }}" CLOUDFLARE_ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" npx wrangler whoami
       working-directory: backend
-      env:
-        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         
     - name: 🚀 Deploy to Staging Environment
       run: |
-        # Set environment variables explicitly for Wrangler
-        export CLOUDFLARE_API_TOKEN=$CLOUDFLARE_API_TOKEN
-        export CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID
-        
         # Deploy with explicit environment variable setting
-        CLOUDFLARE_API_TOKEN=$CLOUDFLARE_API_TOKEN npx wrangler deploy src/index.ts --env staging
+        CLOUDFLARE_API_TOKEN="${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+        CLOUDFLARE_ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
+        SUPABASE_URL="${{ secrets.SUPABASE_URL_STAGING }}" \
+        SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY_STAGING }}" \
+        SUPABASE_SERVICE_ROLE_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY_STAGING }}" \
+        npx wrangler deploy src/index.ts --env staging
       working-directory: backend
-      env:
-        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        SUPABASE_URL: ${{ secrets.SUPABASE_URL_STAGING }}
-        SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY_STAGING }}
-        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_STAGING }}
       
     - name: 📋 Display staging deployment info
       run: |
@@ -183,32 +175,24 @@ jobs:
       run: |
         npm ci
         # Verify Cloudflare API token is available
-        if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-          echo "❌ CLOUDFLARE_API_TOKEN is not set"
+        if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+          echo "❌ CLOUDFLARE_API_TOKEN is not set in GitHub Secrets"
           exit 1
         fi
         # Test authentication
-        npx wrangler whoami
+        CLOUDFLARE_API_TOKEN="${{ secrets.CLOUDFLARE_API_TOKEN }}" CLOUDFLARE_ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" npx wrangler whoami
       working-directory: backend
-      env:
-        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         
     - name: 🚀 Deploy to Production Environment
       run: |
-        # Set environment variables explicitly for Wrangler
-        export CLOUDFLARE_API_TOKEN=$CLOUDFLARE_API_TOKEN
-        export CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID
-        
         # Deploy with explicit environment variable setting
-        CLOUDFLARE_API_TOKEN=$CLOUDFLARE_API_TOKEN npx wrangler deploy src/index.ts --env production
+        CLOUDFLARE_API_TOKEN="${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+        CLOUDFLARE_ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
+        SUPABASE_URL="${{ secrets.SUPABASE_URL_PRODUCTION }}" \
+        SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY_PRODUCTION }}" \
+        SUPABASE_SERVICE_ROLE_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY_PRODUCTION }}" \
+        npx wrangler deploy src/index.ts --env production
       working-directory: backend
-      env:
-        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        SUPABASE_URL: ${{ secrets.SUPABASE_URL_PRODUCTION }}
-        SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY_PRODUCTION }}
-        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_PRODUCTION }}
       
     - name: 📋 Display production deployment info
       run: |
