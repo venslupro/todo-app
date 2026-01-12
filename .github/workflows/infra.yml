@@ -133,13 +133,10 @@ jobs:
             -auto-approve
 
       - name: "💾 Upload Terraform State"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
         uses: actions/upload-artifact@v4
         with:
           name: terraform-state-staging
-          path: |
-            terraform.tfstate
-            terraform.tfstate.backup
+          path: ${{ env.WORKING_DIRECTORY }}/terraform.tfstate
           retention-days: 1
 
   terraform-destroy-manual:
@@ -172,11 +169,10 @@ jobs:
           terraform init -input=false
 
       - name: "📥 Download Terraform State"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
         uses: actions/download-artifact@v4
         with:
           name: terraform-state-staging
-          path: .
+          path: ${{ env.WORKING_DIRECTORY }}
 
       - name: "🧹 Terraform Destroy"
         working-directory: ${{ env.WORKING_DIRECTORY }}
@@ -236,12 +232,9 @@ jobs:
             -auto-approve
 
       - name: "💾 Upload Terraform State"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
         uses: actions/upload-artifact@v4
         with:
           name: terraform-state-production
-          path: |
-            terraform.tfstate
-            terraform.tfstate.backup
+          path: ${{ env.WORKING_DIRECTORY }}/terraform.tfstate
           retention-days: 1
 
