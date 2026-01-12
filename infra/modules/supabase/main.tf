@@ -24,16 +24,25 @@ locals {
 resource "supabase_apikey" "anon_key" {
   project_ref = local.project_ref
   name        = local.anon_key_name
+  
+  # Ensure project exists before creating API keys
+  depends_on = [supabase_project.project]
 }
 
 resource "supabase_apikey" "service_key" {
   project_ref = local.project_ref
   name        = local.service_key_name
+  
+  # Ensure project exists before creating API keys
+  depends_on = [supabase_project.project]
 }
 
 # Supabase settings configuration for the project
 resource "supabase_settings" "settings" {
   project_ref = local.project_ref
+  
+  # Ensure project exists before configuring settings
+  depends_on = [supabase_project.project]
 
   # API configuration
   api = jsonencode({

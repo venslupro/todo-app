@@ -20,12 +20,12 @@ output "worker_default_url" {
   value       = "https://${local.worker_default_domain}"
 }
 
-output "frontend_url" {
+output "page_url" {
   description = "URL of the frontend application."
   value       = "https://${local.web_domain_final}"
 }
 
-output "frontend_default_url" {
+output "page_default_url" {
   description = "Default URL of the frontend application (pages.dev domain)."
   value       = "https://${local.pages_default_domain}"
 }

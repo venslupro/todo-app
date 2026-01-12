@@ -71,7 +71,7 @@ resource "cloudflare_dns_record" "api_dns" {
   zone_id = var.zone_id
   name    = var.api_domain
   type    = "CNAME"
-  content = "${local.worker_name}.${data.cloudflare_zone.existing[0].name}"
+  content = local.worker_default_domain
   proxied = true
   ttl     = 1
 

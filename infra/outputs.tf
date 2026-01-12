@@ -1,8 +1,8 @@
 # Output values for the infrastructure deployment.
 
-output "frontend_url" {
+output "page_url" {
   description = "URL of the frontend application."
-  value       = module.cloudflare.frontend_url
+  value       = module.cloudflare.page_url
 }
 
 output "worker_url" {
