@@ -30,14 +30,14 @@ variable "supabase_database_password" {
 
 variable "api_domain" {
   type        = string
-  description = "API domain for staging environment."
-  default     = "staging.api.todoapp.com"
+  description = "API domain for staging environment. Leave empty to use default workers.dev domain."
+  default     = ""
 }
 
 variable "web_domain" {
   type        = string
-  description = "Web domain for staging environment."
-  default     = "staging.app.todoapp.com"
+  description = "Web domain for staging environment. Leave empty to use default pages.dev domain."
+  default     = ""
 }
 
 variable "zone_name" {

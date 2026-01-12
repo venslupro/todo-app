@@ -4,7 +4,7 @@
 # Worker script for the API.
 # In Cloudflare provider v5.x, we create the Worker resource but defer script upload to Wrangler
 # This is an account-level resource and doesn't require a zone
-resource "cloudflare_workers_script" "todo_api" {
+resource "cloudflare_workers_script" "worker" {
   account_id  = var.account_id
   script_name = local.worker_name
   
@@ -39,7 +39,7 @@ resource "cloudflare_workers_script" "todo_api" {
 
 # Cloudflare Pages project for frontend deployment.
 # This is an account-level resource and doesn't require a zone
-resource "cloudflare_pages_project" "todo_frontend" {
+resource "cloudflare_pages_project" "page" {
   account_id = var.account_id
   name       = local.pages_name
 
@@ -65,42 +65,31 @@ resource "cloudflare_pages_project" "todo_frontend" {
 
 # DNS record for API domain (using custom domain for Worker)
 # Only create if zone is configured (custom domain)
-resource "cloudflare_dns_record" "api" {
+resource "cloudflare_dns_record" "api_dns" {
   count = var.zone_id != "" ? 1 : 0  # Only create if zone_id is provided (existing zone)
   
   zone_id = var.zone_id
   name    = var.api_domain
   type    = "CNAME"
-  content = "${local.worker_name}.${data.cloudflare_zone.existing[0].name}"
+  content = local.worker_default_domain
   proxied = true
   ttl     = 1
 
-  depends_on = [cloudflare_workers_script.todo_api]
+  depends_on = [cloudflare_workers_script.worker]
 }
 
 # DNS record for web domain (Pages deployment)
 # Only create if zone is configured (custom domain)
-resource "cloudflare_dns_record" "web" {
+resource "cloudflare_dns_record" "web_dns" {
   count = var.zone_id != "" ? 1 : 0  # Only create if zone_id is provided (existing zone)
   
   zone_id = var.zone_id
   name    = var.web_domain
   type    = "CNAME"
-  content = cloudflare_pages_project.todo_frontend.subdomain
+  content = cloudflare_pages_project.page.subdomain
   proxied = true
   ttl     = 1
 
-  depends_on = [cloudflare_pages_project.todo_frontend]
+  depends_on = [cloudflare_pages_project.page]
 }
 
-# Worker route for API domain - route to custom domain
-resource "cloudflare_workers_route" "api" {
-  count   = var.zone_id != "" ? 1 : 0  # Only create if zone_id is provided (existing zone)
-  zone_id = var.zone_id
-  pattern = "${var.api_domain}/*"
-
-  depends_on = [
-    cloudflare_workers_script.todo_api,
-    cloudflare_dns_record.api
-  ]
-}

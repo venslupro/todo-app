@@ -13,7 +13,6 @@ locals {
     region            = var.supabase_region
     database_password = var.supabase_database_password
     web_domain        = local.web_domain
-    existing_bucket_name = var.existing_bucket_name
     existing_project_id = var.supabase_existing_project_id
   }
 }
@@ -29,7 +28,6 @@ module "supabase" {
   region                = var.supabase_region
   database_password     = var.supabase_database_password
   web_domain            = local.web_domain
-  existing_bucket_name  = var.existing_bucket_name
   existing_project_id   = var.supabase_existing_project_id
 }
 
@@ -47,8 +45,7 @@ module "cloudflare" {
   
   # Supabase configuration from the supabase module
   supabase_url             = module.supabase.supabase_url
-  supabase_anon_key        = module.supabase.supabase_anon_key
-  supabase_service_key     = module.supabase.supabase_service_key
+  supabase_api_key         = module.supabase.supabase_api_key
   
   # Dependencies
   depends_on = [module.supabase]

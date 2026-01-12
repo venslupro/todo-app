@@ -1,8 +1,8 @@
 # Output values for the infrastructure deployment.
 
-output "frontend_url" {
+output "page_url" {
   description = "URL of the frontend application."
-  value       = module.cloudflare.frontend_url
+  value       = module.cloudflare.page_url
 }
 
 output "worker_url" {
@@ -10,31 +10,14 @@ output "worker_url" {
   value       = module.cloudflare.worker_url
 }
 
-output "supabase_api_url" {
+output "supabase_url" {
   description = "API URL of the Supabase project."
-  value       = module.supabase.api_url
+  value       = module.supabase.supabase_url
 }
 
-output "supabase_project_id" {
-  description = "ID of the Supabase project."
-  value       = module.supabase.project_id
-}
-
-output "supabase_anon_key" {
-  description = "Anon key for Supabase authentication."
-  value       = module.supabase.anon_key
-  sensitive   = true
-}
-
-output "supabase_service_key" {
-  description = "Service key for Supabase server operations."
-  value       = module.supabase.service_key
-  sensitive   = true
-}
-
-output "supabase_database_url" {
-  description = "Database connection URL for Supabase."
-  value       = module.supabase.database_url
+output "supabase_api_key" {
+  description = "API key for Supabase authentication (contains both anon and service keys)."
+  value       = module.supabase.supabase_api_key
   sensitive   = true
 }
 

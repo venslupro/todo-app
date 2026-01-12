@@ -1,29 +1,46 @@
-# Output values for Supabase module.
+# Output variables for Cloudflare module
+output "supabase_url" {
+  description = "Supabase project URL"
+  value       = var.existing_project_id != "" ? "https://${var.existing_project_id}.supabase.co" : (length(supabase_project.project) > 0 ? "https://${supabase_project.project[0].id}.supabase.co" : "")
+}
 
+output "supabase_api_key" {
+  description = "Supabase API key (contains both anon and service keys)"
+  value       = supabase_apikey.api_key.api_key
+  sensitive   = true
+}
+
+# Pooler configuration outputs (commented out until proper data source is implemented)
+# output "pooler_connection_string" {
+#   description = "Database connection string for the pooler"
+#   value       = ""
+#   sensitive   = true
+# }
+
+# output "pooler_max_connections" {
+#   description = "Maximum number of connections in the pool"
+#   value       = 0
+# }
+
+# output "pooler_default_pool_size" {
+#   description = "Default pool size configuration"
+#   value       = ""
+# }
+
+
+
+# Project information outputs
 output "project_id" {
-  description = "ID of the Supabase project."
-  value       = var.existing_project_id != "" ? var.existing_project_id : (length(supabase_project.todo_app) > 0 ? supabase_project.todo_app[0].id : "")
+  description = "Supabase project ID"
+  value       = local.project_ref
 }
 
-output "api_url" {
-  description = "API URL for the Supabase project."
-  value       = var.existing_project_id != "" ? "https://${var.existing_project_id}.supabase.co" : (length(supabase_project.todo_app) > 0 ? "https://${supabase_project.todo_app[0].id}.supabase.co" : "")
+output "project_name" {
+  description = "Supabase project name"
+  value       = local.project_name
 }
 
-output "anon_key" {
-  description = "Anon key for client-side authentication."
-  value       = ""
-  sensitive   = true
-}
-
-output "service_key" {
-  description = "Service key for server-side operations."
-  value       = ""
-  sensitive   = true
-}
-
-output "database_url" {
-  description = "Database connection URL."
-  value       = var.existing_project_id != "" ? "postgresql://postgres:${var.database_password}@db.${var.existing_project_id}.supabase.co:5432/postgres" : (length(supabase_project.todo_app) > 0 ? "postgresql://postgres:${supabase_project.todo_app[0].database_password}@db.${supabase_project.todo_app[0].id}.supabase.co:5432/postgres" : "")
-  sensitive   = true
+output "organization_id" {
+  description = "Supabase organization ID"
+  value       = var.organization_id
 }

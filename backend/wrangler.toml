@@ -7,22 +7,20 @@ compatibility_flags = ["nodejs_compat"]
 ENVIRONMENT = "production"
 
 [env.production]
-SUPABASE_URL = "https://your-project.supabase.co"
-SUPABASE_ANON_KEY = "your-anon-key"
-SUPABASE_SERVICE_ROLE_KEY = "your-service-role-key"
+SUPABASE_URL = ""
+SUPABASE_ANON_KEY = ""
+SUPABASE_SERVICE_ROLE_KEY = ""
 
 [env.staging]
-SUPABASE_URL = "https://your-project-staging.supabase.co"
-SUPABASE_ANON_KEY = "your-staging-anon-key"
-SUPABASE_SERVICE_ROLE_KEY = "your-staging-service-role-key"
+SUPABASE_URL = ""
+SUPABASE_ANON_KEY = ""
+SUPABASE_SERVICE_ROLE_KEY = ""
 
 [env.development]
-SUPABASE_URL = "https://your-project-dev.supabase.co"
-SUPABASE_ANON_KEY = "your-dev-anon-key"
-SUPABASE_SERVICE_ROLE_KEY = "your-dev-service-role-key"
+SUPABASE_URL = ""
+SUPABASE_ANON_KEY = ""
+SUPABASE_SERVICE_ROLE_KEY = ""
 
 [build]
 command = "npm run build"
-
-[build.upload]
 format = "service"

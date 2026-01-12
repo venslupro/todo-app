@@ -2,30 +2,40 @@
 
 output "worker_name" {
   description = "Name of the deployed Worker script."
-  value       = cloudflare_workers_script.todo_api.script_name
+  value       = cloudflare_workers_script.worker.script_name
 }
 
 output "worker_id" {
   description = "ID of the deployed Worker script."
-  value       = cloudflare_workers_script.todo_api.id
+  value       = cloudflare_workers_script.worker.id
 }
 
 output "worker_url" {
   description = "URL of the Worker API."
-  value       = var.api_domain != "" ? "https://${var.api_domain}" : "https://${local.worker_name}.${local.account_subdomain}.workers.dev"
+  value       = "https://${local.api_domain_final}"
 }
 
-output "frontend_url" {
+output "worker_default_url" {
+  description = "Default URL of the Worker API (workers.dev domain)."
+  value       = "https://${local.worker_default_domain}"
+}
+
+output "page_url" {
   description = "URL of the frontend application."
-  value       = var.web_domain != "" ? "https://${var.web_domain}" : "https://${local.pages_name}.pages.dev"
+  value       = "https://${local.web_domain_final}"
 }
 
-output "pages_project_name" {
-  description = "Name of the Pages project."
-  value       = cloudflare_pages_project.todo_frontend.name
+output "page_default_url" {
+  description = "Default URL of the frontend application (pages.dev domain)."
+  value       = "https://${local.pages_default_domain}"
 }
 
-output "pages_project_id" {
-  description = "ID of the Pages project."
-  value       = cloudflare_pages_project.todo_frontend.id
+output "page_name" {
+  description = "Name of the deployed Pages project."
+  value       = cloudflare_pages_project.page.name
+}
+
+output "page_id" {
+  description = "ID of the deployed Pages project."
+  value       = cloudflare_pages_project.page.id
 }

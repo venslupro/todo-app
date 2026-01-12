@@ -53,7 +53,7 @@ variable "supabase_plan" {
 variable "project_name" {
   type        = string
   description = "Project name used for resource naming and tagging."
-  default     = "todo-api"
+  default     = "todo"
 }
 
 variable "environment" {
@@ -96,8 +96,3 @@ variable "supabase_database_password" {
   sensitive   = true
 }
 
-variable "existing_bucket_name" {
-  type        = string
-  description = "Name of the existing Supabase storage bucket."
-  default     = "todo-app-storage"
-}
