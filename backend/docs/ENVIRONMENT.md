@@ -99,71 +99,71 @@ Configure in Cloudflare Workers dashboard:
 
 Add to GitHub repository settings:
 
-1. 进入仓库 Settings → Secrets and variables → Actions
-2. 添加以下 Secrets：
-   - `CLOUDFLARE_API_TOKEN`
-   - `CLOUDFLARE_ACCOUNT_ID`
-   - `SUPABASE_URL`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `JWT_SECRET`
+1. Go to repository Settings → Secrets and variables → Actions
+ 2. Add the following Secrets:
+    - `CLOUDFLARE_API_TOKEN`
+    - `CLOUDFLARE_ACCOUNT_ID`
+    - `SUPABASE_URL`
+    - `SUPABASE_SERVICE_ROLE_KEY`
+    - `JWT_SECRET`
 
-## 🔒 安全最佳实践
+## 🔒 Security Best Practices
 
-### 密钥管理
-- 使用不同的密钥用于开发和生产环境
-- 定期轮换敏感密钥
-- 不要将密钥提交到版本控制系统
+### Key Management
+- Use different keys for development and production environments
+- Regularly rotate sensitive keys
+- Do not commit keys to version control systems
 
-### 权限控制
-- 为不同环境使用独立的 Supabase 项目
-- 限制服务角色密钥的数据库权限
-- 启用数据库行级安全策略 (RLS)
+### Permission Control
+- Use separate Supabase projects for different environments
+- Limit database permissions for service role keys
+- Enable database row-level security policies (RLS)
 
-### 环境隔离
-- 开发环境使用测试数据
-- 生产环境启用严格的安全策略
-- 使用环境特定的配置值
+### Environment Isolation
+- Use test data in development environment
+- Enable strict security policies in production environment
+- Use environment-specific configuration values
 
-## 🧪 环境验证
+## 🧪 Environment Validation
 
-### 配置检查
+### Configuration Check
 
-运行以下命令验证环境配置：
+Run the following commands to verify environment configuration:
 
 ```bash
-# 检查 TypeScript 编译
+# Check TypeScript compilation
 npm run type-check
 
-# 运行测试
+# Run tests
 npm test
 
-# 本地开发测试
+# Local development test
 npm run dev
 
-# 构建验证
+# Build verification
 npm run build
 ```
 
-### 常见问题排查
+### Common Issue Troubleshooting
 
-#### 环境变量未加载
-- 检查 `.dev.vars` 文件是否存在且格式正确
-- 确认 Cloudflare Workers 环境变量已设置
-- 验证环境变量名称拼写
+#### Environment Variables Not Loaded
+- Check if `.dev.vars` file exists and has correct format
+- Confirm Cloudflare Workers environment variables are set
+- Verify environment variable names spelling
 
-#### Supabase 连接失败
-- 检查 Supabase URL 和密钥是否正确
-- 验证网络连接和防火墙设置
-- 确认 Supabase 项目状态正常
+#### Supabase Connection Failed
+- Check if Supabase URL and keys are correct
+- Verify network connection and firewall settings
+- Confirm Supabase project status is normal
 
-#### JWT 验证失败
-- 确保 `JWT_SECRET` 在所有环境一致
-- 检查令牌过期时间设置
-- 验证令牌签名算法
+#### JWT Validation Failed
+- Ensure `JWT_SECRET` is consistent across all environments
+- Check token expiration time settings
+- Verify token signature algorithm
 
-## 📋 配置示例
+## 📋 Configuration Examples
 
-### 开发环境配置 (.dev.vars)
+### Development Environment Configuration (.dev.vars)
 
 ```env
 SUPABASE_URL=https://your-dev-project.supabase.co
@@ -176,7 +176,7 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
 LOG_LEVEL=debug
 ```
 
-### 生产环境配置
+### Production Environment Configuration
 
 ```env
 SUPABASE_URL=https://your-prod-project.supabase.co
@@ -189,11 +189,11 @@ ALLOWED_ORIGINS=https://your-app.com
 LOG_LEVEL=info
 ```
 
-## 🔗 相关资源
+## 🔗 Related Resources
 
-- [Supabase 文档](https://supabase.com/docs)
-- [Cloudflare Workers 环境变量](https://developers.cloudflare.com/workers/configuration/environment-variables/)
-- [JWT 认证指南](https://jwt.io/introduction)
+- [Supabase Documentation](https://supabase.com/docs)
+- [Cloudflare Workers Environment Variables](https://developers.cloudflare.com/workers/configuration/environment-variables/)
+- [JWT Authentication Guide](https://jwt.io/introduction)
 
 ---
 

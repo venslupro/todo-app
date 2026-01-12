@@ -30,10 +30,10 @@
    # Link project
    supabase link --project-ref your-project-ref
    
-   # 推送迁移
+   # Push migrations
    supabase db push
 
-3. **方法三：使用pgAdmin或psql**
+3. **Method 3: Using pgAdmin or psql**
    ```bash
    psql -h your-project.supabase.co \
      -p 5432 \

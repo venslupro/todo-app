@@ -89,62 +89,14 @@ jobs:
           path: ${{ env.WORKING_DIRECTORY }}/terraform.tfplan
           retention-days: 30
 
-  terraform-apply-non-main:
-    name: "Terraform Apply (Non-Main Branch)"
+
+
+  terraform-destroy-staging:
+    name: "Terraform Destroy (Staging - Manual)"
     runs-on: ubuntu-latest
     needs: terraform-plan
     environment: staging
-    if: github.event_name == 'push' && github.ref != 'refs/heads/main'
-
-    steps:
-      - name: "📥 Checkout repository"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: "🔧 Setup Terraform"
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.8.0
-
-      - name: "� Setup Node.js"
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: "� Initialize Terraform"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "🔧 Initializing Terraform modules and providers..."
-          terraform init -input=false
-
-      - name: "� Terraform Apply"
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "🚀 Applying infrastructure changes to staging..."
-          terraform apply \
-            -input=false \
-            -var="cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
-            -var="cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-            -var="supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}" \
-            -var="supabase_organization_id=${{ secrets.SUPABASE_ORGANIZATION_ID }}" \
-            -var="supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}" \
-            -var="environment=staging" \
-            -auto-approve
-
-      - name: "💾 Upload Terraform State"
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-state-staging
-          path: ${{ env.WORKING_DIRECTORY }}/terraform.tfstate
-          retention-days: 1
-
-  terraform-destroy-manual:
-    name: "Terraform Destroy (Manual)"
-    runs-on: ubuntu-latest
-    needs: terraform-plan
-    environment: staging
-    if: github.event.inputs.operation == 'destroy' && github.ref != 'refs/heads/main'
+    if: github.event.inputs.operation == 'destroy' && github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
 
     steps:
       - name: "📥 Checkout repository"
@@ -193,12 +145,12 @@ jobs:
             echo "⚠️ No terraform state file found. Skipping destroy as there are no resources to destroy."
           fi
 
-  terraform-apply-main:
-    name: "Terraform Apply (Main Branch)"
+  terraform-apply:
+    name: "Terraform Apply (Manual)"
     runs-on: ubuntu-latest
     needs: terraform-plan
-    environment: production
-    if: github.event.inputs.operation == 'apply' && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    environment: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
+    if: github.event.inputs.operation == 'apply' && github.event_name == 'workflow_dispatch'
 
     steps:
       - name: "📥 Checkout repository"
@@ -225,7 +177,7 @@ jobs:
       - name: "� Terraform Apply"
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
-          echo "🚀 Applying infrastructure changes to production..."
+          echo "🚀 Applying infrastructure changes to ${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}..."
           terraform apply \
             -input=false \
             -var="cloudflare_account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
@@ -233,13 +185,13 @@ jobs:
             -var="supabase_access_token=${{ secrets.SUPABASE_ACCESS_TOKEN }}" \
             -var="supabase_organization_id=${{ secrets.SUPABASE_ORGANIZATION_ID }}" \
             -var="supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}" \
-            -var="environment=production" \
+            -var="environment=${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}" \
             -auto-approve
 
       - name: "💾 Upload Terraform State"
         uses: actions/upload-artifact@v4
         with:
-          name: terraform-state-production
+          name: terraform-state-${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
           path: ${{ env.WORKING_DIRECTORY }}/terraform.tfstate
           retention-days: 1
 
