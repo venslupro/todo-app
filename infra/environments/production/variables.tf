@@ -19,20 +19,20 @@ variable "supabase_access_token" {
 
 variable "api_domain" {
   type        = string
-  description = "API domain for production environment."
-  default     = "api.todoapp.com"
+  description = "API domain for production environment. Leave empty to use default workers.dev domain."
+  default     = ""
 }
 
 variable "web_domain" {
   type        = string
-  description = "Web domain for production environment."
-  default     = "app.todoapp.com"
+  description = "Web domain for production environment. Leave empty to use default pages.dev domain."
+  default     = ""
 }
 
 variable "zone_name" {
   type        = string
-  description = "Cloudflare zone name for production environment."
-  default     = "todoapp.com"
+  description = "Cloudflare zone name for production environment. Leave empty if using default domains."
+  default     = ""
 }
 
 variable "supabase_organization_id" {

@@ -17,17 +17,19 @@ variable "environment" {
 
 variable "api_domain" {
   type        = string
-  description = "API domain for Worker deployment."
+  description = "API domain for Worker deployment. Leave empty to use default workers.dev domain."
+  default     = ""
 }
 
 variable "web_domain" {
   type        = string
-  description = "Web domain for Pages deployment."
+  description = "Web domain for Pages deployment. Leave empty to use default pages.dev domain."
+  default     = ""
 }
 
 variable "zone_id" {
   type        = string
-  description = "Cloudflare zone ID."
+  description = "Cloudflare zone ID. Leave empty if using default domains."
   default     = ""
 }
 

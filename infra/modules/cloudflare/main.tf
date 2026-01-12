@@ -94,6 +94,7 @@ resource "cloudflare_dns_record" "web" {
 }
 
 # Worker route for API domain - route to custom domain
+# Only create if zone is configured (custom domain)
 resource "cloudflare_workers_route" "api" {
   count   = var.zone_id != "" ? 1 : 0  # Only create if zone_id is provided (existing zone)
   zone_id = var.zone_id

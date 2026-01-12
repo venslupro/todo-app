@@ -12,12 +12,22 @@ output "worker_id" {
 
 output "worker_url" {
   description = "URL of the Worker API."
-  value       = var.api_domain != "" ? "https://${var.api_domain}" : "https://${local.worker_name}.${local.account_subdomain}.workers.dev"
+  value       = "https://${local.api_domain_final}"
+}
+
+output "worker_default_url" {
+  description = "Default URL of the Worker API (workers.dev domain)."
+  value       = "https://${local.worker_default_domain}"
 }
 
 output "frontend_url" {
   description = "URL of the frontend application."
-  value       = var.web_domain != "" ? "https://${var.web_domain}" : "https://${local.pages_name}.pages.dev"
+  value       = "https://${local.web_domain_final}"
+}
+
+output "frontend_default_url" {
+  description = "Default URL of the frontend application (pages.dev domain)."
+  value       = "https://${local.pages_default_domain}"
 }
 
 output "pages_project_name" {

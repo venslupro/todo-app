@@ -19,6 +19,17 @@ locals {
   # 账户子域名 (基于环境)
   account_subdomain = "${var.environment}-${var.project_name}"
   
+  # 默认域名配置
+  # Workers默认域名: <worker-name>.<account-subdomain>.workers.dev
+  worker_default_domain = "${local.worker_name}.${local.account_subdomain}.workers.dev"
+  
+  # Pages默认域名: <project-name>.pages.dev
+  pages_default_domain = "${local.pages_name}.pages.dev"
+  
+  # 最终使用的域名 (优先使用自定义域名，如果未提供则使用默认域名)
+  api_domain_final = var.api_domain != "" ? var.api_domain : local.worker_default_domain
+  web_domain_final = var.web_domain != "" ? var.web_domain : local.pages_default_domain
+  
   # 标准标签
   tags = {
     Project     = var.project_name
