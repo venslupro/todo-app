@@ -3,24 +3,23 @@ main = "src/index.ts"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 
-[vars]
-ENVIRONMENT = "production"
+[build]
+command = "npm run build"
 
 [env.production]
+ENVIRONMENT = "production"
 SUPABASE_URL = ""
 SUPABASE_ANON_KEY = ""
 SUPABASE_SERVICE_ROLE_KEY = ""
 
 [env.staging]
+ENVIRONMENT = "staging"
 SUPABASE_URL = "https://evmxtjyinbjkuhrdphnq.supabase.co"
 SUPABASE_ANON_KEY = "sb_publishable_c5Ij2y8T6qyzIgxL6aLiHA_TbW5DULk"
 SUPABASE_SERVICE_ROLE_KEY = "sb_secret_PBvZmYoBQrowZeSYH7DrMA_nDcRkdjG"
 
 [env.development]
+ENVIRONMENT = "development"
 SUPABASE_URL = ""
 SUPABASE_ANON_KEY = ""
 SUPABASE_SERVICE_ROLE_KEY = ""
-
-[build]
-command = "npm run build"
-format = "service"
