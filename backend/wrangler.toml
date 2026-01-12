@@ -23,6 +23,4 @@ SUPABASE_SERVICE_ROLE_KEY = ""
 
 [build]
 command = "npm run build"
-
-[build.upload]
 format = "service"
