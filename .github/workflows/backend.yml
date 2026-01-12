@@ -95,7 +95,7 @@ jobs:
     name: 🚀 Deploy to Staging
     runs-on: ubuntu-latest
     needs: build-and-test  # Depends on build-and-test job
-    if: github.ref != 'refs/heads/main' && github.event_name == 'push'  # Auto run on non-main branches
+    if: github.ref != 'refs/heads/main' && github.event_name == 'push'  # Auto run on non-main branches only
     
     steps:
     - name: 🔄 Checkout source code
