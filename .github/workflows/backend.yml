@@ -7,7 +7,7 @@ name: Backend CI/CD Pipeline
 on:
   # Trigger on push to any branch
   push:
-    branches: ['**']
+    branches: ['main', 'dev']  # 限制在main和dev分支运行
     paths-ignore:
       - 'infra/**'
   
