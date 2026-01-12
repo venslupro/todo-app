@@ -4,7 +4,7 @@
 # Worker script for the API.
 # In Cloudflare provider v5.x, we create the Worker resource but defer script upload to Wrangler
 # This is an account-level resource and doesn't require a zone
-resource "cloudflare_workers_script" "todo_api" {
+resource "cloudflare_workers_script" "api" {
   account_id  = var.account_id
   script_name = local.worker_name
   
@@ -39,7 +39,7 @@ resource "cloudflare_workers_script" "todo_api" {
 
 # Cloudflare Pages project for frontend deployment.
 # This is an account-level resource and doesn't require a zone
-resource "cloudflare_pages_project" "todo_frontend" {
+resource "cloudflare_pages_project" "frontend" {
   account_id = var.account_id
   name       = local.pages_name
 
@@ -75,7 +75,7 @@ resource "cloudflare_dns_record" "api" {
   proxied = true
   ttl     = 1
 
-  depends_on = [cloudflare_workers_script.todo_api]
+  depends_on = [cloudflare_workers_script.api]
 }
 
 # DNS record for web domain (Pages deployment)
@@ -86,11 +86,11 @@ resource "cloudflare_dns_record" "web" {
   zone_id = var.zone_id
   name    = var.web_domain
   type    = "CNAME"
-  content = cloudflare_pages_project.todo_frontend.subdomain
+  content = cloudflare_pages_project.frontend.subdomain
   proxied = true
   ttl     = 1
 
-  depends_on = [cloudflare_pages_project.todo_frontend]
+  depends_on = [cloudflare_pages_project.frontend]
 }
 
 # Worker route for API domain - route to custom domain
@@ -100,7 +100,7 @@ resource "cloudflare_workers_route" "api" {
   pattern = "${var.api_domain}/*"
 
   depends_on = [
-    cloudflare_workers_script.todo_api,
+    cloudflare_workers_script.api,
     cloudflare_dns_record.api
   ]
 }

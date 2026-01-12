@@ -3,19 +3,19 @@
 # Cloudflare module for Worker and Pages deployment.
 module "cloudflare" {
   source = "../../modules/cloudflare"
-  
-  account_id         = var.cloudflare_account_id
-  project_name       = local.project_name
-  environment        = local.environment
-  api_domain         = var.api_domain
-  web_domain         = var.web_domain
-  zone_name          = var.zone_name
+
+  account_id   = var.cloudflare_account_id
+  project_name = local.project_name
+  environment  = local.environment
+  api_domain   = var.api_domain
+  web_domain   = var.web_domain
+  zone_name    = var.zone_name
 }
 
 # Supabase module for database and backend services.
 module "supabase" {
   source = "../../modules/supabase"
-  
+
   organization_id   = var.supabase_organization_id
   project_name      = local.project_name
   environment       = local.environment

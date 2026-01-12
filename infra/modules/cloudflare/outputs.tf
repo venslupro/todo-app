@@ -2,12 +2,12 @@
 
 output "worker_name" {
   description = "Name of the deployed Worker script."
-  value       = cloudflare_workers_script.todo_api.script_name
+  value       = cloudflare_workers_script.api.script_name
 }
 
 output "worker_id" {
   description = "ID of the deployed Worker script."
-  value       = cloudflare_workers_script.todo_api.id
+  value       = cloudflare_workers_script.api.id
 }
 
 output "worker_url" {
@@ -22,10 +22,10 @@ output "frontend_url" {
 
 output "pages_project_name" {
   description = "Name of the Pages project."
-  value       = cloudflare_pages_project.todo_frontend.name
+  value       = cloudflare_pages_project.frontend.name
 }
 
 output "pages_project_id" {
   description = "ID of the Pages project."
-  value       = cloudflare_pages_project.todo_frontend.id
+  value       = cloudflare_pages_project.frontend.id
 }

@@ -6,5 +6,5 @@ resource "cloudflare_workers_route" "api_route" {
   zone_id = var.zone_id
   pattern = "${var.api_domain}/*"
   
-  depends_on = [cloudflare_workers_script.todo_api]
+  depends_on = [cloudflare_workers_script.api]
 }

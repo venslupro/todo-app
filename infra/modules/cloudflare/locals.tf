@@ -1,16 +1,25 @@
 # Local variables for Cloudflare module.
 
 locals {
-  # Resource naming conventions.
-  worker_name = "${var.project_name}-${var.environment}"
-  pages_name  = "${var.project_name}-frontend-tf-${var.environment}"
+  # 资源命名规范: 环境名-应用名-资源类型
   
-  # Account subdomain for Workers default domain.
-  # This is typically the account name, but we'll use a default value.
-  # In practice, this should be set based on the actual account subdomain.
-  account_subdomain = "todoapp"  # Default subdomain, can be overridden
+  # Worker资源命名: stg-todo-worker / prd-todo-worker
+  worker_name = "${var.environment}-${var.project_name}-worker"
   
-  # Standard tags.
+  # Pages资源命名: stg-todo-page / prd-todo-page
+  pages_name  = "${var.environment}-${var.project_name}-page"
+  
+  # DNS记录命名
+  api_dns_name = "${var.environment}-${var.project_name}-api-dns"
+  web_dns_name = "${var.environment}-${var.project_name}-web-dns"
+  
+  # Worker路由命名
+  api_route_name = "${var.environment}-${var.project_name}-api-route"
+  
+  # 账户子域名 (基于环境)
+  account_subdomain = "${var.environment}-${var.project_name}"
+  
+  # 标准标签
   tags = {
     Project     = var.project_name
     Environment = var.environment

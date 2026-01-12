@@ -2,7 +2,7 @@
 
 # Supabase project resource for the Todo application.
 # Only create new project if no existing project ID is provided
-resource "supabase_project" "todo_app" {
+resource "supabase_project" "project" {
   count = var.existing_project_id == "" ? 1 : 0
   
   organization_id   = var.organization_id
@@ -17,11 +17,22 @@ resource "supabase_project" "todo_app" {
 
 # Local value for project reference (either created or existing)
 locals {
-  project_ref = var.existing_project_id != "" ? var.existing_project_id : (length(supabase_project.todo_app) > 0 ? supabase_project.todo_app[0].id : "")
+  project_ref = var.existing_project_id != "" ? var.existing_project_id : (length(supabase_project.project) > 0 ? supabase_project.project[0].id : "")
+}
+
+# Supabase API key resources for the project
+resource "supabase_apikey" "anon_key" {
+  project_ref = local.project_ref
+  name        = "${var.environment}-${var.project_name}-anon-key"
+}
+
+resource "supabase_apikey" "service_key" {
+  project_ref = local.project_ref
+  name        = "${var.environment}-${var.project_name}-service-key"
 }
 
 # Supabase settings configuration for the project
-resource "supabase_settings" "todo_settings" {
+resource "supabase_settings" "settings" {
   project_ref = local.project_ref
 
   # API configuration
@@ -35,37 +46,17 @@ resource "supabase_settings" "todo_settings" {
   auth = jsonencode({
     site_url = "https://${var.web_domain}"
   })
+
+  # Database configuration
+  database = jsonencode({
+    pooler = {
+      default_pool_size = var.pooler_default_size
+      max_client_conn   = var.pooler_max_connections
+    }
+  })
 }
 
-# Output variables for Cloudflare module
-output "supabase_url" {
-  description = "Supabase project URL"
-  value       = var.existing_project_id != "" ? "https://${var.existing_project_id}.supabase.co" : (length(supabase_project.todo_app) > 0 ? "https://${supabase_project.todo_app[0].id}.supabase.co" : "")
-}
-
-output "supabase_anon_key" {
-  description = "Supabase anonymous API key"
-  value       = ""
-}
-
-output "supabase_service_key" {
-  description = "Supabase service role API key"
-  value       = ""
-  sensitive   = true
-}
-
-# Storage bucket outputs (for existing bucket)
-output "storage_bucket_name" {
-  description = "Existing storage bucket name"
-  value       = local.existing_bucket_name
-}
-
-output "storage_bucket_url" {
-  description = "Storage bucket public URL"
-  value       = local.storage_config.public_url
-}
-
-output "storage_api_url" {
-  description = "Storage API URL"
-  value       = local.storage_config.api_url
+# Supabase pooler data source for connection pool management
+data "supabase_pooler" "connection_pool" {
+  project_ref = local.project_ref
 }
