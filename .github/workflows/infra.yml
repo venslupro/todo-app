@@ -217,6 +217,3 @@ jobs:
             -var="supabase_database_password=${{ secrets.SUPABASE_DATABASE_PASSWORD }}" \
             -var="environment=staging" \
             -auto-approve
-          elif [ "${{ github.event.inputs.operation }}" = "destroy" ]; then
-            echo "### Destroy Status: Completed successfully" >> $GITHUB_STEP_SUMMARY
-          fi
