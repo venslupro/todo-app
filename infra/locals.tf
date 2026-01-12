@@ -4,7 +4,9 @@
 locals {
   # Project and environment configuration.
   project_name = var.project_name
-  environment  = var.environment
+  
+  # 环境名称映射: production -> prd, staging -> stg
+  environment = var.environment == "production" ? "prd" : (var.environment == "staging" ? "stg" : "dev")
 
   # Standard tags for resource identification and organization.
   tags = {
@@ -18,10 +20,10 @@ locals {
   web_domain = var.web_domain
 
   # Resource naming conventions.
-  worker_name = "${local.project_name}-${local.environment}"
-  pages_name  = "${local.project_name}-frontend-${local.environment}"
-  kv_name     = "${local.project_name}-kv-${local.environment}"
+  worker_name = "${local.environment}-${local.project_name}-worker"
+  pages_name  = "${local.environment}-${local.project_name}-page"
+  kv_name     = "${local.environment}-${local.project_name}-kv"
   
   # Supabase project naming.
-  supabase_project_name = "${local.project_name}-${local.environment}"
+  supabase_project_name = "${local.environment}-${local.project_name}-project"
 }
