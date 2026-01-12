@@ -101,20 +101,20 @@ npm run deploy     # Deploy to Cloudflare Workers
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 📄 许可证
+## 📄 License
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 📞 联系方式
+## 📞 Contact
 
-如有问题或建议，请通过以下方式联系：
-- 项目 Issues: [GitHub Issues](https://github.com/venslupro/todo-app/issues)
-- 邮箱: [项目维护者邮箱]
+For questions or suggestions, please contact us through:
+- Project Issues: [GitHub Issues](https://github.com/venslupro/todo-app/issues)
+- Email: [Project maintainer email]
 
 ---
 
-**注意**: 部署前请确保已正确配置所有环境变量，详细说明请查看 [环境配置文档](docs/ENVIRONMENT.md)。
+**Note**: Before deployment, ensure all environment variables are properly configured. For detailed instructions, see [Environment Configuration Documentation](docs/ENVIRONMENT.md).

@@ -106,54 +106,54 @@ Client Request → Cloudflare Workers → Hono Router → Business Service Layer
 ### Concurrent Capacity
 - Supports thousands of concurrent WebSocket connections
 - Processes hundreds of API requests per second
-- 自动水平扩展
+- Automatic horizontal scaling
 
-### 可用性
-- 99.9% 服务可用性
-- 全球多个边缘节点
-- 自动故障转移
+### Availability
+- 99.9% service availability
+- Multiple global edge nodes
+- Automatic failover
 
-## 🔧 开发最佳实践
+## 🔧 Development Best Practices
 
-### 代码组织
-- 清晰的模块边界
-- 单一职责原则
-- 依赖注入模式
+### Code Organization
+- Clear module boundaries
+- Single responsibility principle
+- Dependency injection patterns
 
-### 错误处理
-- 统一的错误响应格式
-- 详细的错误日志记录
-- 优雅的错误恢复
+### Error Handling
+- Unified error response format
+- Detailed error logging
+- Graceful error recovery
 
-### 测试策略
-- 单元测试覆盖核心逻辑
-- 集成测试验证 API 接口
-- 端到端测试确保系统功能
+### Testing Strategy
+- Unit tests covering core logic
+- Integration tests validating API interfaces
+- End-to-end tests ensuring system functionality
 
-## 🚀 部署架构
+## 🚀 Deployment Architecture
 
-### 开发环境
-- 本地 Wrangler 开发服务器
-- 热重载和调试支持
-- 本地数据库连接
+### Development Environment
+- Local Wrangler development server
+- Hot reload and debugging support
+- Local database connections
 
-### 生产环境
-- Cloudflare Workers 全球部署
-- Supabase 生产数据库
-- GitHub Actions 自动化部署
+### Production Environment
+- Global deployment with Cloudflare Workers
+- Supabase production database
+- Automated deployment with GitHub Actions
 
-### 监控和日志
-- Cloudflare Workers 日志
-- Supabase 性能监控
-- 错误追踪和报警
+### Monitoring and Logging
+- Cloudflare Workers logs
+- Supabase performance monitoring
+- Error tracking and alerts
 
-## 📚 相关文档
+## 📚 Related Documentation
 
-- [环境配置](ENVIRONMENT.md) - 环境变量和部署配置
-- [API 文档](API.md) - 详细的 API 接口说明
-- [测试指南](TESTING.md) - 测试框架使用说明
-- [部署指南](DEPLOYMENT.md) - 生产环境部署流程
+- [Environment Configuration](ENVIRONMENT.md) - Environment variables and deployment configuration
+- [API Documentation](API.md) - Detailed API interface specifications
+- [Testing Guide](TESTING.md) - Testing framework usage instructions
+- [Deployment Guide](DEPLOYMENT.md) - Production environment deployment process
 
 ---
 
-**技术优势**: 本项目结合了现代无服务器架构的优势，提供了高性能、高可用性的后端服务，同时保持了开发效率和代码质量。
+**Technical Advantages**: This project combines the advantages of modern serverless architecture, providing high-performance, highly available backend services while maintaining development efficiency and code quality.

@@ -55,49 +55,49 @@ SUPPORTED_IMAGE_TYPES=image/jpeg,image/png,image/gif,image/webp
 SUPPORTED_VIDEO_TYPES=video/mp4,video/webm,video/ogg
 ```
 
-### 速率限制
+### Rate Limiting
 
 ```env
-# 每分钟最大请求数 (默认 1000)
+# Maximum requests per minute (default 1000)
 RATE_LIMIT_REQUESTS=1000
 
-# 速率限制窗口时间 (秒，默认 60)
+# Rate limit window time (seconds, default 60)
 RATE_LIMIT_WINDOW=60
 ```
 
-### 日志配置
+### Logging Configuration
 
 ```env
-# 日志级别 (error/warn/info/debug)
+# Log level (error/warn/info/debug)
 LOG_LEVEL=info
 
-# 是否启用详细日志
+# Enable verbose logging
 DEBUG=false
 ```
 
-## 🛠️ 环境设置
+## 🛠️ Environment Setup
 
-### 1. 本地开发 (.dev.vars)
+### 1. Local Development (.dev.vars)
 
-创建 `.dev.vars` 文件用于 Wrangler 开发：
+Create `.dev.vars` file for Wrangler development:
 
 ```bash
 cp .dev.vars.example .dev.vars
-# 编辑 .dev.vars 文件，填入实际配置
+# Edit .dev.vars file with actual configuration
 ```
 
-### 2. 生产环境 (Cloudflare Dashboard)
+### 2. Production Environment (Cloudflare Dashboard)
 
-在 Cloudflare Workers 仪表板中设置：
+Configure in Cloudflare Workers dashboard:
 
-1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com)
-2. 选择 Workers 服务
-3. 进入 "Settings" → "Variables"
-4. 添加所有必需的环境变量
+1. Log in to [Cloudflare Dashboard](https://dash.cloudflare.com)
+2. Select Workers service
+3. Go to "Settings" → "Variables"
+4. Add all required environment variables
 
-### 3. CI/CD 环境 (GitHub Secrets)
+### 3. CI/CD Environment (GitHub Secrets)
 
-在 GitHub 仓库设置中添加：
+Add to GitHub repository settings:
 
 1. 进入仓库 Settings → Secrets and variables → Actions
 2. 添加以下 Secrets：
