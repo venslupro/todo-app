@@ -117,9 +117,9 @@ jobs:
         
     - name: 📝 Update wrangler.toml
       run: |        
-        sed -i 's|supabase_url_staging = ""|supabase_url = "${{ vars.SUPABASE_URL }}"|g' wrangler.toml
-        sed -i 's|supabase_anon_key_staging = ""|supabase_anon_key = "${{ vars.SUPABASE_ANON_KEY }}"|g' wrangler.toml
-        sed -i 's|supabase_service_role_key_staging = ""|supabase_service_role_key = "${{ vars.SUPABASE_SERVICE_ROLE_KEY }}"|g' wrangler.toml
+        sed -i 's|supabase_url = ""|supabase_url = "${{ vars.SUPABASE_URL }}"|g' wrangler.toml
+        sed -i 's|supabase_anon_key = ""|supabase_anon_key = "${{ vars.SUPABASE_ANON_KEY }}"|g' wrangler.toml
+        sed -i 's|supabase_service_role_key = ""|supabase_service_role_key = "${{ vars.SUPABASE_SERVICE_ROLE_KEY }}"|g' wrangler.toml
       working-directory: backend
         
     - name: 🚀 Deploy to Staging
@@ -173,9 +173,9 @@ jobs:
         
     - name: 📝 Update wrangler.toml
       run: |        
-        sed -i 's|supabase_url_production = ""|supabase_url = "${{ vars.SUPABASE_URL }}"|g' wrangler.toml
-        sed -i 's|supabase_anon_key_production = ""|supabase_anon_key = "${{ vars.SUPABASE_ANON_KEY }}"|g' wrangler.toml
-        sed -i 's|supabase_service_role_key_production = ""|supabase_service_role_key = "${{ vars.SUPABASE_SERVICE_ROLE_KEY }}"|g' wrangler.toml
+        sed -i 's|supabase_url = ""|supabase_url = "${{ vars.SUPABASE_URL }}"|g' wrangler.toml
+        sed -i 's|supabase_anon_key = ""|supabase_anon_key = "${{ vars.SUPABASE_ANON_KEY }}"|g' wrangler.toml
+        sed -i 's|supabase_service_role_key = ""|supabase_service_role_key = "${{ vars.SUPABASE_SERVICE_ROLE_KEY }}"|g' wrangler.toml
       working-directory: backend
         
     - name: 🚀 Deploy to Production
