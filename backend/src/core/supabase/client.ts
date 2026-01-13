@@ -21,6 +21,9 @@ export class SupabaseClient {
    * Gets anonymous client for frontend calls.
    */
   public static getClient(config: AppConfig): ReturnType<typeof createClient<Database>> {
+    if (!config || typeof config.getSupabase !== 'function') {
+      throw new Error('Invalid config object provided to SupabaseClient.getClient');
+    }
     const supabaseConfig = config.getSupabase();
     const cacheKey = this.generateCacheKey(
       supabaseConfig.getUrl(),
@@ -48,6 +51,9 @@ export class SupabaseClient {
    * Gets service role client for backend management.
    */
   public static getServiceClient(config: AppConfig): ReturnType<typeof createClient<Database>> {
+    if (!config || typeof config.getSupabase !== 'function') {
+      throw new Error('Invalid config object provided to SupabaseClient.getServiceClient');
+    }
     const supabaseConfig = config.getSupabase();
     const cacheKey = this.generateCacheKey(
       supabaseConfig.getUrl(),
