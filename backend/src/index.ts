@@ -25,11 +25,17 @@ app.use('*', errorMiddleware);
 
 // 系统路由（无需认证）
 app.route('/', systemRoutes);
+
+// 认证路由（无需认证）
 app.route('/api/v1/auth', authRoutes);
 
-// API路由（需要认证）
-app.use('/api/v1/*', authMiddleware);
-app.use('/api/v1/*', globalRateLimit);
+// API路由（需要认证）- 排除认证路由
+app.use('/api/v1/todos/*', authMiddleware);
+app.use('/api/v1/todos/*', globalRateLimit);
+app.use('/api/v1/media/*', authMiddleware);
+app.use('/api/v1/media/*', globalRateLimit);
+app.use('/api/v1/team/*', authMiddleware);
+app.use('/api/v1/team/*', globalRateLimit);
 app.route('/api/v1/todos', todoRoutes);
 app.route('/api/v1/media', mediaRoutes);
 app.route('/api/v1/team', teamRoutes);
