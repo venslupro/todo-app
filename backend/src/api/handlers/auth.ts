@@ -15,7 +15,16 @@ const router = new Hono<{
 }>();
 
 // Function to create service instance
-function createAuthService(c: { env: { supabase_url: string; supabase_service_role_key: string; supabase_anon_key: string; environment: 'development' | 'production' | 'staging'; } }) {
+function createAuthService(
+  c: {
+    env: {
+      supabase_url: string;
+      supabase_service_role_key: string;
+      supabase_anon_key: string;
+      environment: 'development' | 'production' | 'staging';
+    };
+  },
+) {
   const envConfig = {
     supabase_url: c.env.supabase_url,
     supabase_anon_key: c.env.supabase_anon_key,
