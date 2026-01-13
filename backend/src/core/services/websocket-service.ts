@@ -88,13 +88,13 @@ export class WebSocketService {
   ): Promise<void> {
     const supabase = SupabaseClient.getClient(env);
 
-    // 检查编辑权限
+    // Check edit permission
     const canEdit = await this.checkEditPermission(todoId, userId, env);
     if (!canEdit) {
       throw new WebSocketErrors.WebSocketAuthError('No permission to edit this todo');
     }
 
-    // 更新TODO
+    // Update TODO
     const {error} = await (supabase as any)
       .from('todos')
       .update({
@@ -109,7 +109,7 @@ export class WebSocketService {
   }
 
   /**
-   * 获取TODO房间的用户列表
+   * Get TODO room user list
    */
   async getTodoRoomUsers(
     todoId: string,
@@ -123,7 +123,7 @@ export class WebSocketService {
   }>> {
     const supabase = SupabaseClient.getClient(env);
 
-    // 获取所有有权限访问这个TODO的用户
+    // Get all users with access to this TODO
     const {data: todo} = await supabase
       .from('todos')
       .select('created_by')
@@ -134,10 +134,10 @@ export class WebSocketService {
       return [];
     }
 
-    // 获取创建者信息
+    // Get creator information
     const creatorResponse = await supabase.auth.admin.getUserById(todo.created_by);
 
-    // 获取分享用户
+    // Get shared users
     const sharesResponse = await supabase
       .from('todo_shares')
       .select('user_id')
@@ -156,7 +156,7 @@ export class WebSocketService {
       });
     }
 
-    // 获取分享用户的信息
+    // Get shared user information
     if (sharesResponse && sharesResponse.data && sharesResponse.data.length > 0) {
       for (const share of sharesResponse.data) {
         const userResponse = await supabase.auth.admin.getUserById(share.user_id);
@@ -176,7 +176,7 @@ export class WebSocketService {
   }
 
   /**
-   * 检查编辑权限
+   * Check edit permission
    */
   private async checkEditPermission(
     todoId: string,
@@ -196,12 +196,12 @@ export class WebSocketService {
       return false;
     }
 
-    // 如果是创建者，允许编辑
+    // If creator, allow editing
     if (todo.created_by === userId) {
       return true;
     }
 
-    // 检查是否有编辑权限的分享
+    // Check if there is edit permission share
     const {data: share} = await supabase
       .from('todo_shares')
       .select('permission')
