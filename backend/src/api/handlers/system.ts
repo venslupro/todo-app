@@ -4,10 +4,10 @@ import {HttpErrors} from '../../shared/errors/http-errors';
 
 const router = new Hono<{
   Bindings: {
-    SUPABASE_URL: string;
-    SUPABASE_SERVICE_ROLE_KEY: string;
-    SUPABASE_ANON_KEY: string;
-    ENVIRONMENT: 'development' | 'production' | 'staging';
+    supabase_url: string;
+    supabase_service_role_key: string;
+    supabase_anon_key: string;
+    environment: 'development' | 'production' | 'staging';
   };
   Variables: {};
 }>();

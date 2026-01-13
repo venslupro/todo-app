@@ -1,6 +1,8 @@
 // core/services/websocket-service.ts
 import {WebSocketErrors} from '../../shared/errors/websocket-errors';
-import {SupabaseClient} from '../../shared/supabase/client';
+import {SupabaseClient} from '../supabase/client';
+import {AppConfig} from '../../shared/config/config';
+import {Todo} from '../models/todo';
 
 /**
  * WebSocket message interface
@@ -21,7 +23,10 @@ export class WebSocketService {
   /**
    * Authenticate WebSocket connection
    */
-  async authenticateConnection(token: string, env: any): Promise<any> {
+  async authenticateConnection(
+    token: string,
+    env: AppConfig,
+  ): Promise<{ id: string; email?: string }> {
     if (!token) {
       throw new WebSocketErrors.WebSocketAuthError('Authentication token required');
     }
@@ -42,7 +47,7 @@ export class WebSocketService {
   async verifyTodoAccess(
     todoId: string,
     userId: string,
-    env: any,
+    env: AppConfig,
   ): Promise<boolean> {
     const supabase = SupabaseClient.getClient(env);
 
@@ -51,14 +56,14 @@ export class WebSocketService {
       .select('created_by')
       .eq('id', todoId)
       .eq('is_deleted', false)
-      .single();
+      .single<{ created_by: string }>();
 
     if (!todo) {
       return false;
     }
 
     // 如果是创建者，允许访问
-    if ((todo as any).created_by === userId) {
+    if (todo.created_by === userId) {
       return true;
     }
 
@@ -77,18 +82,13 @@ export class WebSocketService {
    * 广播消息给TODO房间的所有用户
    */
   async broadcastToTodoRoom(
-    todoId: string,
-    message: WebSocketMessage,
-    excludeUserId?: string,
+    _todoId: string,
+    _message: WebSocketMessage,
+    _excludeUserId?: string,
   ): Promise<void> {
     // 这里应该实现向WebSocket连接广播消息的逻辑
     // 由于我们使用Durable Objects，这个逻辑会在Durable Object内部实现
     // 这个方法主要是为了服务层的接口一致性
-    console.log(`Broadcasting to todo room ${todoId}:`, {
-      type: message.type,
-      sender: message.sender,
-      exclude: excludeUserId,
-    });
   }
 
   /**
@@ -96,9 +96,9 @@ export class WebSocketService {
    */
   async handleTodoUpdate(
     todoId: string,
-    updateData: any,
+    updateData: Partial<Todo>,
     userId: string,
-    env: any,
+    env: AppConfig,
   ): Promise<void> {
     const supabase = SupabaseClient.getClient(env);
 
@@ -118,15 +118,23 @@ export class WebSocketService {
       .eq('id', todoId);
 
     if (error) {
-      console.error('WebSocket update error:', error);
-      throw new Error('Failed to update todo');
+      throw new Error(`Failed to update todo: ${error.message}`);
     }
   }
 
   /**
    * 获取TODO房间的用户列表
    */
-  async getTodoRoomUsers(todoId: string, env: any): Promise<any[]> {
+  async getTodoRoomUsers(
+    todoId: string,
+    env: AppConfig,
+  ): Promise<Array<{
+    id: string;
+    email?: string | null | undefined;
+    username?: string | null | undefined;
+    full_name?: string | null | undefined;
+    is_creator: boolean;
+  }>> {
     const supabase = SupabaseClient.getClient(env);
 
     // 获取所有有权限访问这个TODO的用户
@@ -134,20 +142,21 @@ export class WebSocketService {
       .from('todos')
       .select('created_by')
       .eq('id', todoId)
-      .single();
+      .single<{ created_by: string }>();
 
     if (!todo) {
       return [];
     }
 
     // 获取创建者信息
-    const creatorResponse = await supabase.auth.admin.getUserById((todo as any).created_by);
+    const creatorResponse = await supabase.auth.admin.getUserById(todo.created_by);
 
     // 获取分享用户
     const sharesResponse = await supabase
       .from('todo_shares')
       .select('user_id')
-      .eq('todo_id', todoId);
+      .eq('todo_id', todoId)
+      .returns<Array<{ user_id: string }>>();
 
     const users = [];
 
@@ -164,7 +173,7 @@ export class WebSocketService {
     // 获取分享用户的信息
     if (sharesResponse && sharesResponse.data && sharesResponse.data.length > 0) {
       for (const share of sharesResponse.data) {
-        const userResponse = await supabase.auth.admin.getUserById((share as any).user_id);
+        const userResponse = await supabase.auth.admin.getUserById(share.user_id);
         if (userResponse && userResponse.data && userResponse.data.user) {
           users.push({
             id: userResponse.data.user.id,
@@ -195,14 +204,14 @@ export class WebSocketService {
       .select('created_by')
       .eq('id', todoId)
       .eq('is_deleted', false)
-      .single();
+      .single<{created_by: string}>();
 
     if (!todo) {
       return false;
     }
 
     // 如果是创建者，允许编辑
-    if ((todo as any).created_by === userId) {
+    if (todo.created_by === userId) {
       return true;
     }
 
@@ -212,8 +221,8 @@ export class WebSocketService {
       .select('permission')
       .eq('todo_id', todoId)
       .eq('user_id', userId)
-      .single();
+      .single<{permission: string}>();
 
-    return (share as any)?.permission === 'edit';
+    return share?.permission === 'edit';
   }
 }

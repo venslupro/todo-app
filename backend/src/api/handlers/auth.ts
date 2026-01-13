@@ -2,20 +2,28 @@
 import {Hono} from 'hono';
 import {HttpErrors} from '../../shared/errors/http-errors';
 import {AuthService} from '../../core/services/auth-service';
+import {AppConfig} from '../../shared/config/config';
 
 const router = new Hono<{
   Bindings: {
-    SUPABASE_URL: string;
-    SUPABASE_SERVICE_ROLE_KEY: string;
-    SUPABASE_ANON_KEY: string;
-    ENVIRONMENT: 'development' | 'production' | 'staging';
+    supabase_url: string;
+    supabase_service_role_key: string;
+    supabase_anon_key: string;
+    environment: 'development' | 'production' | 'staging';
   };
   Variables: {};
 }>();
 
 // Function to create service instance
-function createAuthService(c: any) {
-  return new AuthService(c.env);
+function createAuthService(c: { env: { supabase_url: string; supabase_service_role_key: string; supabase_anon_key: string; environment: 'development' | 'production' | 'staging'; } }) {
+  const envConfig = {
+    supabase_url: c.env.supabase_url,
+    supabase_anon_key: c.env.supabase_anon_key,
+    supabase_service_role_key: c.env.supabase_service_role_key,
+    environment: c.env.environment,
+  };
+  const appConfig = new AppConfig(envConfig);
+  return new AuthService(appConfig);
 }
 
 /**

@@ -1,7 +1,7 @@
 // core/services/media-service.ts
 import {HttpErrors} from '../../shared/errors/http-errors';
 import {Validator} from '../../shared/validation/validator';
-import {SupabaseClient} from '../../shared/supabase/client';
+import {SupabaseClient} from '../supabase/client';
 import {
   Media,
   MediaType,

@@ -1,5 +1,5 @@
 // scripts/seed.ts
-import {SupabaseClient} from '../src/shared/supabase/client';
+import {SupabaseClient} from '../src/core/supabase/client';
 import * as fs from 'fs';
 import * as path from 'path';
 

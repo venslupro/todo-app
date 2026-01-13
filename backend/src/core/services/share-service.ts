@@ -1,7 +1,7 @@
 // core/services/share-service.ts
 import {HttpErrors} from '../../shared/errors/http-errors';
 import {Validator} from '../../shared/validation/validator';
-import {SupabaseClient} from '../../shared/supabase/client';
+import {SupabaseClient} from '../supabase/client';
 import {
   TodoShare,
   // SharePermission,
@@ -16,8 +16,8 @@ import {
 export class ShareService {
   private supabase: ReturnType<typeof SupabaseClient.getClient>;
 
-  constructor(env: any) {
-    this.supabase = SupabaseClient.getClient(env);
+  constructor(env: Record<string, unknown>) {
+    this.supabase = SupabaseClient.getClient(env as any);
   }
 
   /**
@@ -48,7 +48,7 @@ export class ShareService {
       throw new HttpErrors.NotFoundError('Todo not found');
     }
 
-    if ((todo as any).created_by !== userId) {
+    if ((todo as {created_by: string}).created_by !== userId) {
       throw new HttpErrors.ForbiddenError('You can only share your own todos');
     }
 
@@ -86,8 +86,7 @@ export class ShareService {
       .single();
 
     if (error) {
-      console.error('Database error:', error);
-      throw new HttpErrors.InternalServerError('Failed to create share');
+      throw new HttpErrors.InternalServerError(`Failed to create share: ${error.message}`);
     }
 
     return data as TodoShare;
@@ -121,7 +120,7 @@ export class ShareService {
         throw new HttpErrors.NotFoundError('Todo not found');
       }
 
-      if ((todo as any).created_by !== userId) {
+      if ((todo as {created_by: string}).created_by !== userId) {
         throw new HttpErrors.ForbiddenError('You can only view shares of your own todos');
       }
 
@@ -145,8 +144,7 @@ export class ShareService {
     const {data, error} = await query;
 
     if (error) {
-      console.error('Database error:', error);
-      throw new HttpErrors.InternalServerError('Failed to fetch shares');
+      throw new HttpErrors.InternalServerError(`Failed to fetch shares: ${error.message}`);
     }
 
     return data as TodoShare[];
@@ -169,7 +167,8 @@ export class ShareService {
     }
 
     // 检查权限
-    if ((share as any).todos.created_by !== userId && (share as any).user_id !== userId) {
+    if (((share as {todos: {created_by: string}, user_id: string}).todos.created_by !== userId) &&
+        ((share as {todos: {created_by: string}, user_id: string}).user_id !== userId)) {
       throw new HttpErrors.ForbiddenError('No permission to view this share');
     }
 
@@ -201,7 +200,7 @@ export class ShareService {
     }
 
     // 检查权限
-    if ((share as any).todos.created_by !== userId) {
+    if (((share as {todos: {created_by: string}}).todos.created_by !== userId)) {
       throw new HttpErrors.ForbiddenError('You can only update shares of your own todos');
     }
 
@@ -217,8 +216,7 @@ export class ShareService {
       .single();
 
     if (error) {
-      console.error('Database error:', error);
-      throw new HttpErrors.InternalServerError('Failed to update share');
+      throw new HttpErrors.InternalServerError(`Failed to update share: ${error.message}`);
     }
 
     return data as TodoShare;
@@ -242,7 +240,8 @@ export class ShareService {
     }
 
     // 检查权限
-    if ((share as any).todos.created_by !== userId && (share as any).shared_by !== userId) {
+    if (((share as {todos: {created_by: string}, shared_by: string}).todos.created_by !== userId) &&
+        ((share as {todos: {created_by: string}, shared_by: string}).shared_by !== userId)) {
       throw new HttpErrors.ForbiddenError('You can only delete shares you created or received');
     }
 
@@ -252,8 +251,7 @@ export class ShareService {
       .eq('id', shareId);
 
     if (error) {
-      console.error('Database error:', error);
-      throw new HttpErrors.InternalServerError('Failed to delete share');
+      throw new HttpErrors.InternalServerError(`Failed to delete share: ${error.message}`);
     }
   }
 }

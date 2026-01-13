@@ -1,8 +1,8 @@
-// api/handlers/todo.ts
 import {Hono} from 'hono';
 import {HonoAppType} from '../../shared/types/hono-types';
 import {HttpErrors} from '../../shared/errors/http-errors';
 import {TodoService} from '../../core/services/todo-service';
+import {AppConfig} from '../../shared/config/config';
 import {
   TodoStatus,
   TodoPriority,
@@ -10,18 +10,24 @@ import {
 
 const router = new Hono<HonoAppType>();
 
-// Function to create service instance
-function createTodoService(c: any) {
-  return new TodoService(c.env);
+/**
+ * Creates a TODO service instance.
+ */
+function createTodoService(c: {env: Record<string, unknown>}): TodoService {
+  const config = new AppConfig(c.env);
+  return new TodoService(config);
 }
 
 /**
- * Get TODO list
+ * Gets TODO list.
  * GET /api/v1/todos
  */
 router.get('/', async (c) => {
-  const user = c.get('user') as any;
+  const user = c.get('user');
   const query = c.req.query();
+
+  const sortBy = query['sort_by'];
+  const validSortBy = ['name', 'priority', 'due_date', 'created_at', 'updated_at'];
 
   const params = {
     status: query['status'] as TodoStatus,
@@ -32,12 +38,12 @@ router.get('/', async (c) => {
     search: query['search'],
     limit: query['limit'] ? parseInt(query['limit']) : undefined,
     offset: query['offset'] ? parseInt(query['offset']) : undefined,
-    sort_by: query['sort_by'] as any,
-    sort_order: query['sort_order'] as any,
+    sort_by: validSortBy.includes(sortBy || '') ? sortBy as 'name' | 'priority' | 'due_date' | 'created_at' | 'updated_at' : undefined,
+    sort_order: query['sort_order'] as 'asc' | 'desc',
   };
 
   const todoService = createTodoService(c);
-  const result = await todoService.getTodos(user.id, params as any);
+  const result = await todoService.getTodos(user.id, params);
 
   return c.json(new HttpErrors.OkResponse(result));
 });

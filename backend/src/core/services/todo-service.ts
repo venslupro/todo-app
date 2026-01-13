@@ -1,7 +1,8 @@
-// core/services/todo-service.ts
 import {HttpErrors} from '../../shared/errors/http-errors';
 import {Validator} from '../../shared/validation/validator';
-import {SupabaseClient} from '../../shared/supabase/client';
+import {SupabaseClient} from '../supabase/client';
+import {AppConfig} from '../../shared/config/config';
+import type {Database} from '../supabase/database.types';
 import {
   Todo,
   CreateTodoDto,
@@ -13,13 +14,13 @@ import {
 } from '../models/todo';
 
 /**
- * TODO service class
+ * TODO service class.
  */
 export class TodoService {
   private supabase: ReturnType<typeof SupabaseClient.getClient>;
 
-  constructor(env: any) {
-    this.supabase = SupabaseClient.getClient(env);
+  constructor(config: AppConfig) {
+    this.supabase = SupabaseClient.getClient(config);
   }
 
   /**
@@ -76,7 +77,6 @@ export class TodoService {
     const {data, error, count} = await query;
 
     if (error) {
-      console.error('Database error:', error);
       throw new HttpErrors.InternalServerError('Failed to fetch todos');
     }
 
@@ -95,7 +95,7 @@ export class TodoService {
     userId: string,
     dto: CreateTodoDto,
   ): Promise<Todo> {
-    const todoData: any = {
+    const todoData: Database['public']['Tables']['todos']['Insert'] = {
       name: Validator.sanitizeString(dto.name, 200),
       description: dto.description ?
         Validator.sanitizeString(dto.description, 1000) :
@@ -132,13 +132,12 @@ export class TodoService {
 
     const {data, error} = await this.supabase
       .from('todos')
-      .insert(todoData)
+      .insert(todoData as any)
       .select()
       .single();
 
     if (error) {
-      console.error('Database error:', error);
-      throw new HttpErrors.InternalServerError('Failed to create todo');
+      throw new HttpErrors.InternalServerError(`Failed to create todo: ${error.message}`);
     }
 
     return data as Todo;
@@ -186,7 +185,7 @@ export class TodoService {
       throw new HttpErrors.ForbiddenError('No permission to edit this todo');
     }
 
-    const updateData: any = {
+    const updateData: Partial<Todo> = {
       updated_at: new Date().toISOString(),
     };
 
@@ -259,8 +258,7 @@ export class TodoService {
       .single();
 
     if (error) {
-      console.error('Database error:', error);
-      throw new HttpErrors.InternalServerError('Failed to update todo');
+      throw new HttpErrors.InternalServerError(`Failed to update todo: ${error.message}`);
     }
 
     return data as Todo;
@@ -280,7 +278,7 @@ export class TodoService {
       .eq('is_deleted', false)
       .single();
 
-    const todo = todoResponse.data as any;
+    const todo = todoResponse.data as {created_by: string} | null;
 
     if (!todo) {
       throw new HttpErrors.NotFoundError('Todo not found');
@@ -299,8 +297,7 @@ export class TodoService {
       .eq('id', todoId);
 
     if (error) {
-      console.error('Database error:', error);
-      throw new HttpErrors.InternalServerError('Failed to delete todo');
+      throw new HttpErrors.InternalServerError(`Failed to delete todo: ${error.message}`);
     }
   }
 
@@ -321,7 +318,7 @@ export class TodoService {
     if (!data) return false;
 
     // If user is the creator, allow access
-    if ((data as any).created_by === userId) return true;
+    if ((data as {created_by: string}).created_by === userId) return true;
 
     // Check if user has share permissions
     const {data: share} = await this.supabase
@@ -351,7 +348,7 @@ export class TodoService {
     if (!todo) return false;
 
     // If user is the creator, allow editing
-    if ((todo as any).created_by === userId) return true;
+    if ((todo as {created_by: string}).created_by === userId) return true;
 
     // Check if user has edit permission through sharing
     const {data: share} = await this.supabase
@@ -361,6 +358,6 @@ export class TodoService {
       .eq('user_id', userId)
       .single();
 
-    return (share as any)?.permission === 'edit';
+    return (share as {permission: string} | null)?.permission === 'edit';
   }
 }

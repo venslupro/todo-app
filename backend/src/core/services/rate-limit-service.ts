@@ -1,6 +1,6 @@
 // core/services/rate-limit-service.ts
 // import {HttpErrors} from '../../shared/errors/http-errors';
-import {SupabaseClient} from '../../shared/supabase/client';
+import {SupabaseClient} from '../supabase/client';
 
 /**
  * Rate limiting service
@@ -9,8 +9,8 @@ import {SupabaseClient} from '../../shared/supabase/client';
 export class RateLimitService {
   private supabase: ReturnType<typeof SupabaseClient.getClient>;
 
-  constructor(env: any) {
-    this.supabase = SupabaseClient.getClient(env);
+  constructor(env: Record<string, unknown>) {
+    this.supabase = SupabaseClient.getClient(env as any);
   }
 
   /**
@@ -40,7 +40,6 @@ export class RateLimitService {
         .gte('timestamp', windowStart);
 
       if (countError) {
-        console.error('Rate limit count error:', countError);
         // 如果查询失败，出于安全考虑允许请求
         return {allowed: true, remaining: limit, reset: now + windowSeconds};
       }
@@ -62,7 +61,7 @@ export class RateLimitService {
       });
 
       if (insertError) {
-        console.error('Rate limit insert error:', insertError);
+        // 插入失败不影响主要逻辑
       }
 
       return {
@@ -71,7 +70,6 @@ export class RateLimitService {
         reset: now + windowSeconds,
       };
     } catch (error) {
-      console.error('Rate limit error:', error);
       // 如果出现异常，出于安全考虑允许请求
       return {allowed: true, remaining: limit, reset: now + windowSeconds};
     }
@@ -106,7 +104,7 @@ export class RateLimitService {
 
       const currentCount = requests?.length || 0;
 
-      if (currentCount >= (keyData as any).rate_limit) {
+      if (currentCount >= (keyData as {rate_limit: number}).rate_limit) {
         return false;
       }
 
@@ -118,7 +116,6 @@ export class RateLimitService {
 
       return true;
     } catch (error) {
-      console.error('API key rate limit error:', error);
       return false;
     }
   }
