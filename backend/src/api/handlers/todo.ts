@@ -38,7 +38,9 @@ router.get('/', async (c) => {
     search: query['search'],
     limit: query['limit'] ? parseInt(query['limit']) : undefined,
     offset: query['offset'] ? parseInt(query['offset']) : undefined,
-    sort_by: validSortBy.includes(sortBy || '') ? sortBy as 'name' | 'priority' | 'due_date' | 'created_at' | 'updated_at' : undefined,
+    sort_by: validSortBy.includes(sortBy || '') ?
+      sortBy as 'name' | 'priority' | 'due_date' | 'created_at' | 'updated_at' :
+      undefined,
     sort_order: query['sort_order'] as 'asc' | 'desc',
   };
 
