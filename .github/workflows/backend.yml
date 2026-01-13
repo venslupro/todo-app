@@ -117,7 +117,6 @@ jobs:
         
     - name: 📝 Update wrangler.toml
       run: |        
-        cp wrangler.toml wrangler.toml.backup
         sed -i 's|supabase_url_staging = ""|supabase_url = "${{ vars.SUPABASE_URL }}"|g' wrangler.toml
         sed -i 's|supabase_anon_key_staging = ""|supabase_anon_key = "${{ vars.SUPABASE_ANON_KEY }}"|g' wrangler.toml
         sed -i 's|supabase_service_role_key_staging = ""|supabase_service_role_key = "${{ vars.SUPABASE_SERVICE_ROLE_KEY }}"|g' wrangler.toml
@@ -129,7 +128,6 @@ jobs:
         CLOUDFLARE_ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
         npx wrangler deploy --env staging
         
-        mv wrangler.toml.backup wrangler.toml
       working-directory: backend
 
   deploy-production:
@@ -174,7 +172,6 @@ jobs:
         
     - name: 📝 Update wrangler.toml
       run: |        
-        cp wrangler.toml wrangler.toml.backup
         sed -i 's|supabase_url_production = ""|supabase_url = "${{ vars.SUPABASE_URL }}"|g' wrangler.toml
         sed -i 's|supabase_anon_key_production = ""|supabase_anon_key = "${{ vars.SUPABASE_ANON_KEY }}"|g' wrangler.toml
         sed -i 's|supabase_service_role_key_production = ""|supabase_service_role_key = "${{ vars.SUPABASE_SERVICE_ROLE_KEY }}"|g' wrangler.toml
@@ -186,5 +183,4 @@ jobs:
         CLOUDFLARE_ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
         npx wrangler deploy --env production
         
-        mv wrangler.toml.backup wrangler.toml
       working-directory: backend
