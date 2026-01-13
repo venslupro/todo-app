@@ -32,7 +32,7 @@ export class RateLimitService {
         .lt('timestamp', windowStart)
         .eq('identifier', identifier);
 
-      // 获取当前窗口内的请求数
+      // Get request count in current window
       const {data: requests, error: countError} = await this.supabase
         .from('rate_limits')
         .select('id', {count: 'exact'})
@@ -40,7 +40,7 @@ export class RateLimitService {
         .gte('timestamp', windowStart);
 
       if (countError) {
-        // 如果查询失败，出于安全考虑允许请求
+        // If query fails, allow request for security reasons
         return {allowed: true, remaining: limit, reset: now + windowSeconds};
       }
 
@@ -54,14 +54,14 @@ export class RateLimitService {
         };
       }
 
-      // 记录本次请求
+      // Record this request
       const {error: insertError} = await (this.supabase as any).from('rate_limits').insert({
         identifier,
         timestamp: now,
       });
 
       if (insertError) {
-        // 插入失败不影响主要逻辑
+        // Insertion failure does not affect main logic
       }
 
       return {
@@ -70,20 +70,20 @@ export class RateLimitService {
         reset: now + windowSeconds,
       };
     } catch (error) {
-      // 如果出现异常，出于安全考虑允许请求
+      // If exception occurs, allow request for security reasons
       return {allowed: true, remaining: limit, reset: now + windowSeconds};
     }
   }
 
   /**
-   * 检查API密钥速率限制
+   * Check API key rate limit
    */
   async checkApiKeyRateLimit(apiKey: string): Promise<boolean> {
     const now = Math.floor(Date.now() / 1000);
-    const windowStart = now - 3600; // 1小时窗口
+    const windowStart = now - 3600; // 1 hour window
 
     try {
-      // 检查API密钥是否存在且有效
+      // Check if API key exists and is valid
       const {data: keyData} = await this.supabase
         .from('api_keys')
         .select('rate_limit, is_active')
@@ -95,7 +95,7 @@ export class RateLimitService {
         return false;
       }
 
-      // 获取当前窗口内的请求数
+      // Get request count in current window
       const {data: requests} = await this.supabase
         .from('api_key_requests')
         .select('id', {count: 'exact'})
@@ -108,7 +108,7 @@ export class RateLimitService {
         return false;
       }
 
-      // 记录本次请求
+      // Record this request
       await (this.supabase as any).from('api_key_requests').insert({
         api_key: apiKey,
         timestamp: now,

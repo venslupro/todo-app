@@ -1,7 +1,7 @@
 // shared/config/durable-objects.ts
 /**
- * Durable Objects配置
- * 这个文件用于配置Durable Objects，而不需要直接修改wrangler.toml
+ * Durable Objects configuration
+ * This file is used to configure Durable Objects without directly modifying wrangler.toml
  */
 
 export interface DurableObjectsConfig {
@@ -12,8 +12,8 @@ export interface DurableObjectsConfig {
 }
 
 /**
- * 默认的Durable Objects配置
- * 在实际部署时，这些配置应该通过wrangler.toml或环境变量设置
+ * Default Durable Objects configuration
+ * In actual deployment, these configurations should be set via wrangler.toml or environment variables
  */
 export const defaultDurableObjectsConfig: DurableObjectsConfig = {
   todoWebSocket: {
@@ -23,10 +23,10 @@ export const defaultDurableObjectsConfig: DurableObjectsConfig = {
 };
 
 /**
- * 获取Durable Objects配置
- * 优先使用环境变量，如果没有则使用默认配置
+ * Get Durable Objects configuration
+ * Prioritize environment variables, use default configuration if not available
  */
 export function getDurableObjectsConfig(): DurableObjectsConfig {
-  // 这里可以从环境变量读取配置，如果没有则使用默认值
+  // Configuration can be read from environment variables, use default values if not available
   return defaultDurableObjectsConfig;
 }

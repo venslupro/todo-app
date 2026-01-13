@@ -197,4 +197,4 @@ LOG_LEVEL=info
 
 ---
 
-**重要**: 部署到生产环境前，请确保所有安全配置已正确设置，并进行了充分测试。
+**Important**: Before deploying to production, ensure all security configurations are properly set up and thoroughly tested.

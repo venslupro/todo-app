@@ -2,7 +2,7 @@
 import {Context, Next} from 'hono';
 
 /**
- * 日志中间件
+ * Logger middleware
  */
 export const loggerMiddleware = async (c: Context, next: Next) => {
   const start = Date.now();

@@ -57,7 +57,7 @@ router.post('/upload-url', async (c) => {
 });
 
 /**
- * 确认上传
+ * Confirm upload
  * POST /api/v1/media/:id/confirm
  */
 router.post('/:id/confirm', async (c) => {
@@ -71,7 +71,7 @@ router.post('/:id/confirm', async (c) => {
 });
 
 /**
- * 获取媒体文件URL
+ * Get media file URL
  * GET /api/v1/media/:id/url
  */
 router.get('/:id/url', async (c) => {
@@ -85,7 +85,7 @@ router.get('/:id/url', async (c) => {
 });
 
 /**
- * 删除媒体文件
+ * Delete media file
  * DELETE /api/v1/media/:id
  */
 router.delete('/:id', async (c) => {

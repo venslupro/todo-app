@@ -104,11 +104,11 @@ export class ShareService {
       .select('*')
       .order('created_at', {ascending: false});
 
-    // 应用过滤器
+    // Apply filters
     if (params.todo_id) {
       Validator.validateUUID(params.todo_id, 'todo_id');
 
-      // 检查用户是否有权限查看这个TODO的分享
+      // Check if user has permission to view shares for this TODO
       const {data: todo} = await this.supabase
         .from('todos')
         .select('created_by')
@@ -136,7 +136,7 @@ export class ShareService {
       query = query.eq('permission', params.permission);
     }
 
-    // 应用分页
+    // Apply pagination
     const limit = params.limit || 50;
     const offset = params.offset || 0;
     query = query.range(offset, offset + limit - 1);
@@ -151,7 +151,7 @@ export class ShareService {
   }
 
   /**
-   * 获取单个分享
+   * Get single share
    */
   async getShare(shareId: string, userId: string): Promise<TodoShare> {
     Validator.validateUUID(shareId, 'share_id');
@@ -166,7 +166,7 @@ export class ShareService {
       throw new HttpErrors.NotFoundError('Share not found');
     }
 
-    // 检查权限
+    // Check permissions
     if (((share as {todos: {created_by: string}, user_id: string}).todos.created_by !== userId) &&
         ((share as {todos: {created_by: string}, user_id: string}).user_id !== userId)) {
       throw new HttpErrors.ForbiddenError('No permission to view this share');
@@ -176,7 +176,7 @@ export class ShareService {
   }
 
   /**
-   * 更新分享权限
+   * Update share permissions
    */
   async updateShare(
     shareId: string,
@@ -186,7 +186,7 @@ export class ShareService {
     Validator.validateUUID(shareId, 'share_id');
     const permission = Validator.validateSharePermission(dto.permission);
 
-    // 获取分享信息
+    // Get share information
     const {data: share} = await this.supabase
       .from('todo_shares')
       .select('*, todos!inner(created_by)')
@@ -199,12 +199,12 @@ export class ShareService {
       );
     }
 
-    // 检查权限
+    // Check permissions
     if (((share as {todos: {created_by: string}}).todos.created_by !== userId)) {
       throw new HttpErrors.ForbiddenError('You can only update shares of your own todos');
     }
 
-    // 更新分享权限
+    // Update share permissions
     const {data, error} = await (this.supabase as any)
       .from('todo_shares')
       .update({
@@ -223,12 +223,12 @@ export class ShareService {
   }
 
   /**
-   * 删除分享
+   * Delete share
    */
   async deleteShare(shareId: string, userId: string): Promise<void> {
     Validator.validateUUID(shareId, 'share_id');
 
-    // 获取分享信息
+    // Get share information
     const {data: share} = await this.supabase
       .from('todo_shares')
       .select('*, todos!inner(created_by)')
@@ -239,7 +239,7 @@ export class ShareService {
       throw new HttpErrors.NotFoundError('Share not found');
     }
 
-    // 检查权限
+    // Check permissions
     if (((share as {todos: {created_by: string}, shared_by: string}).todos.created_by !== userId) &&
         ((share as {todos: {created_by: string}, shared_by: string}).shared_by !== userId)) {
       throw new HttpErrors.ForbiddenError('You can only delete shares you created or received');

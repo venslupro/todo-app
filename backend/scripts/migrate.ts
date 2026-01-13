@@ -35,7 +35,7 @@ async function runMigrations() {
 
     const runMigrationNames = new Set(runMigrations?.map((m: any) => m.name) || []);
 
-    // 获取迁移文件
+    // Get migration files
     const migrationsDir = path.join(__dirname, '../database/migrations');
     const migrationFiles = fs.readdirSync(migrationsDir)
       .filter((file) => file.endsWith('.sql'))
@@ -45,11 +45,11 @@ async function runMigrations() {
       if (!runMigrationNames.has(migrationFile)) {
         console.log(`Running migration: ${migrationFile}`);
 
-        // 读取SQL文件
+        // Read SQL file
         const sqlPath = path.join(migrationsDir, migrationFile);
         const sql = fs.readFileSync(sqlPath, 'utf-8');
 
-        // 执行SQL - 使用rpc方法执行原始SQL
+        // Execute SQL - use rpc method to execute raw SQL
         const {error} = await (supabase as any).rpc('exec_sql', {sql});
 
         if (error) {
@@ -57,7 +57,7 @@ async function runMigrations() {
           throw error;
         }
 
-        // 记录迁移
+        // Record migration
         await (supabase as any).from('migrations').insert({
           name: migrationFile,
           executed_at: new Date().toISOString(),
@@ -76,7 +76,7 @@ async function runMigrations() {
 }
 
 /**
- * 创建迁移记录表
+ * Create migration records table
  */
 async function createMigrationsTable(supabase: any): Promise<void> {
   const createTableSQL = `
@@ -93,7 +93,7 @@ async function createMigrationsTable(supabase: any): Promise<void> {
   await (supabase as any).rpc('exec_sql', {sql: createTableSQL});
 }
 
-// 运行迁移
+// Run migrations
 if (require.main === module) {
   runMigrations();
 }

@@ -28,7 +28,7 @@ export const SUPPORTED_MIME_TYPES = {
 };
 
 /**
- * 媒体文件数据模型
+ * Media file data model
  */
 export interface Media {
   id: string;
@@ -38,17 +38,17 @@ export interface Media {
   file_size: number;
   mime_type: string;
   media_type: MediaType;
-  duration: number | undefined; // 视频时长（秒）
-  width: number | undefined; // 图片/视频宽度
-  height: number | undefined; // 图片/视频高度
-  thumbnail_url: string | undefined; // 缩略图URL
+  duration: number | undefined; // Video duration (seconds)
+  width: number | undefined; // Image/video width
+  height: number | undefined; // Image/video height
+  thumbnail_url: string | undefined; // Thumbnail URL
   created_by: string;
   created_at: string;
   updated_at: string;
 }
 
 /**
- * 上传媒体文件DTO
+ * Upload media file DTO
  */
 export interface UploadMediaDto {
   todo_id: string;
@@ -61,7 +61,7 @@ export interface UploadMediaDto {
 }
 
 /**
- * 媒体上传响应
+ * Media upload response
  */
 export interface MediaUploadResponse {
   media: Media;
@@ -69,7 +69,7 @@ export interface MediaUploadResponse {
 }
 
 /**
- * 媒体查询参数
+ * Media query parameters
  */
 export interface MediaQueryParams {
   todo_id?: string;

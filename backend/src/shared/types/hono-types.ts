@@ -1,7 +1,7 @@
 // shared/types/hono-types.ts
 
 /**
- * 用户信息类型别名
+ * User information type alias
  */
 export type UserInfo = {
   id: string;
@@ -12,7 +12,7 @@ export type UserInfo = {
 };
 
 /**
- * Durable Object命名空间类型定义
+ * Durable Object namespace type definition
  */
 type DurableObjectNamespace = {
   idFromName(name: string): DurableObjectId;
@@ -20,21 +20,21 @@ type DurableObjectNamespace = {
 };
 
 /**
- * Durable Object ID类型定义
+ * Durable Object ID type definition
  */
 type DurableObjectId = {
   toString(): string;
 };
 
 /**
- * Durable Object Stub类型定义
+ * Durable Object Stub type definition
  */
 type DurableObjectStub = {
   fetch(request: Request): Promise<Response>;
 };
 
 /**
- * Hono 应用类型别名 - 符合Google Code Style的行长度限制
+ * Hono application type alias - Complies with Google Code Style line length limit
  */
 export type HonoAppType = {
   Bindings: {

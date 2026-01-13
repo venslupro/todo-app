@@ -40,7 +40,7 @@ export const rateLimitMiddleware = (options: {
       );
     }
 
-    // 添加速率限制头
+    // Add rate limit headers
     c.header('X-RateLimit-Limit', options.limit.toString());
     c.header('X-RateLimit-Remaining', result.remaining.toString());
     c.header('X-RateLimit-Reset', result.reset.toString());
@@ -50,25 +50,25 @@ export const rateLimitMiddleware = (options: {
 };
 
 /**
- * 全局速率限制中间件（默认配置）
+ * Global rate limit middleware (default configuration)
  */
 export const globalRateLimit = rateLimitMiddleware({
-  limit: 100, // 每分钟100次请求
-  windowSeconds: 60, // 1分钟窗口
+  limit: 100, // 100 requests per minute
+  windowSeconds: 60, // 1 minute window
 });
 
 /**
- * 严格速率限制中间件（用于敏感操作）
+ * Strict rate limit middleware (for sensitive operations)
  */
 export const strictRateLimit = rateLimitMiddleware({
-  limit: 10, // 每分钟10次请求
+  limit: 10, // 10 requests per minute
   windowSeconds: 60,
 });
 
 /**
- * 宽松速率限制中间件（用于公共API）
+ * Loose rate limit middleware (for public APIs)
  */
 export const looseRateLimit = rateLimitMiddleware({
-  limit: 1000, // 每分钟1000次请求
+  limit: 1000, // 1000 requests per minute
   windowSeconds: 60,
 });

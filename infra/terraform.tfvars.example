@@ -1,13 +1,13 @@
-# Terraform变量配置文件示例
-# 复制此文件为 terraform.tfvars 并填入实际值
+# Terraform variable configuration file example
+# Copy this file as terraform.tfvars and fill in actual values
 
-# Cloudflare配置
+# Cloudflare configuration
 cloudflare_account_id = "your-cloudflare-account-id"
 cloudflare_api_token = "your-cloudflare-api-token"
 
-# 环境配置
+# Environment configuration
 environment = "production"
 
-# GitHub配置
+# GitHub configuration
 github_owner = "venslupro"
 github_repo = "todo-app"

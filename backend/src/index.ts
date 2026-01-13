@@ -2,13 +2,13 @@
 import {Hono} from 'hono';
 import {HonoAppType} from './shared/types/hono-types';
 
-// 导入中间件
+// Import middleware
 import {errorMiddleware} from './api/middleware/error';
 import {corsMiddleware} from './api/middleware/cors';
 import {authMiddleware} from './api/middleware/auth';
 import {globalRateLimit} from './api/middleware/rate-limit';
 
-// 导入处理器
+// Import handlers
 import systemRoutes from './api/handlers/system';
 import authRoutes from './api/handlers/auth';
 import todoRoutes from './api/handlers/todo';
@@ -16,20 +16,20 @@ import mediaRoutes from './api/handlers/media';
 import teamRoutes from './api/handlers/team';
 import websocketRoutes from './api/handlers/websocket';
 
-// 创建Hono应用
+// Create Hono application
 const app = new Hono<HonoAppType>();
 
-// 全局中间件
+// Global middleware
 app.use('*', corsMiddleware);
 app.use('*', errorMiddleware);
 
-// 系统路由（无需认证）
+// System routes (no authentication required)
 app.route('/', systemRoutes);
 
-// 认证路由（无需认证）
+// Authentication routes (no authentication required)
 app.route('/api/v1/auth', authRoutes);
 
-// API路由（需要认证）- 排除认证路由
+// API routes (authentication required) - exclude authentication routes
 app.use('/api/v1/todos/*', authMiddleware);
 app.use('/api/v1/todos/*', globalRateLimit);
 app.use('/api/v1/media/*', authMiddleware);
@@ -40,10 +40,10 @@ app.route('/api/v1/todos', todoRoutes);
 app.route('/api/v1/media', mediaRoutes);
 app.route('/api/v1/team', teamRoutes);
 
-// WebSocket路由
+// WebSocket routes
 app.route('/ws/v1', websocketRoutes);
 
-// 404处理
+// 404 handling
 app.notFound((c) => {
   return c.json(
     {

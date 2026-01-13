@@ -1,36 +1,36 @@
 # Local variables for Cloudflare module.
 
 locals {
-  # 资源命名规范: 环境名-应用名-资源类型
+  # Resource naming convention: environment-name-app-name-resource-type
   
-  # Worker资源命名: stg-todo-worker / prd-todo-worker
+  # Worker resource naming: stg-todo-worker / prd-todo-worker
   worker_name = "${var.environment}-${var.project_name}-worker"
   
-  # Pages资源命名: stg-todo-page / prd-todo-page
+  # Pages resource naming: stg-todo-page / prd-todo-page
   pages_name  = "${var.environment}-${var.project_name}-page"
   
-  # DNS记录命名
+  # DNS record naming
   api_dns_name = "${var.environment}-${var.project_name}-api-dns"
   web_dns_name = "${var.environment}-${var.project_name}-web-dns"
   
-  # Worker路由命名
+  # Worker route naming
   api_route_name = "${var.environment}-${var.project_name}-api-route"
   
-  # 账户子域名 (基于环境)
+  # Account subdomain (based on environment)
   account_subdomain = "${var.environment}-${var.project_name}"
   
-  # 默认域名配置
-  # Workers默认域名: <worker-name>.<account-subdomain>.workers.dev
+  # Default domain configuration
+  # Workers default domain: <worker-name>.<account-subdomain>.workers.dev
   worker_default_domain = "${local.worker_name}.${local.account_subdomain}.workers.dev"
   
-  # Pages默认域名: <project-name>.pages.dev
+  # Pages default domain: <project-name>.pages.dev
   pages_default_domain = "${local.pages_name}.pages.dev"
   
-  # 最终使用的域名 (优先使用自定义域名，如果未提供则使用默认域名)
+  # Final domain to use (prefer custom domain, fallback to default domain if not provided)
   api_domain_final = var.api_domain != "" ? var.api_domain : local.worker_default_domain
   web_domain_final = var.web_domain != "" ? var.web_domain : local.pages_default_domain
   
-  # 标准标签
+  # Standard tags
   tags = {
     Project     = var.project_name
     Environment = var.environment

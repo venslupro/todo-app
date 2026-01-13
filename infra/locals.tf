@@ -5,7 +5,7 @@ locals {
   # Project and environment configuration.
   project_name = var.project_name
   
-  # 环境名称映射: production -> prd, staging -> stg
+  # Environment name mapping: production -> prd, staging -> stg
   environment = var.environment == "production" ? "prd" : (var.environment == "staging" ? "stg" : "dev")
 
   # Standard tags for resource identification and organization.

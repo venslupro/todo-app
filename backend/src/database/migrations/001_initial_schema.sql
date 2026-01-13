@@ -85,5 +85,5 @@ CREATE TABLE IF NOT EXISTS media (
     ON DELETE CASCADE
 );
 
--- 为Supabase Storage创建存储桶策略
+-- Create storage bucket policies for Supabase Storage
 COMMENT ON TABLE media IS 'Stores metadata for media files uploaded to Supabase Storage';

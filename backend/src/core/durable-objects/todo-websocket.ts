@@ -35,13 +35,13 @@ export class TodoWebSocketDurableObject {
   }
 
   /**
-   * 处理WebSocket连接请求
+   * Handle WebSocket connection request
    */
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
 
     if (url.pathname === '/websocket') {
-      // 升级到WebSocket连接
+      // Upgrade to WebSocket connection
       if (request.headers.get('Upgrade') !== 'websocket') {
         return new Response('Expected WebSocket upgrade', {status: 426});
       }
@@ -49,7 +49,7 @@ export class TodoWebSocketDurableObject {
       const {0: clientWebSocket, 1: serverWebSocket} = new WebSocketPair();
 
       try {
-        // 验证认证信息
+        // Validate authentication information
         const authHeader = request.headers.get('Authorization');
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
           throw new Error('Missing or invalid authorization header');
@@ -57,13 +57,13 @@ export class TodoWebSocketDurableObject {
 
         const token = authHeader.substring(7);
 
-        // 从URL参数获取todoId
+        // Get todoId from URL parameters
         const todoId = url.searchParams.get('todoId');
         if (!todoId) {
           throw new Error('Todo ID is required');
         }
 
-        // 验证用户身份和权限
+        // Validate user identity and permissions
         const appConfig = new AppConfig({
           supabase_url: this.env.supabase_url,
           supabase_anon_key: this.env.supabase_anon_key,
@@ -81,10 +81,10 @@ export class TodoWebSocketDurableObject {
           throw new Error('No access to this todo');
         }
 
-        // 接受WebSocket连接
+        // Accept WebSocket connection
         serverWebSocket.accept();
 
-        // 存储连接信息
+        // Store connection information
         const connectionId = this.generateConnectionId();
         const connection: WebSocketConnection = {
           webSocket: serverWebSocket,
@@ -95,7 +95,7 @@ export class TodoWebSocketDurableObject {
 
         this.connections.set(connectionId, connection);
 
-        // 设置消息处理
+        // Set up message handling
         serverWebSocket.addEventListener('message', (event) => {
           this.handleWebSocketMessage(connectionId, event.data);
         });
@@ -104,7 +104,7 @@ export class TodoWebSocketDurableObject {
           this.connections.delete(connectionId);
         });
 
-        // 发送连接成功消息
+        // Send connection success message
         serverWebSocket.send(JSON.stringify({
           type: 'connection_established',
           payload: {
@@ -120,7 +120,7 @@ export class TodoWebSocketDurableObject {
           webSocket: clientWebSocket,
         });
       } catch (error) {
-        // 发送错误消息并关闭连接
+        // Send error message and close connection
         if (error instanceof Error) {
           clientWebSocket.send(JSON.stringify({
             type: 'error',
@@ -139,7 +139,7 @@ export class TodoWebSocketDurableObject {
   }
 
   /**
-   * 处理WebSocket消息
+   * Handle WebSocket message
    */
   private async handleWebSocketMessage(connectionId: string, data: string): Promise<void> {
     const connection = this.connections.get(connectionId);
@@ -178,13 +178,13 @@ export class TodoWebSocketDurableObject {
   }
 
   /**
-   * 处理TODO更新消息
+   * Handle TODO update message
    */
   private async handleTodoUpdate(
     todoId: string, updateData: unknown, userId: string,
   ): Promise<void> {
     try {
-      // 创建AppConfig实例
+      // Create AppConfig instance
       const appConfig = new AppConfig({
         supabase_url: this.env.supabase_url,
         supabase_anon_key: this.env.supabase_anon_key,
@@ -192,12 +192,12 @@ export class TodoWebSocketDurableObject {
         environment: this.env.environment,
       });
 
-      // 调用WebSocketService处理业务逻辑
+      // Call WebSocketService to handle business logic
       await this.websocketService.handleTodoUpdate(
         todoId, updateData as Partial<Todo>, userId, appConfig,
       );
 
-      // 广播更新消息给房间内的所有用户
+      // Broadcast update message to all users in the room
       await this.broadcastToTodoRoom(todoId, {
         type: 'todo_updated',
         payload: updateData,
@@ -205,12 +205,12 @@ export class TodoWebSocketDurableObject {
         sender: userId,
       }, userId);
     } catch (error) {
-      // 错误处理已移除console语句
+      // Error handling - console statements removed
     }
   }
 
   /**
-   * 广播消息到TODO房间的所有用户
+   * Broadcast message to all users in TODO room
    */
   private async broadcastToTodoRoom(
     todoId: string, message: WebSocketMessage, excludeUserId?: string,
@@ -220,7 +220,7 @@ export class TodoWebSocketDurableObject {
         try {
           connection.webSocket.send(JSON.stringify(message));
         } catch (error) {
-          // 错误处理已移除console语句
+          // Error handling - console statements removed
           this.connections.delete(connectionId);
         }
       }
@@ -228,7 +228,7 @@ export class TodoWebSocketDurableObject {
   }
 
   /**
-   * 生成唯一的连接ID
+   * Generate unique connection ID
    */
   private generateConnectionId(): string {
     return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;

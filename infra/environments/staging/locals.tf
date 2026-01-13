@@ -1,16 +1,16 @@
 # Local variables for staging environment.
 
 locals {
-  # 环境标识: stg (staging)
+  # Environment identifier: stg (staging)
   environment = "stg"
   
-  # 应用名称: todo
+  # Application name: todo
   app_name = "todo"
   
-  # 基础项目名称: 环境名-应用名 (模块内部会添加资源类型后缀)
+  # Base project name: environment-app (modules will add resource type suffix)
   project_name = "${local.environment}-${local.app_name}"
   
-  # 标准标签
+  # Standard tags
   tags = {
     Project     = local.app_name
     Environment = local.environment

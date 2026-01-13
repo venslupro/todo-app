@@ -35,10 +35,10 @@ async function runSeed() {
 
     console.log('Running seed script...');
 
-    // 读取SQL文件
+    // Read SQL file
     const sql = fs.readFileSync(seedFile, 'utf-8');
 
-    // 执行SQL - 使用rpc方法执行原始SQL
+    // Execute SQL - use rpc method to execute raw SQL
     const {error} = await (supabase as any).rpc('exec_sql', {sql});
 
     if (error) {
@@ -54,7 +54,7 @@ async function runSeed() {
   }
 }
 
-// 运行种子脚本
+// Run seed script
 if (require.main === module) {
   runSeed();
 }
