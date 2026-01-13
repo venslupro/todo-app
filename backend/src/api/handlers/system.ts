@@ -41,7 +41,7 @@ router.get('/health', (c) => {
 });
 
 /**
- * 版本信息
+ * Version information
  * GET /version
  */
 router.get('/version', (c) => {

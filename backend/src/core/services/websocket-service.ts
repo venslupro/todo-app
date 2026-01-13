@@ -32,7 +32,7 @@ export class WebSocketService {
   }
 
   /**
-   * 验证TODO访问权限
+   * Validate TODO access permissions
    */
   async verifyTodoAccess(
     todoId: string,
@@ -52,12 +52,12 @@ export class WebSocketService {
       return false;
     }
 
-    // 如果是创建者，允许访问
+    // If creator, allow access
     if (todo.created_by === userId) {
       return true;
     }
 
-    // 检查是否有分享权限
+    // Check if there is share permission
     const {data: share} = await supabase
       .from('todo_shares')
       .select('id')
@@ -69,16 +69,16 @@ export class WebSocketService {
   }
 
   /**
-   * 广播消息给TODO房间的所有用户
+   * Broadcast message to all users in TODO room
    */
   async broadcastToTodoRoom(): Promise<void> {
-    // 这里应该实现向WebSocket连接广播消息的逻辑
-    // 由于我们使用Durable Objects，这个逻辑会在Durable Object内部实现
-    // 这个方法主要是为了服务层的接口一致性
+    // This should implement logic to broadcast messages to WebSocket connections
+    // Since we use Durable Objects, this logic will be implemented inside the Durable Object
+    // This method is mainly for service layer interface consistency
   }
 
   /**
-   * 处理TODO更新消息
+   * Handle TODO update message
    */
   async handleTodoUpdate(
     todoId: string,

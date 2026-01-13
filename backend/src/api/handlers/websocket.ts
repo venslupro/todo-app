@@ -47,22 +47,22 @@ router.get('/todo/:id', async (c) => {
       throw new WebSocketErrors.WebSocketAuthError('No access to this todo');
     }
 
-    // 使用Durable Objects处理WebSocket连接
+    // Use Durable Objects to handle WebSocket connections
     if (!c.env.TODO_WEBSOCKET) {
       throw new Error('Durable Objects not configured');
     }
 
-    // 获取Durable Object ID（基于TODO ID）
+    // Get Durable Object ID (based on TODO ID)
     const durableObjectId = c.env.TODO_WEBSOCKET.idFromName(todoId);
 
-    // 获取Durable Object stub
+    // Get Durable Object stub
     const durableObjectStub = c.env.TODO_WEBSOCKET.get(durableObjectId);
 
-    // 构建WebSocket连接URL
+    // Build WebSocket connection URL
     const websocketUrl = new URL('https://dummy-url/websocket');
     websocketUrl.searchParams.set('todoId', todoId);
 
-    // 创建WebSocket连接请求
+    // Create WebSocket connection request
     const websocketRequest = new Request(websocketUrl.toString(), {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -70,7 +70,7 @@ router.get('/todo/:id', async (c) => {
       },
     });
 
-    // 转发请求到Durable Object
+    // Forward request to Durable Object
     return durableObjectStub.fetch(websocketRequest);
   } catch (error) {
     if (error instanceof WebSocketErrors.WebSocketAuthError) {
@@ -98,7 +98,7 @@ router.get('/todo/:id', async (c) => {
 });
 
 /**
- * 获取TODO房间的用户列表
+ * Get TODO room user list
  * GET /ws/v1/todo/:id/users
  */
 router.get('/todo/:id/users', async (c) => {
@@ -135,7 +135,7 @@ router.get('/todo/:id/users', async (c) => {
       throw new WebSocketErrors.WebSocketAuthError('No access to this todo');
     }
 
-    // 获取TODO房间的用户列表
+    // Get TODO room user list
     const users = await websocketService.getTodoRoomUsers(todoId, appConfig);
 
     return c.json({
@@ -168,7 +168,7 @@ router.get('/todo/:id/users', async (c) => {
 });
 
 /**
- * 发送消息到TODO房间
+ * Send message to TODO room
  * POST /ws/v1/todo/:id/message
  */
 router.post('/todo/:id/message', async (c) => {
@@ -205,19 +205,19 @@ router.post('/todo/:id/message', async (c) => {
       throw new WebSocketErrors.WebSocketAuthError('No access to this todo');
     }
 
-    // 解析消息体
+    // Parse message body
     const messageData = await c.req.json();
 
-    // 获取Durable Object ID
+    // Get Durable Object ID
     if (!c.env.TODO_WEBSOCKET) {
       throw new Error('Durable Objects not configured');
     }
     const durableObjectId = c.env.TODO_WEBSOCKET.idFromName(todoId);
 
-    // 获取Durable Object stub
+    // Get Durable Object stub
     const durableObjectStub = c.env.TODO_WEBSOCKET.get(durableObjectId);
 
-    // 构建消息发送请求
+    // Build message sending request
     const messageRequest = new Request('https://dummy-url/message', {
       method: 'POST',
       headers: {
@@ -232,7 +232,7 @@ router.post('/todo/:id/message', async (c) => {
       }),
     });
 
-    // 转发消息到Durable Object
+    // Forward message to Durable Object
     const response = await durableObjectStub.fetch(messageRequest);
 
     if (response.ok) {

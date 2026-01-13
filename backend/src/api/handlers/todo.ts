@@ -51,7 +51,7 @@ router.get('/', async (c) => {
 });
 
 /**
- * 创建TODO
+ * Create TODO
  * POST /api/v1/todos
  */
 router.post('/', async (c) => {
@@ -65,7 +65,7 @@ router.post('/', async (c) => {
 });
 
 /**
- * 获取单个TODO
+ * Get single TODO
  * GET /api/v1/todos/:id
  */
 router.get('/:id', async (c) => {
@@ -79,7 +79,7 @@ router.get('/:id', async (c) => {
 });
 
 /**
- * 更新TODO
+ * Update TODO
  * PUT /api/v1/todos/:id
  */
 router.put('/:id', async (c) => {
@@ -94,7 +94,7 @@ router.put('/:id', async (c) => {
 });
 
 /**
- * 删除TODO
+ * Delete TODO
  * DELETE /api/v1/todos/:id
  */
 router.delete('/:id', async (c) => {
