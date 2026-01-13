@@ -29,14 +29,19 @@ router.get('/todo/:id', async (c) => {
       supabase_url: c.env?.['supabase_url'] || '',
       supabase_anon_key: c.env?.['supabase_anon_key'] || '',
       supabase_service_role_key: c.env?.['supabase_service_role_key'] || '',
-      environment: (c.env?.['environment'] as 'development' | 'production' | 'staging') || 'development',
+      environment: (c.env?.['environment'] as 'development' | 'production' | 'staging') 
+        || 'development',
     });
 
     // Verify user identity
-    const user = await websocketService.authenticateConnection(token, appConfig);
+    const user = await websocketService.authenticateConnection(
+      token, appConfig,
+    );
 
     // Check TODO access permissions
-    const hasAccess = await websocketService.verifyTodoAccess(todoId, user.id, appConfig);
+    const hasAccess = await websocketService.verifyTodoAccess(
+      todoId, user.id, appConfig,
+    );
 
     if (!hasAccess) {
       throw new WebSocketErrors.WebSocketAuthError('No access to this todo');
@@ -49,14 +54,14 @@ router.get('/todo/:id', async (c) => {
 
     // 获取Durable Object ID（基于TODO ID）
     const durableObjectId = c.env.TODO_WEBSOCKET.idFromName(todoId);
-    
+
     // 获取Durable Object stub
     const durableObjectStub = c.env.TODO_WEBSOCKET.get(durableObjectId);
-    
+
     // 构建WebSocket连接URL
     const websocketUrl = new URL('https://dummy-url/websocket');
     websocketUrl.searchParams.set('todoId', todoId);
-    
+
     // 创建WebSocket连接请求
     const websocketRequest = new Request(websocketUrl.toString(), {
       headers: {
@@ -67,7 +72,6 @@ router.get('/todo/:id', async (c) => {
 
     // 转发请求到Durable Object
     return durableObjectStub.fetch(websocketRequest);
-
   } catch (error) {
     if (error instanceof WebSocketErrors.WebSocketAuthError) {
       return c.json(
@@ -113,14 +117,19 @@ router.get('/todo/:id/users', async (c) => {
       supabase_url: c.env?.['supabase_url'] || '',
       supabase_anon_key: c.env?.['supabase_anon_key'] || '',
       supabase_service_role_key: c.env?.['supabase_service_role_key'] || '',
-      environment: (c.env?.['environment'] as 'development' | 'production' | 'staging') || 'development',
+      environment: (c.env?.['environment'] as 'development' | 'production' | 'staging') 
+        || 'development',
     });
 
     // Verify user identity
-    const user = await websocketService.authenticateConnection(token, appConfig);
+    const user = await websocketService.authenticateConnection(
+      token, appConfig,
+    );
 
     // Check TODO access permissions
-    const hasAccess = await websocketService.verifyTodoAccess(todoId, user.id, appConfig);
+    const hasAccess = await websocketService.verifyTodoAccess(
+      todoId, user.id, appConfig,
+    );
 
     if (!hasAccess) {
       throw new WebSocketErrors.WebSocketAuthError('No access to this todo');
@@ -133,7 +142,6 @@ router.get('/todo/:id/users', async (c) => {
       todo_id: todoId,
       users,
     });
-
   } catch (error) {
     if (error instanceof WebSocketErrors.WebSocketAuthError) {
       return c.json(
@@ -179,14 +187,19 @@ router.post('/todo/:id/message', async (c) => {
       supabase_url: c.env?.['supabase_url'] || '',
       supabase_anon_key: c.env?.['supabase_anon_key'] || '',
       supabase_service_role_key: c.env?.['supabase_service_role_key'] || '',
-      environment: (c.env?.['environment'] as 'development' | 'production' | 'staging') || 'development',
+      environment: (c.env?.['environment'] as 'development' | 'production' | 'staging') 
+        || 'development',
     });
 
     // Verify user identity
-    const user = await websocketService.authenticateConnection(token, appConfig);
+    const user = await websocketService.authenticateConnection(
+      token, appConfig,
+    );
 
     // Check TODO access permissions
-    const hasAccess = await websocketService.verifyTodoAccess(todoId, user.id, appConfig);
+    const hasAccess = await websocketService.verifyTodoAccess(
+      todoId, user.id, appConfig,
+    );
 
     if (!hasAccess) {
       throw new WebSocketErrors.WebSocketAuthError('No access to this todo');
@@ -194,18 +207,18 @@ router.post('/todo/:id/message', async (c) => {
 
     // 解析消息体
     const messageData = await c.req.json();
-    
+
     // 获取Durable Object ID
     if (!c.env.TODO_WEBSOCKET) {
       throw new Error('Durable Objects not configured');
     }
     const durableObjectId = c.env.TODO_WEBSOCKET.idFromName(todoId);
-    
+
     // 获取Durable Object stub
     const durableObjectStub = c.env.TODO_WEBSOCKET.get(durableObjectId);
-    
+
     // 构建消息发送请求
-    const messageRequest = new Request(`https://dummy-url/message`, {
+    const messageRequest = new Request('https://dummy-url/message', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -221,7 +234,7 @@ router.post('/todo/:id/message', async (c) => {
 
     // 转发消息到Durable Object
     const response = await durableObjectStub.fetch(messageRequest);
-    
+
     if (response.ok) {
       return c.json({
         message: 'Message sent successfully',
@@ -230,7 +243,6 @@ router.post('/todo/:id/message', async (c) => {
     } else {
       throw new Error('Failed to send message');
     }
-
   } catch (error) {
     if (error instanceof WebSocketErrors.WebSocketAuthError) {
       return c.json(

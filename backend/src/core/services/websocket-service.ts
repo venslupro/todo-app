@@ -5,16 +5,6 @@ import {AppConfig} from '../../shared/config/config';
 import {Todo} from '../models/todo';
 
 /**
- * WebSocket message interface
- */
-interface WebSocketMessage {
-  type: string;
-  payload: unknown;
-  timestamp: number;
-  sender: string;
-}
-
-/**
  * WebSocket service class
  */
 export class WebSocketService {
@@ -81,11 +71,7 @@ export class WebSocketService {
   /**
    * 广播消息给TODO房间的所有用户
    */
-  async broadcastToTodoRoom(
-    _todoId: string,
-    _message: WebSocketMessage,
-    _excludeUserId?: string,
-  ): Promise<void> {
+  async broadcastToTodoRoom(): Promise<void> {
     // 这里应该实现向WebSocket连接广播消息的逻辑
     // 由于我们使用Durable Objects，这个逻辑会在Durable Object内部实现
     // 这个方法主要是为了服务层的接口一致性
@@ -195,7 +181,7 @@ export class WebSocketService {
   private async checkEditPermission(
     todoId: string,
     userId: string,
-    env: any,
+    env: AppConfig,
   ): Promise<boolean> {
     const supabase = SupabaseClient.getClient(env);
 

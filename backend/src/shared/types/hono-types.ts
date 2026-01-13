@@ -12,6 +12,28 @@ export type UserInfo = {
 };
 
 /**
+ * Durable Object命名空间类型定义
+ */
+type DurableObjectNamespace = {
+  idFromName(name: string): DurableObjectId;
+  get(id: DurableObjectId): DurableObjectStub;
+};
+
+/**
+ * Durable Object ID类型定义
+ */
+type DurableObjectId = {
+  toString(): string;
+};
+
+/**
+ * Durable Object Stub类型定义
+ */
+type DurableObjectStub = {
+  fetch(request: Request): Promise<Response>;
+};
+
+/**
  * Hono 应用类型别名 - 符合Google Code Style的行长度限制
  */
 export type HonoAppType = {
