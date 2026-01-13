@@ -21,7 +21,7 @@ router.get('/', (c) => {
     new HttpErrors.OkResponse({
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      environment: (c.env as any)['ENVIRONMENT'] || 'unknown',
+      environment: c.env.environment || 'unknown',
     }),
   );
 });
@@ -35,7 +35,7 @@ router.get('/health', (c) => {
     new HttpErrors.OkResponse({
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      environment: (c.env as any)['ENVIRONMENT'] || 'unknown',
+      environment: c.env.environment || 'unknown',
     }),
   );
 });
