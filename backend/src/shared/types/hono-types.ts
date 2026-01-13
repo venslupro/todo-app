@@ -38,10 +38,12 @@ type DurableObjectStub = {
  */
 export type HonoAppType = {
   Bindings: {
+    name: string;
     supabase_url: string;
     supabase_service_role_key: string;
     supabase_anon_key: string;
     environment: 'development' | 'production' | 'staging';
+    log_level?: string;
     TODO_WEBSOCKET?: DurableObjectNamespace;
   };
   Variables: {

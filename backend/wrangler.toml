@@ -1,8 +1,8 @@
 # Top-level configuration
 name = "todo-app-worker"
 main = "src/index.ts"
-compatibility_date = "2026-01-01"
-compatibility_flags = ["nodejs_compat_v2"]
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
 logpush = true
 
 [observability]
@@ -28,9 +28,9 @@ log_level = "info"  # "error" | "warn" | "info" | "debug"
 [env.staging]
 name = "stg-todo-worker"
 environment = "staging"
-supabase_url_staging = ""
-supabase_anon_key_staging = ""
-supabase_service_role_key_staging = ""
+supabase_url = ""
+supabase_anon_key = ""
+supabase_service_role_key = ""
 log_level = "debug"   # "error" | "warn" | "info" | "debug"
 
 # start workers locally
