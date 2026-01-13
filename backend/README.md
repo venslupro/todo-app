@@ -1,120 +1,110 @@
-# Todo App Backend API
+# Todo App Backend
 
-A modern Todo application backend service built with Cloudflare Workers + Hono + Supabase.
+A serverless backend service for a Todo application built on Cloudflare Workers with Hono framework.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js 18+
-- npm or yarn
-- Cloudflare Wrangler CLI
-- Supabase account
+- Cloudflare account with Workers access
+- Supabase account for database
 
-### Installation and Running
-
+### Installation
 ```bash
+# Clone the repository
+git clone https://github.com/venslupro/todo-app.git
+cd todo-app/backend
+
 # Install dependencies
 npm install
 
-# Set up environment variables
-cp docs/.dev.vars.example .dev.vars
-# Edit .dev.vars file with actual values
+# Configure environment variables
+cp .dev.vars.example .dev.vars
+# Edit .dev.vars with your configuration
 
-# Run in development mode
+# Start development server
 npm run dev
-
-# Build the project
-npm run build
-
-# Run tests
-npm test
 ```
 
-## 📚 Documentation
-
-- [📖 Project Overview](docs/PROJECT_SUMMARY.md) - Architecture and tech stack
-- [⚙️ Environment Configuration](docs/ENVIRONMENT.md) - Environment variables setup
-- [🔧 API Documentation](docs/API.md) - API endpoints and usage
-- [🧪 Testing Guide](docs/TESTING.md) - Testing framework usage
-- [🚀 Deployment Guide](docs/DEPLOYMENT.md) - Deployment to Cloudflare Workers
-
-## 🏗️ Technology Stack
-
-- **Framework**: Hono (RESTful API) + Durable Objects (WebSocket)
-- **Runtime**: Cloudflare Workers
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: JWT + Supabase Auth
-- **Testing**: Jest + TypeScript
-- **Code Quality**: ESLint + Google Code Style
-
-## 📁 Project Structure
-
-```
-src/
-├── api/           # API routes and handlers
-├── core/          # Core business logic
-├── shared/        # Shared utilities and types
-├── scripts/       # Database scripts
-├── types/         # Type definitions
-└── __tests__/     # Test files
-
-docs/              # Project documentation
-.github/          # CI/CD configuration
-```
-
-## 🔄 Development Workflow
-
-### Code Standards
-- Follow Google TypeScript code style
-- Use ESLint for code quality checking
-- Run `npm run lint` and `npm test` before committing
-
-### Branch Strategy
-- `main`: Production branch
-- `dev`: Development branch
-- Feature branches: `feature/feature-name`
-- Fix branches: `fix/issue-description`
-
-### Commit Convention
-- feat: New feature
-- fix: Bug fix
-- docs: Documentation update
-- style: Code formatting
-- refactor: Code refactoring
-- test: Test related
-
-## 🛠️ Available Scripts
-
+### Deployment
 ```bash
-npm run dev        # Development server
-npm run build      # Build project
-npm run type-check # TypeScript type checking
-npm run lint       # Code quality check
-npm test           # Run tests
-npm run deploy     # Deploy to Cloudflare Workers
+# Deploy to production
+npm run deploy:prod
+
+# Deploy to staging
+npm run deploy:staging
 ```
 
-## 🤝 Contributing Guide
+## Project Structure
 
-1. Fork the project
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+```
+backend/
+├── src/
+│   ├── api/
+│   │   ├── handlers/          # API route handlers
+│   │   └── middleware/        # Request middleware
+│   ├── core/
+│   │   ├── models/           # Data models
+│   │   └── services/         # Business logic services
+│   ├── database/             # Database schema and migrations
+│   └── shared/
+│       ├── errors/           # Error handling
+│       ├── supabase/         # Database client
+│       └── validation/       # Data validation
+├── docs/                     # Documentation
+└── tests/                     # Test files
+```
 
-## 📄 License
+## API Endpoints
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### Authentication
+- `POST /api/v1/auth/register` - User registration
+- `POST /api/v1/auth/login` - User login
+- `POST /api/v1/auth/refresh` - Token refresh
 
-## 📞 Contact
+### Todo Management
+- `GET /api/v1/todos` - List todos
+- `POST /api/v1/todos` - Create todo
+- `GET /api/v1/todos/:id` - Get todo
+- `PUT /api/v1/todos/:id` - Update todo
+- `DELETE /api/v1/todos/:id` - Delete todo
 
-For questions or suggestions, please contact us through:
-- Project Issues: [GitHub Issues](https://github.com/venslupro/todo-app/issues)
-- Email: [Project maintainer email]
+### Media Files
+- `POST /api/v1/media/upload` - Upload file
+- `GET /api/v1/media/:id` - Get file
+- `DELETE /api/v1/media/:id` - Delete file
 
----
+### Team Collaboration
+- `POST /api/v1/team/share` - Share todo
+- `GET /api/v1/team/shared` - List shared todos
+- `PUT /api/v1/team/permissions/:id` - Update permissions
 
-**Note**: Before deployment, ensure all environment variables are properly configured. For detailed instructions, see [Environment Configuration Documentation](docs/ENVIRONMENT.md).
+### WebSocket
+- `GET /ws/v1/todo/:id` - Real-time todo updates
+
+## Development
+
+### Available Scripts
+```bash
+npm run dev          # Start development server
+npm run build        # Build project
+npm test             # Run tests
+npm run type-check   # TypeScript type checking
+npm run lint         # Code linting
+```
+
+### Environment Variables
+Required environment variables:
+- `SUPABASE_URL` - Supabase project URL
+- `SUPABASE_ANON_KEY` - Supabase anonymous key
+- `JWT_SECRET` - JWT signing secret
+
+## Documentation
+
+- [Developer Guide](docs/DEVELOPER_GUIDE.md) - API documentation and usage
+- [Deployment Guide](docs/DEPLOYMENT.md) - Deployment instructions
+- [Testing Guide](docs/TESTING.md) - Testing framework and practices
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
