@@ -29,8 +29,8 @@ router.get('/todo/:id', async (c) => {
       supabase_url: c.env?.['supabase_url'] || '',
       supabase_anon_key: c.env?.['supabase_anon_key'] || '',
       supabase_service_role_key: c.env?.['supabase_service_role_key'] || '',
-      environment: (c.env?.['environment'] as 'development' | 'production' | 'staging') 
-        || 'development',
+      environment: (c.env?.['environment'] as 'development' | 'production' | 'staging') ||
+        'development',
     });
 
     // Verify user identity
@@ -117,8 +117,8 @@ router.get('/todo/:id/users', async (c) => {
       supabase_url: c.env?.['supabase_url'] || '',
       supabase_anon_key: c.env?.['supabase_anon_key'] || '',
       supabase_service_role_key: c.env?.['supabase_service_role_key'] || '',
-      environment: (c.env?.['environment'] as 'development' | 'production' | 'staging') 
-        || 'development',
+      environment: (c.env?.['environment'] as 'development' | 'production' | 'staging') ||
+        'development',
     });
 
     // Verify user identity
@@ -187,8 +187,8 @@ router.post('/todo/:id/message', async (c) => {
       supabase_url: c.env?.['supabase_url'] || '',
       supabase_anon_key: c.env?.['supabase_anon_key'] || '',
       supabase_service_role_key: c.env?.['supabase_service_role_key'] || '',
-      environment: (c.env?.['environment'] as 'development' | 'production' | 'staging') 
-        || 'development',
+      environment: (c.env?.['environment'] as 'development' | 'production' | 'staging') ||
+        'development',
     });
 
     // Verify user identity
@@ -269,3 +269,4 @@ router.post('/todo/:id/message', async (c) => {
 });
 
 export default router;
+
