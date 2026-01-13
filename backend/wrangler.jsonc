@@ -1,0 +1,32 @@
+{
+  "name": "todo-app-worker",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-13",
+  "compatibility_flags": ["nodejs_compat"],
+  "build": {
+    "command": "npm run build"
+  },
+  "env": {
+    "production": {
+      "name": "prod-todo-worker",
+      "ENVIRONMENT": "production",
+      "SUPABASE_URL": "",
+      "SUPABASE_ANON_KEY": "",
+      "SUPABASE_SERVICE_ROLE_KEY": ""
+    },
+    "staging": {
+      "name": "stg-todo-worker",
+      "ENVIRONMENT": "staging",
+      "SUPABASE_URL": "https://evmxtjyinbjkuhrdphnq.supabase.co",
+      "SUPABASE_ANON_KEY": "sb_publishable_c5Ij2y8T6qyzIgxL6aLiHA_TbW5DULk",
+      "SUPABASE_SERVICE_ROLE_KEY": "sb_secret_PBvZmYoBQrowZeSYH7DrMA_nDcRkdjG"
+    },
+    "development": {
+      "name": "dev-todo-worker",
+      "ENVIRONMENT": "development",
+      "SUPABASE_URL": "",
+      "SUPABASE_ANON_KEY": "",
+      "SUPABASE_SERVICE_ROLE_KEY": ""
+    }
+  }
+}
