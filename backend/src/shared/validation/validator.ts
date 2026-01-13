@@ -157,6 +157,35 @@ export class Validator {
       throw new HttpErrors.ValidationError('Invalid email format');
     }
 
+    // Additional email validation rules
+    if (sanitized.length > 254) {
+      throw new HttpErrors.ValidationError('Email address is too long');
+    }
+
+    const [localPart, domain] = sanitized.split('@');
+
+    // Ensure both parts exist after split
+    if (!localPart || !domain) {
+      throw new HttpErrors.ValidationError('Invalid email format');
+    }
+
+    if (localPart.length > 64) {
+      throw new HttpErrors.ValidationError('Email local part is too long');
+    }
+
+    if (domain.length > 253) {
+      throw new HttpErrors.ValidationError('Email domain is too long');
+    }
+
+    // Check for common invalid patterns
+    if (domain.includes('..')) {
+      throw new HttpErrors.ValidationError('Invalid email domain format');
+    }
+
+    if (localPart.startsWith('.') || localPart.endsWith('.')) {
+      throw new HttpErrors.ValidationError('Invalid email local part format');
+    }
+
     return sanitized;
   }
 

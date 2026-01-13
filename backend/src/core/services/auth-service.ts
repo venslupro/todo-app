@@ -34,6 +34,10 @@ export class AuthService {
     });
 
     if (error) {
+      // Handle specific Supabase validation errors
+      if (error.message.includes('Email address') || error.message.includes('email')) {
+        throw new HttpErrors.ValidationError(error.message);
+      }
       throw new HttpErrors.ValidationError(error.message);
     }
 
