@@ -13,7 +13,8 @@ export interface DurableObjectsConfig {
 
 /**
  * Default Durable Objects configuration
- * In actual deployment, these configurations should be set via wrangler.toml or environment variables
+ * In actual deployment, these configurations should be set via wrangler.toml
+ * or environment variables
  */
 export const defaultDurableObjectsConfig: DurableObjectsConfig = {
   todoWebSocket: {
