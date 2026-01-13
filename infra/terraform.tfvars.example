@@ -5,24 +5,9 @@
 cloudflare_account_id = "your-cloudflare-account-id"
 cloudflare_api_token = "your-cloudflare-api-token"
 
-# 域名配置
-zone_name = "example.com"
-api_domain = ""
-web_domain = ""
-
 # 环境配置
 environment = "production"
-
-# Supabase配置
-supabase_url = "https://your-project.supabase.co"
-supabase_anon_key = "your-supabase-anon-key"
-supabase_service_role_key = "your-supabase-service-role-key"
 
 # GitHub配置
 github_owner = "venslupro"
 github_repo = "todo-app"
-
-# 可选配置
-# create_ci_cd_token = true
-# create_r2_bucket = true
-# allowed_cidr_blocks = ["192.168.1.0/24"]

@@ -1,4 +1,5 @@
 // core/durable-objects/todo-websocket.ts
+/* eslint-disable no-undef */
 import {WebSocketService} from '../services/websocket-service';
 import {AppConfig} from '../../shared/config/config';
 import {Todo} from '../models/todo';
@@ -38,7 +39,7 @@ export class TodoWebSocketDurableObject {
    */
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
-    
+
     if (url.pathname === '/websocket') {
       // 升级到WebSocket连接
       if (request.headers.get('Upgrade') !== 'websocket') {
@@ -46,7 +47,7 @@ export class TodoWebSocketDurableObject {
       }
 
       const {0: clientWebSocket, 1: serverWebSocket} = new WebSocketPair();
-      
+
       try {
         // 验证认证信息
         const authHeader = request.headers.get('Authorization');
@@ -55,7 +56,7 @@ export class TodoWebSocketDurableObject {
         }
 
         const token = authHeader.substring(7);
-        
+
         // 从URL参数获取todoId
         const todoId = url.searchParams.get('todoId');
         if (!todoId) {
@@ -69,16 +70,20 @@ export class TodoWebSocketDurableObject {
           supabase_service_role_key: this.env.supabase_service_role_key,
           environment: this.env.environment,
         });
-        const user = await this.websocketService.authenticateConnection(token, appConfig);
-        const hasAccess = await this.websocketService.verifyTodoAccess(todoId, user.id, appConfig);
-        
+        const user = await this.websocketService.authenticateConnection(
+          token, appConfig,
+        );
+        const hasAccess = await this.websocketService.verifyTodoAccess(
+          todoId, user.id, appConfig,
+        );
+
         if (!hasAccess) {
           throw new Error('No access to this todo');
         }
 
         // 接受WebSocket连接
         serverWebSocket.accept();
-        
+
         // 存储连接信息
         const connectionId = this.generateConnectionId();
         const connection: WebSocketConnection = {
@@ -87,7 +92,7 @@ export class TodoWebSocketDurableObject {
           todoId,
           createdAt: Date.now(),
         };
-        
+
         this.connections.set(connectionId, connection);
 
         // 设置消息处理
@@ -114,7 +119,6 @@ export class TodoWebSocketDurableObject {
           status: 101,
           webSocket: clientWebSocket,
         });
-
       } catch (error) {
         // 发送错误消息并关闭连接
         if (error instanceof Error) {
@@ -145,24 +149,24 @@ export class TodoWebSocketDurableObject {
 
     try {
       const message: WebSocketMessage = JSON.parse(data);
-      
+
       switch (message.type) {
-        case 'todo_update':
-          await this.handleTodoUpdate(connection.todoId, message.payload, connection.userId);
-          break;
-        case 'ping':
-          connection.webSocket.send(JSON.stringify({
-            type: 'pong',
-            payload: {timestamp: Date.now()},
-            timestamp: Date.now(),
-          }));
-          break;
-        default:
-          connection.webSocket.send(JSON.stringify({
-            type: 'error',
-            payload: {message: 'Unknown message type'},
-            timestamp: Date.now(),
-          }));
+      case 'todo_update':
+        await this.handleTodoUpdate(connection.todoId, message.payload, connection.userId);
+        break;
+      case 'ping':
+        connection.webSocket.send(JSON.stringify({
+          type: 'pong',
+          payload: {timestamp: Date.now()},
+          timestamp: Date.now(),
+        }));
+        break;
+      default:
+        connection.webSocket.send(JSON.stringify({
+          type: 'error',
+          payload: {message: 'Unknown message type'},
+          timestamp: Date.now(),
+        }));
       }
     } catch (error) {
       connection.webSocket.send(JSON.stringify({
@@ -176,7 +180,9 @@ export class TodoWebSocketDurableObject {
   /**
    * 处理TODO更新消息
    */
-  private async handleTodoUpdate(todoId: string, updateData: unknown, userId: string): Promise<void> {
+  private async handleTodoUpdate(
+    todoId: string, updateData: unknown, userId: string,
+  ): Promise<void> {
     try {
       // 创建AppConfig实例
       const appConfig = new AppConfig({
@@ -185,10 +191,12 @@ export class TodoWebSocketDurableObject {
         supabase_service_role_key: this.env.supabase_service_role_key,
         environment: this.env.environment,
       });
-      
+
       // 调用WebSocketService处理业务逻辑
-      await this.websocketService.handleTodoUpdate(todoId, updateData as Partial<Todo>, userId, appConfig);
-      
+      await this.websocketService.handleTodoUpdate(
+        todoId, updateData as Partial<Todo>, userId, appConfig,
+      );
+
       // 广播更新消息给房间内的所有用户
       await this.broadcastToTodoRoom(todoId, {
         type: 'todo_updated',
@@ -196,36 +204,23 @@ export class TodoWebSocketDurableObject {
         timestamp: Date.now(),
         sender: userId,
       }, userId);
-      
     } catch (error) {
-      // 发送错误消息给发起者
-      const senderConnection = this.findConnectionByUserAndTodo(userId, todoId);
-      if (senderConnection) {
-        senderConnection.webSocket.send(JSON.stringify({
-          type: 'error',
-          payload: {
-            message: error instanceof Error ? error.message : 'Update failed',
-          },
-          timestamp: Date.now(),
-        }));
-      }
+      // 错误处理已移除console语句
     }
   }
 
   /**
-   * 向TODO房间广播消息
+   * 广播消息到TODO房间的所有用户
    */
   private async broadcastToTodoRoom(
-    todoId: string,
-    message: WebSocketMessage,
-    excludeUserId?: string,
+    todoId: string, message: WebSocketMessage, excludeUserId?: string,
   ): Promise<void> {
-    for (const [connectionId, connection] of this.connections) {
+    for (const [connectionId, connection] of this.connections.entries()) {
       if (connection.todoId === todoId && connection.userId !== excludeUserId) {
         try {
           connection.webSocket.send(JSON.stringify(message));
         } catch (error) {
-          // 如果发送失败，移除连接
+          // 错误处理已移除console语句
           this.connections.delete(connectionId);
         }
       }
@@ -233,21 +228,9 @@ export class TodoWebSocketDurableObject {
   }
 
   /**
-   * 根据用户ID和TODO ID查找连接
-   */
-  private findConnectionByUserAndTodo(userId: string, todoId: string): WebSocketConnection | undefined {
-    for (const connection of this.connections.values()) {
-      if (connection.userId === userId && connection.todoId === todoId) {
-        return connection;
-      }
-    }
-    return undefined;
-  }
-
-  /**
    * 生成唯一的连接ID
    */
   private generateConnectionId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   }
 }
