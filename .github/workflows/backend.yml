@@ -117,11 +117,16 @@ jobs:
         
     - name: 🚀 Deploy to Staging
       run: |
-        CLOUDFLARE_API_TOKEN="${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-        CLOUDFLARE_ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
-        sed -i 's|supabase_url_staging = ""|supabase_url = "${{ vars.SUPABASE_URL }}"|g' wrangler.toml  \
-        sed -i 's|supabase_anon_key_staging = ""|supabase_anon_key = "${{ vars.SUPABASE_ANON_KEY }}"|g' wrangler.toml \
-        sed -i 's|supabase_service_role_key_staging = ""|supabase_service_role_key = "${{ vars.SUPABASE_SERVICE_ROLE_KEY }}"|g' wrangler.toml  \
+        # 更新wrangler.toml配置
+        sed -i 's|supabase_url_staging = ""|supabase_url = "${{ vars.SUPABASE_URL }}"|g' wrangler.toml
+        sed -i 's|supabase_anon_key_staging = ""|supabase_anon_key = "${{ vars.SUPABASE_ANON_KEY }}"|g' wrangler.toml
+        sed -i 's|supabase_service_role_key_staging = ""|supabase_service_role_key = "${{ vars.SUPABASE_SERVICE_ROLE_KEY }}"|g' wrangler.toml
+        
+        # 设置环境变量
+        export CLOUDFLARE_API_TOKEN="${{ secrets.CLOUDFLARE_API_TOKEN }}"
+        export CLOUDFLARE_ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+        
+        # 部署到staging环境
         npx wrangler deploy --env staging
         
       working-directory: backend
@@ -168,11 +173,16 @@ jobs:
         
     - name: 🚀 Deploy to Production
       run: |
-        CLOUDFLARE_API_TOKEN="${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-        CLOUDFLARE_ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" \
-        sed -i 's|supabase_url_production = ""|supabase_url = "${{ vars.SUPABASE_URL }}"|g' wrangler.toml \
-        sed -i 's|supabase_anon_key_production = ""|supabase_anon_key = "${{ vars.SUPABASE_ANON_KEY }}"|g' wrangler.toml \
-        sed -i 's|supabase_service_role_key_production = ""|supabase_service_role_key = "${{ vars.SUPABASE_SERVICE_ROLE_KEY }}"|g' wrangler.toml \
+        # 更新wrangler.toml配置
+        sed -i 's|supabase_url_production = ""|supabase_url = "${{ vars.SUPABASE_URL }}"|g' wrangler.toml
+        sed -i 's|supabase_anon_key_production = ""|supabase_anon_key = "${{ vars.SUPABASE_ANON_KEY }}"|g' wrangler.toml
+        sed -i 's|supabase_service_role_key_production = ""|supabase_service_role_key = "${{ vars.SUPABASE_SERVICE_ROLE_KEY }}"|g' wrangler.toml
+        
+        # 设置环境变量
+        export CLOUDFLARE_API_TOKEN="${{ secrets.CLOUDFLARE_API_TOKEN }}"
+        export CLOUDFLARE_ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+        
+        # 部署到production环境
         npx wrangler deploy --env production
         
       working-directory: backend
