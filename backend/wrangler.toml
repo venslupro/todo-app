@@ -1,26 +1,44 @@
-name = "todo-api"
+# Top-level configuration
+name = "todo-app-worker"
 main = "src/index.ts"
-compatibility_date = "2024-01-01"
+compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
+# logpush = true
 
-[vars]
-ENVIRONMENT = "production"
+# Observability configuration for Wrangler v4
+[observability]
+enabled = true
+# head_sampling_rate = 0.1 # 10% of requests are logged
+
+[observability.traces]
+enabled = true
+# head_sampling_rate = 0.05
+
+[observability.logs]
+enabled = true
+# head_sampling_rate = 0.6
 
 [env.production]
-SUPABASE_URL = ""
-SUPABASE_ANON_KEY = ""
-SUPABASE_SERVICE_ROLE_KEY = ""
+name = "prod-todo-worker"
+environment = "production"
+supabase_url_production = ""
+supabase_anon_key_production = ""
+supabase_service_role_key_production = ""
+log_level = "info"  # "error" | "warn" | "info" | "debug"
 
 [env.staging]
-SUPABASE_URL = ""
-SUPABASE_ANON_KEY = ""
-SUPABASE_SERVICE_ROLE_KEY = ""
+name = "stg-todo-worker"
+environment = "staging"
+supabase_url = ""
+supabase_anon_key = ""
+supabase_service_role_key = ""
+log_level = "debug"   # "error" | "warn" | "info" | "debug"
 
+# start workers locally
 [env.development]
-SUPABASE_URL = ""
-SUPABASE_ANON_KEY = ""
-SUPABASE_SERVICE_ROLE_KEY = ""
-
-[build]
-command = "npm run build"
-format = "service"
+name = "dev-todo-worker"
+environment = "development"
+supabase_url = ""
+supabase_anon_key = ""
+supabase_service_role_key = ""
+log_level = "debug"   # "error" | "warn" | "info" | "debug"

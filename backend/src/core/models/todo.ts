@@ -33,12 +33,12 @@ export interface Todo {
   created_at: string;
   updated_at: string;
   completed_at: string | null;
-  parent_id: string | null; // 用于子任务
+  parent_id: string | null; // For subtasks
   is_deleted: boolean;
 }
 
 /**
- * 创建TODO的DTO
+ * Create TODO DTO
  */
 export interface CreateTodoDto {
   name: string;
@@ -51,7 +51,7 @@ export interface CreateTodoDto {
 }
 
 /**
- * 更新TODO的DTO
+ * Update TODO DTO
  */
 export interface UpdateTodoDto {
   name?: string;
@@ -64,7 +64,7 @@ export interface UpdateTodoDto {
 }
 
 /**
- * TODO查询参数
+ * TODO query parameters
  */
 export interface TodoQueryParams {
   status: TodoStatus | undefined;
@@ -80,7 +80,7 @@ export interface TodoQueryParams {
 }
 
 /**
- * TODO列表响应
+ * TODO list response
  */
 export interface TodoListResponse {
   todos: Todo[];

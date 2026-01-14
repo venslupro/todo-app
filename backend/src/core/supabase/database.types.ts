@@ -1,8 +1,8 @@
 // shared/supabase/database.types.ts
-// 数据库类型定义 - 手动创建，因为缺少自动生成的类型定义
+// Database type definitions - manually created due to missing auto-generated type definitions
 
 /**
- * 数据库表类型定义
+ * Database table type definitions
  */
 export interface Database {
   public: {
@@ -173,12 +173,12 @@ export interface Database {
 }
 
 /**
- * Supabase客户端类型
+ * Supabase client type
  */
 export type SupabaseClient = any;
 
 /**
- * 数据库查询结果类型
+ * Database query result type
  */
 export type DbResult<T> = T extends PromiseLike<infer U> ? U : never;
 export type DbResultOk<T> = T extends PromiseLike<{ data: infer U }> ? Exclude<U, null> : never;

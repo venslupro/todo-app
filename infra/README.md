@@ -178,19 +178,19 @@ Manages all Cloudflare resources including:
 
 ### Supabase Module
 Handles Supabase infrastructure including:
-- **Project Creation**: Database and authentication setup with region selection (默认亚太地区 ap-southeast-1)
+- **Project Creation**: Database and authentication setup with region selection (default Asia Pacific region ap-southeast-1)
 - **API Configuration**: REST, Realtime, and Storage APIs enabled
 - **Authentication**: Site URL configuration for OAuth and security
-- **Storage**: File upload limits and management configuration (50MB 文件大小限制)
+- **Storage**: File upload limits and management configuration (50MB file size limit)
 - **Database**: PostgreSQL database with version management
-- **Environment Variables**: 自动配置 Supabase URL 和 API 密钥供 Cloudflare Worker 使用
+- **Environment Variables**: Automatically configures Supabase URL and API keys for Cloudflare Worker usage
 
 ## 🌍 Environment Management
 
 ### Production Environment
 Located in `environments/production/` with:
 - **Domain**: `api.todoapp.com`, `app.todoapp.com`
-- **Region**: `us-east-1` (北美地区)
+- **Region**: `us-east-1` (North America region)
 - **Security**: Enhanced security settings and resource tagging
 - **Resources**: Production-grade resource sizing (Pro plan for Supabase)
 - **Monitoring**: Comprehensive monitoring and logging setup
@@ -199,7 +199,7 @@ Located in `environments/production/` with:
 ### Staging Environment
 Located in `environments/staging/` with:
 - **Domain**: `staging.api.todoapp.com`, `staging.app.todoapp.com`
-- **Region**: `ap-southeast-1` (亚太地区，与生产环境隔离)
+- **Region**: `ap-southeast-1` (Asia Pacific region, isolated from production environment)
 - **Security**: Staging-specific security settings
 - **Resources**: Development-grade resource sizing (Free plan for Supabase)
 - **Testing**: Pre-production testing environment
@@ -215,56 +215,56 @@ Each environment includes:
 - **outputs.tf**: Environment-specific outputs
 
 ### Deployment Commands
-- **Production**: `terraform apply` - 手动确认的生产环境部署
-- **Staging**: `terraform apply` - 预发布环境部署，用于测试
+- **Production**: `terraform apply` - Production environment deployment with manual confirmation
+- **Staging**: `terraform apply` - Pre-production environment deployment for testing
 
-## 🔧 GitHub Actions 配置
+## 🔧 GitHub Actions Configuration
 
-### 必需的 Secrets 配置
-在 GitHub 仓库的 Settings → Secrets and variables → Actions 中配置：
+### Required Secrets Configuration
+Configure in GitHub repository Settings → Secrets and variables → Actions:
 
-| Secret 名称 | 描述 | 获取方式 |
+| Secret Name | Description | How to Obtain |
 |------------|------|----------|
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 账户 ID | Cloudflare 控制台 → 账户概览 |
-| `CLOUDFLARE_API_TOKEN` | Cloudflare API 令牌 | Cloudflare 控制台 → 我的个人资料 → API 令牌 |
-| `SUPABASE_ACCESS_TOKEN` | Supabase 访问令牌 | Supabase 控制台 → 设置 → API |
-| `SUPABASE_ORGANIZATION_ID` | Supabase 组织 ID | Supabase 控制台 → 组织设置 |
-| `SUPABASE_DATABASE_PASSWORD` | Supabase 数据库密码 | 创建 Supabase 项目时设置 |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID | Cloudflare Console → Account Overview |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API token | Cloudflare Console → My Profile → API Tokens |
+| `SUPABASE_ACCESS_TOKEN` | Supabase access token | Supabase Console → Settings → API |
+| `SUPABASE_ORGANIZATION_ID` | Supabase organization ID | Supabase Console → Organization Settings |
+| `SUPABASE_DATABASE_PASSWORD` | Supabase database password | Set when creating Supabase project |
 
-### 可选的 Variables 配置
-在 GitHub 仓库的 Settings → Secrets and variables → Variables 中配置：
+### Optional Variables Configuration
+Configure in GitHub repository Settings → Secrets and variables → Variables:
 
-| 变量名称 | 描述 | 默认值 |
+| Variable Name | Description | Default Value |
 |----------|------|--------|
-| `API_DOMAIN` | API 域名 | `api.todoapp.com` |
-| `WEB_DOMAIN` | Web 域名 | `app.todoapp.com` |
-| `ZONE_NAME` | Cloudflare 区域名称 | `todoapp.com` |
+| `API_DOMAIN` | API domain | `api.todoapp.com` |
+| `WEB_DOMAIN` | Web domain | `app.todoapp.com` |
+| `ZONE_NAME` | Cloudflare zone name | `todoapp.com` |
 
-### 工作流触发方式
-- **自动触发**: 当 `infra/` 目录有变更时自动运行
-- **手动触发**: 通过 GitHub Actions 界面手动选择操作 (plan/apply/destroy)
-- **分支限制**: 仅在 `main` 和 `dev` 分支上执行
+### Workflow Trigger Methods
+- **Automatic Trigger**: Automatically runs when changes are made in `infra/` directory
+- **Manual Trigger**: Manually select operations (plan/apply/destroy) through GitHub Actions interface
+- **Branch Restrictions**: Only executes on `main` and `dev` branches
 
-## 🌏 Supabase 亚太地区配置
+## 🌏 Supabase Asia Pacific Region Configuration
 
-### 默认区域
-- **默认区域**: `ap-southeast-1` (亚太东南地区)
-- **支持的区域**: ap-southeast-1, us-east-1, eu-central-1 等
-- **配置方法**: 通过 `supabase_region` 变量配置
+### Default Region
+- **Default Region**: `ap-southeast-1` (Asia Pacific Southeast region)
+- **Supported Regions**: ap-southeast-1, us-east-1, eu-central-1, etc.
+- **Configuration Method**: Configure through `supabase_region` variable
 
-### 亚太地区优势
-- **更低的延迟**: 为亚太地区用户提供更好的访问体验
-- **数据合规性**: 满足亚太地区的数据存储要求
-- **性能优化**: 优化的网络连接和响应时间
+### Asia Pacific Region Advantages
+- **Lower Latency**: Better access experience for Asia Pacific users
+- **Data Compliance**: Meets Asia Pacific data storage requirements
+- **Performance Optimization**: Optimized network connections and response times
 
-### 区域配置示例
+### Region Configuration Example
 ```terraform
-# 使用默认亚太地区
+# Use default Asia Pacific region
 supabase_region = "ap-southeast-1"
 
-# 或指定其他区域
-supabase_region = "us-east-1"  # 北美东部
-supabase_region = "eu-central-1"  # 欧洲中部
+# Or specify other regions
+supabase_region = "us-east-1"  # North America East
+supabase_region = "eu-central-1"  # Europe Central
 ```
 
 ## 🔒 Security Considerations

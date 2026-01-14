@@ -1,10 +1,10 @@
-// api/middleware/auth.ts
 import {Context, Next} from 'hono';
 import {HttpErrors} from '../../shared/errors/http-errors';
 import {AuthService} from '../../core/services/auth-service';
+import {AppConfig} from '../../shared/config/config';
 
 /**
- * Authentication middleware
+ * Authentication middleware.
  */
 export const authMiddleware = async (c: Context, next: Next) => {
   const authHeader = c.req.header('Authorization');
@@ -17,7 +17,8 @@ export const authMiddleware = async (c: Context, next: Next) => {
 
   try {
     // Use authentication service to verify token
-    const authService = new AuthService(c.env);
+    const config = new AppConfig(c.env as Record<string, unknown>);
+    const authService = new AuthService(config);
     const user = await authService.verifyToken(token);
 
     // Add user information to context
@@ -28,7 +29,6 @@ export const authMiddleware = async (c: Context, next: Next) => {
     if (error instanceof HttpErrors.UnauthorizedError) {
       throw error;
     }
-    console.error('Auth middleware error:', error);
     throw new HttpErrors.UnauthorizedError('Authentication failed');
   }
 };

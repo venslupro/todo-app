@@ -32,7 +32,7 @@ export interface UserSession {
 }
 
 /**
- * 认证响应
+ * Authentication response
  */
 export interface AuthResponse {
   user: User;
@@ -44,7 +44,7 @@ export interface AuthResponse {
 }
 
 /**
- * 用户注册DTO
+ * User registration DTO
  */
 export interface RegisterDto {
   email: string;
@@ -54,7 +54,7 @@ export interface RegisterDto {
 }
 
 /**
- * 用户登录DTO
+ * User login DTO
  */
 export interface LoginDto {
   email: string;

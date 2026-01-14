@@ -35,7 +35,7 @@ export class WebSocketAuthError extends BaseError {
 }
 
 /**
- * WebSocket消息格式错误
+ * WebSocket message format error
  */
 export class WebSocketMessageError extends BaseError {
   constructor(message = 'Invalid message format', details?: unknown) {
@@ -46,7 +46,7 @@ export class WebSocketMessageError extends BaseError {
   public readonly closeCode: number;
 }
 
-// 导出WebSocket错误集合
+// Export WebSocket error collection
 export const WebSocketErrors = {
   WebSocketAuthError,
   WebSocketMessageError,

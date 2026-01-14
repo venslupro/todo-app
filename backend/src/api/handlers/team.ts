@@ -30,7 +30,7 @@ router.post('/shares', async (c) => {
 });
 
 /**
- * 获取分享列表
+ * Get share list
  * GET /api/v1/team/shares
  */
 router.get('/shares', async (c) => {
@@ -52,7 +52,7 @@ router.get('/shares', async (c) => {
 });
 
 /**
- * 获取单个分享
+ * Get single share
  * GET /api/v1/team/shares/:id
  */
 router.get('/shares/:id', async (c) => {
@@ -66,7 +66,7 @@ router.get('/shares/:id', async (c) => {
 });
 
 /**
- * 更新分享权限
+ * Update share permission
  * PUT /api/v1/team/shares/:id
  */
 router.put('/shares/:id', async (c) => {
@@ -81,7 +81,7 @@ router.put('/shares/:id', async (c) => {
 });
 
 /**
- * 删除分享
+ * Delete share
  * DELETE /api/v1/team/shares/:id
  */
 router.delete('/shares/:id', async (c) => {

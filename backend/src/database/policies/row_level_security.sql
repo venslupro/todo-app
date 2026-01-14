@@ -1,12 +1,12 @@
 -- database/policies/row_level_security.sql
--- 行级安全策略（如果需要）
+-- Row Level Security policies (if needed)
 
--- 启用行级安全
+-- Enable Row Level Security
 ALTER TABLE todos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE todo_shares ENABLE ROW LEVEL SECURITY;
 ALTER TABLE media ENABLE ROW LEVEL SECURITY;
 
--- TODO表策略
+-- TODO table policies
 CREATE POLICY "Users can view their own todos" ON todos
   FOR SELECT USING (
     created_by = auth.uid() 

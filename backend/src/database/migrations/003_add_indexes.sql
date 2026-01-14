@@ -41,12 +41,12 @@ CREATE INDEX IF NOT EXISTS idx_api_keys_key ON api_keys(key);
 CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id);
 CREATE INDEX IF NOT EXISTS idx_api_keys_is_active ON api_keys(is_active);
 
--- API密钥请求日志表索引
+-- API key request log table indexes
 CREATE INDEX IF NOT EXISTS idx_api_key_requests_api_key ON api_key_requests(api_key);
 CREATE INDEX IF NOT EXISTS idx_api_key_requests_timestamp ON api_key_requests(timestamp);
 CREATE INDEX IF NOT EXISTS idx_api_key_requests_api_key_timestamp ON api_key_requests(api_key, timestamp DESC);
 
--- 全文搜索索引（如果需要搜索功能）
+-- Full-text search indexes (if search functionality is needed)
 CREATE INDEX IF NOT EXISTS idx_todos_search 
   ON todos 
   USING GIN (to_tsvector('english', COALESCE(name, '') || ' ' || COALESCE(description, '')));

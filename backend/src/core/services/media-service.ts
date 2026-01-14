@@ -1,7 +1,7 @@
 // core/services/media-service.ts
 import {HttpErrors} from '../../shared/errors/http-errors';
 import {Validator} from '../../shared/validation/validator';
-import {SupabaseClient} from '../../shared/supabase/client';
+import {SupabaseClient} from '../supabase/client';
 import {
   Media,
   MediaType,
@@ -100,12 +100,12 @@ export class MediaService {
       Validator.validateVideoDuration(dto.duration);
     }
 
-    // 生成文件路径
+    // Generate file path
     const fileId = crypto.randomUUID();
     const fileName = `todo-${todoId}/${fileId}/${dto.file_name}`;
     const filePath = `todo-media/${fileName}`;
 
-    // 获取上传URL
+    // Get upload URL
     const {data: uploadData, error: uploadError} = await this.supabase.storage
       .from('todo-media')
       .createSignedUploadUrl(filePath);
@@ -115,7 +115,7 @@ export class MediaService {
       throw new HttpErrors.InternalServerError('Failed to generate upload URL');
     }
 
-    // 创建媒体记录（预创建，上传后更新状态）
+    // Create media record (pre-creation, update status after upload)
     const mediaData: any = {
       id: fileId,
       todo_id: todoId,
@@ -148,7 +148,7 @@ export class MediaService {
   }
 
   /**
-   * 确认上传成功
+   * Confirm upload success
    */
   async confirmUpload(
     mediaId: string,
@@ -166,23 +166,23 @@ export class MediaService {
       throw new HttpErrors.NotFoundError('Media not found');
     }
 
-    // 检查权限
+    // Check permissions
     if ((media as any).todos.created_by !== userId && (media as any).created_by !== userId) {
       throw new HttpErrors.ForbiddenError('No permission to update this media');
     }
 
-    // 这里可以添加额外的验证，比如检查文件是否确实存在于存储中
+    // Additional validation can be added here, such as checking if file actually exists in storage
 
     return media as Media;
   }
 
   /**
-   * 删除媒体文件
+   * Delete media file
    */
   async deleteMedia(mediaId: string, userId: string): Promise<void> {
     Validator.validateUUID(mediaId, 'media_id');
 
-    // 获取媒体记录
+    // Get media record
     const {data: media} = await this.supabase
       .from('media')
       .select('*, todos!inner(created_by)')
@@ -193,7 +193,7 @@ export class MediaService {
       throw new HttpErrors.NotFoundError('Media not found');
     }
 
-    // 检查权限（只有TODO创建者或媒体上传者可以删除）
+    // Check permissions (only TODO creator or media uploader can delete)
     const canDelete = (media as any).todos.created_by === userId ||
       (media as any).created_by === userId;
 
@@ -201,17 +201,17 @@ export class MediaService {
       throw new HttpErrors.ForbiddenError('No permission to delete this media');
     }
 
-    // 从存储中删除文件
+    // Delete file from storage
     const {error: storageError} = await this.supabase.storage
       .from('todo-media')
       .remove([(media as any).file_path]);
 
     if (storageError) {
       console.error('Storage error:', storageError);
-      // 继续删除数据库记录
+      // Continue deleting database record
     }
 
-    // 删除数据库记录
+    // Delete database record
     const {error: dbError} = await this.supabase
       .from('media')
       .delete()
@@ -224,7 +224,7 @@ export class MediaService {
   }
 
   /**
-   * 获取媒体文件URL
+   * Get media file URL
    */
   async getMediaUrl(mediaId: string, userId: string): Promise<string> {
     Validator.validateUUID(mediaId, 'media_id');
@@ -239,13 +239,13 @@ export class MediaService {
       throw new HttpErrors.NotFoundError('Media not found');
     }
 
-    // 检查TODO访问权限
+    // Check TODO access permissions
     const hasAccess = await this.checkTodoAccess((media as any).todo_id, userId);
     if (!hasAccess) {
       throw new HttpErrors.ForbiddenError('No access to this media');
     }
 
-    // 获取文件URL
+    // Get file URL
     const {data: {publicUrl}} = this.supabase.storage
       .from('todo-media')
       .getPublicUrl((media as any).file_path);
@@ -254,7 +254,7 @@ export class MediaService {
   }
 
   /**
-   * 检查TODO访问权限
+   * Check TODO access permissions
    */
   private async checkTodoAccess(
     todoId: string,
@@ -269,10 +269,10 @@ export class MediaService {
 
     if (!data) return false;
 
-    // 如果是创建者，允许访问
+    // If creator, allow access
     if ((data as any).created_by === userId) return true;
 
-    // 检查是否有分享权限
+    // Check if has share permission
     const {data: share} = await this.supabase
       .from('todo_shares')
       .select('id')
@@ -284,7 +284,7 @@ export class MediaService {
   }
 
   /**
-   * 检查编辑权限
+   * Check edit permissions
    */
   private async checkEditPermission(
     todoId: string,
@@ -299,10 +299,10 @@ export class MediaService {
 
     if (!todo) return false;
 
-    // 如果是创建者，允许编辑
+    // If creator, allow editing
     if ((todo as any).created_by === userId) return true;
 
-    // 检查是否有编辑权限的分享
+    // Check if has edit permission share
     const {data: share} = await this.supabase
       .from('todo_shares')
       .select('permission')

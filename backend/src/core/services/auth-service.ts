@@ -1,17 +1,17 @@
-// core/services/auth-service.ts
 import {HttpErrors} from '../../shared/errors/http-errors';
 import {Validator} from '../../shared/validation/validator';
-import {SupabaseClient} from '../../shared/supabase/client';
+import {SupabaseClient} from '../supabase/client';
+import {AppConfig} from '../../shared/config/config';
 import {User, AuthResponse, RegisterDto, LoginDto} from '../models/user';
 
 /**
- * Authentication service class
+ * Authentication service class.
  */
 export class AuthService {
   private supabase: ReturnType<typeof SupabaseClient.getClient>;
 
-  constructor(env: any) {
-    this.supabase = SupabaseClient.getClient(env);
+  constructor(config: AppConfig) {
+    this.supabase = SupabaseClient.getClient(config);
   }
 
   /**
@@ -34,7 +34,10 @@ export class AuthService {
     });
 
     if (error) {
-      console.error('Registration error:', error);
+      // Handle specific Supabase validation errors
+      if (error.message.includes('Email address') || error.message.includes('email')) {
+        throw new HttpErrors.ValidationError(error.message);
+      }
       throw new HttpErrors.ValidationError(error.message);
     }
 

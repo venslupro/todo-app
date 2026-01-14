@@ -30,14 +30,14 @@ export interface CreateShareDto {
 }
 
 /**
- * 更新分享权限DTO
+ * Update share permission DTO
  */
 export interface UpdateShareDto {
   permission: SharePermission;
 }
 
 /**
- * 分享查询参数
+ * Share query parameters
  */
 export interface ShareQueryParams {
   todo_id?: string;
