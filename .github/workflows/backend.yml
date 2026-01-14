@@ -81,14 +81,6 @@ jobs:
     - name: 🧪 Run tests
       run: npm test
       working-directory: ${{ env.WORKING_DIRECTORY }}
-      
-    - name: 📊 Upload test results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results
-        path: ${{ env.WORKING_DIRECTORY }}/test-results/
-        retention-days: 30
 
   build:
     name: 🏗️ Build Project
@@ -145,7 +137,6 @@ jobs:
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        environment: staging
         command: deploy
         workingDirectory: ${{ env.WORKING_DIRECTORY }}
       env:
@@ -196,9 +187,9 @@ jobs:
         command: deploy
         workingDirectory: ${{ env.WORKING_DIRECTORY }}
       env:
-        SUPABASE_URL: ${{ vars.SUPABASE_URL_PRODUCTION }}
-        SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY_PRODUCTION }}
-        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_PRODUCTION }}
+        supabase_url: ${{ vars.SUPABASE_URL }}
+        supabase_anon_key: ${{ vars.SUPABASE_ANON_KEY }}
+        supabase_service_role_key: ${{ vars.SUPABASE_SERVICE_ROLE_KEY }}
         
     - name: 📝 Deployment Summary
       run: |
