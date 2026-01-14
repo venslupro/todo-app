@@ -74,7 +74,7 @@ export abstract class WebSocketBaseError extends Error {
  * WebSocket authentication error.
  */
 export class WebSocketAuthError extends WebSocketBaseError {
-  constructor(message = 'Authentication failed', _details?: unknown) {
+  constructor(message = 'Authentication failed') {
     super(message, 'WS_AUTH_ERROR', WebSocketCloseCode.POLICY_VIOLATION);
     this.name = 'WebSocketAuthError';
   }
@@ -84,7 +84,7 @@ export class WebSocketAuthError extends WebSocketBaseError {
  * WebSocket message format error.
  */
 export class WebSocketMessageError extends WebSocketBaseError {
-  constructor(message = 'Invalid message format', _details?: unknown) {
+  constructor(message = 'Invalid message format') {
     super(message, 'WS_MESSAGE_ERROR', WebSocketCloseCode.UNSUPPORTED_DATA);
     this.name = 'WebSocketMessageError';
   }
@@ -94,7 +94,7 @@ export class WebSocketMessageError extends WebSocketBaseError {
  * WebSocket connection error.
  */
 export class WebSocketConnectionError extends WebSocketBaseError {
-  constructor(message = 'Connection error', _details?: unknown) {
+  constructor(message = 'Connection error') {
     super(message, 'WS_CONNECTION_ERROR', WebSocketCloseCode.INTERNAL_ERROR);
     this.name = 'WebSocketConnectionError';
   }
@@ -104,7 +104,7 @@ export class WebSocketConnectionError extends WebSocketBaseError {
  * WebSocket permission error.
  */
 export class WebSocketPermissionError extends WebSocketBaseError {
-  constructor(message = 'Permission denied', _details?: unknown) {
+  constructor(message = 'Permission denied') {
     super(message, 'WS_PERMISSION_ERROR', WebSocketCloseCode.POLICY_VIOLATION);
     this.name = 'WebSocketPermissionError';
   }
@@ -114,7 +114,7 @@ export class WebSocketPermissionError extends WebSocketBaseError {
  * WebSocket room error.
  */
 export class WebSocketRoomError extends WebSocketBaseError {
-  constructor(message = 'Room error', _details?: unknown) {
+  constructor(message = 'Room error') {
     super(message, 'WS_ROOM_ERROR', WebSocketCloseCode.INTERNAL_ERROR);
     this.name = 'WebSocketRoomError';
   }
@@ -124,7 +124,7 @@ export class WebSocketRoomError extends WebSocketBaseError {
  * WebSocket validation error.
  */
 export class WebSocketValidationError extends WebSocketBaseError {
-  constructor(message = 'Validation failed', _details?: unknown) {
+  constructor(message = 'Validation failed') {
     super(message, 'WS_VALIDATION_ERROR', WebSocketCloseCode.UNSUPPORTED_DATA);
     this.name = 'WebSocketValidationError';
   }

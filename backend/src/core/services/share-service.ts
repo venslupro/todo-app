@@ -1,5 +1,5 @@
 // core/services/share-service.ts
-import {ErrorCode, Result, Ok, Err} from '../../shared/errors/error-codes';
+import {ErrorCode, Result, okResult, errResult} from '../../shared/errors/error-codes';
 import {HttpExceptions} from '../../shared/errors/http-exception';
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
@@ -28,25 +28,25 @@ export class ShareService {
     userId: string,
     dto: CreateShare,
   ): Promise<Result<TodoShare, ErrorCode>> {
-    const todoIdResult = Validator.validateUUID(dto.todo_id, 'todo_id');
+    const todoIdResult = Validator.validateUUID(dto.todo_id);
     if (todoIdResult.isErr()) {
-      return Err(todoIdResult.error);
+      return errResult(todoIdResult.error);
     }
     
-    const userIdResult = Validator.validateUUID(dto.user_id, 'user_id');
+    const userIdResult = Validator.validateUUID(dto.user_id);
     if (userIdResult.isErr()) {
-      return Err(userIdResult.error);
+      return errResult(userIdResult.error);
     }
     
     const permissionResult = Validator.validateSharePermission(dto.permission);
     if (permissionResult.isErr()) {
-      return Err(permissionResult.error);
+      return errResult(permissionResult.error);
     }
     const permission = permissionResult.value;
 
     // Cannot share with yourself
     if (dto.user_id === userId) {
-      return Err(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
+      return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
     // Check if TODO exists and belongs to current user
@@ -58,18 +58,18 @@ export class ShareService {
       .single();
 
     if (!todo) {
-      return Err(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
+      return errResult(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
     }
 
     if ((todo as {created_by: string}).created_by !== userId) {
-      return Err(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
+      return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
     // Check if target user exists
     const {data: targetUser} = await this.supabase.auth.admin.getUserById(dto.user_id);
 
     if (!targetUser) {
-      return Err(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
+      return errResult(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
     }
 
     // Check if already shared
@@ -102,7 +102,7 @@ export class ShareService {
       throw new HttpExceptions.InternalServerException(`Failed to create share: ${error.message}`);
     }
 
-    return Ok(data as TodoShare);
+    return okResult(data as TodoShare);
   }
 
   /**
@@ -119,7 +119,7 @@ export class ShareService {
 
     // Apply filters
     if (params.todo_id) {
-      Validator.validateUUID(params.todo_id, 'todo_id');
+      Validator.validateUUID(params.todo_id);
 
       // Check if user has permission to view shares for this TODO
       const {data: todo} = await this.supabase
@@ -130,18 +130,18 @@ export class ShareService {
         .single();
 
       if (!todo) {
-        return Err(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
+        return errResult(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
       }
 
       if ((todo as {created_by: string}).created_by !== userId) {
-        return Err(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
+        return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
       }
 
       query = query.eq('todo_id', params.todo_id);
     }
 
     if (params.user_id) {
-      Validator.validateUUID(params.user_id, 'user_id');
+      Validator.validateUUID(params.user_id);
       query = query.eq('user_id', params.user_id);
     }
 
@@ -157,17 +157,17 @@ export class ShareService {
     const {data, error} = await query;
 
     if (error) {
-      return Err(ErrorCode.SYSTEM_INTERNAL_ERROR);
+      return errResult(ErrorCode.SYSTEM_INTERNAL_ERROR);
     }
 
-    return Ok(data as TodoShare[]);
+    return okResult(data as TodoShare[]);
   }
 
   /**
    * Get single share
    */
   async getShare(shareId: string, userId: string): Promise<Result<TodoShare, ErrorCode>> {
-    Validator.validateUUID(shareId, 'share_id');
+    Validator.validateUUID(shareId);
 
     const {data: share, error} = await this.supabase
       .from('todo_shares')
@@ -176,16 +176,16 @@ export class ShareService {
       .single();
 
     if (error || !share) {
-      return Err(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
+      return errResult(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
     }
 
     // Check permissions
     if (((share as {todos: {created_by: string}, user_id: string}).todos.created_by !== userId) &&
         ((share as {todos: {created_by: string}, user_id: string}).user_id !== userId)) {
-      return Err(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
+      return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
-    return Ok(share as TodoShare);
+    return okResult(share as TodoShare);
   }
 
   /**
@@ -196,7 +196,7 @@ export class ShareService {
     userId: string,
     dto: UpdateShare,
   ): Promise<Result<TodoShare, ErrorCode>> {
-    Validator.validateUUID(shareId, 'share_id');
+    Validator.validateUUID(shareId);
     const permission = Validator.validateSharePermission(dto.permission);
 
     // Get share information
@@ -207,12 +207,12 @@ export class ShareService {
       .single();
 
     if (!share) {
-      return Err(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
+      return errResult(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
     }
 
     // Check permissions
     if (((share as {todos: {created_by: string}}).todos.created_by !== userId)) {
-      return Err(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
+      return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
     // Update share permissions
@@ -230,16 +230,16 @@ export class ShareService {
       throw new HttpExceptions.InternalServerException(`Failed to update share: ${error.message}`);
     }
 
-    return Ok(data as TodoShare);
+    return okResult(data as TodoShare);
   }
 
   /**
    * Delete share
    */
   async deleteShare(shareId: string, userId: string): Promise<Result<void, ErrorCode>> {
-    const uuidResult = Validator.validateUUID(shareId, 'share_id');
+    const uuidResult = Validator.validateUUID(shareId);
     if (uuidResult.isErr()) {
-      return Err(uuidResult.error);
+      return errResult(uuidResult.error);
     }
 
     // Get share information
@@ -250,13 +250,13 @@ export class ShareService {
       .single();
 
     if (!share) {
-      return Err(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
+      return errResult(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
     }
 
     // Check permissions
     if (((share as {todos: {created_by: string}, shared_by: string}).todos.created_by !== userId) &&
         ((share as {todos: {created_by: string}, shared_by: string}).shared_by !== userId)) {
-      return Err(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
+      return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
     const {error} = await (this.supabase as any)
@@ -265,9 +265,9 @@ export class ShareService {
       .eq('id', shareId);
 
     if (error) {
-      return Err(ErrorCode.SYSTEM_INTERNAL_ERROR);
+      return errResult(ErrorCode.SYSTEM_INTERNAL_ERROR);
     }
 
-    return Ok(undefined);
+    return okResult(undefined);
   }
 }

@@ -1,5 +1,5 @@
 // shared/validation/validator.ts
-import {ErrorCode, Result, Ok, Err} from '../errors/error-codes';
+import {ErrorCode, Result, okResult, errResult} from '../errors/error-codes';
 import {
   TodoStatus,
   TodoPriority,
@@ -19,12 +19,12 @@ export class Validator {
   /**
    * Validate UUID format
    */
-  static validateUUID(id: string, _fieldName = 'id'): Result<void, ErrorCode> {
+  static validateUUID(id: string): Result<void, ErrorCode> {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {
-      return Err(ErrorCode.VALIDATION_REQUIRED_FIELD);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
-    return Ok(undefined);
+    return okResult(undefined);
   }
 
   /**
@@ -32,9 +32,9 @@ export class Validator {
    */
   static validateTodoStatus(status: string): Result<TodoStatus, ErrorCode> {
     if (!Object.values(TodoStatus).includes(status as TodoStatus)) {
-      return Err(ErrorCode.VALIDATION_REQUIRED_FIELD);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
-    return Ok(status as TodoStatus);
+    return okResult(status as TodoStatus);
   }
 
   /**
@@ -42,9 +42,9 @@ export class Validator {
    */
   static validateTodoPriority(priority: string): Result<TodoPriority, ErrorCode> {
     if (!Object.values(TodoPriority).includes(priority as TodoPriority)) {
-      return Err(ErrorCode.VALIDATION_REQUIRED_FIELD);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
-    return Ok(priority as TodoPriority);
+    return okResult(priority as TodoPriority);
   }
 
   /**
@@ -52,20 +52,20 @@ export class Validator {
    */
   static validateSharePermission(permission: string): Result<SharePermission, ErrorCode> {
     if (!Object.values(SharePermission).includes(permission as SharePermission)) {
-      return Err(ErrorCode.VALIDATION_REQUIRED_FIELD);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
-    return Ok(permission as SharePermission);
+    return okResult(permission as SharePermission);
   }
 
   /**
    * Validate date format
    */
-  static validateDate(dateString: string, _fieldName = 'date'): Result<Date, ErrorCode> {
+  static validateDate(dateString: string): Result<Date, ErrorCode> {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      return Err(ErrorCode.VALIDATION_REQUIRED_FIELD);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
-    return Ok(date);
+    return okResult(date);
   }
 
   /**
@@ -73,9 +73,9 @@ export class Validator {
    */
   static validateFileSize(fileSize: number, maxSizeBytes: number): Result<void, ErrorCode> {
     if (fileSize > maxSizeBytes) {
-      return Err(ErrorCode.VALIDATION_REQUIRED_FIELD);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
-    return Ok(undefined);
+    return okResult(undefined);
   }
 
   /**
@@ -85,9 +85,9 @@ export class Validator {
     const supportedTypes = SUPPORTED_MIME_TYPES[mediaType];
 
     if (!supportedTypes.includes(mimeType.toLowerCase())) {
-      return Err(ErrorCode.VALIDATION_REQUIRED_FIELD);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
-    return Ok(undefined);
+    return okResult(undefined);
   }
 
   /**
@@ -96,9 +96,9 @@ export class Validator {
   static validateVideoDuration(durationSeconds: number): Result<void, ErrorCode> {
     const MAX_VIDEO_DURATION = 4 * 60; // 4 minutes
     if (durationSeconds > MAX_VIDEO_DURATION) {
-      return Err(ErrorCode.VALIDATION_REQUIRED_FIELD);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
-    return Ok(undefined);
+    return okResult(undefined);
   }
 
   /**
@@ -106,19 +106,19 @@ export class Validator {
    */
   static sanitizeString(input: string, maxLength: number): Result<string, ErrorCode> {
     if (!input || typeof input !== 'string') {
-      return Err(ErrorCode.VALIDATION_REQUIRED_FIELD);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
 
     const sanitized = input.trim();
     if (sanitized.length === 0) {
-      return Err(ErrorCode.VALIDATION_REQUIRED_FIELD);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
 
     if (sanitized.length > maxLength) {
-      return Err(ErrorCode.VALIDATION_REQUIRED_FIELD);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
 
-    return Ok(sanitized);
+    return okResult(sanitized);
   }
 
   /**
@@ -139,7 +139,7 @@ export class Validator {
       Math.max(0, Math.floor(offset)) :
       0;
 
-    return Ok({
+    return okResult({
       limit: validatedLimit,
       offset: validatedOffset,
     });
@@ -159,39 +159,39 @@ export class Validator {
     const sanitized = sanitizedResult.value;
 
     if (!emailRegex.test(sanitized)) {
-      return Err(ErrorCode.VALIDATION_INVALID_EMAIL);
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
     // Additional email validation rules
     if (sanitized.length > 254) {
-      return Err(ErrorCode.VALIDATION_INVALID_EMAIL);
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
     const [localPart, domain] = sanitized.split('@');
 
     // Ensure both parts exist after split
     if (!localPart || !domain) {
-      return Err(ErrorCode.VALIDATION_INVALID_EMAIL);
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
     if (localPart.length > 64) {
-      return Err(ErrorCode.VALIDATION_INVALID_EMAIL);
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
     if (domain.length > 253) {
-      return Err(ErrorCode.VALIDATION_INVALID_EMAIL);
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
     // Check for common invalid patterns
     if (domain.includes('..')) {
-      return Err(ErrorCode.VALIDATION_INVALID_EMAIL);
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
     if (localPart.startsWith('.') || localPart.endsWith('.')) {
-      return Err(ErrorCode.VALIDATION_INVALID_EMAIL);
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
-    return Ok(sanitized);
+    return okResult(sanitized);
   }
 
   /**
@@ -199,21 +199,21 @@ export class Validator {
    */
   static validatePassword(password: string): Result<void, ErrorCode> {
     if (password.length < 8) {
-      return Err(ErrorCode.VALIDATION_INVALID_PASSWORD);
+      return errResult(ErrorCode.VALIDATION_INVALID_PASSWORD);
     }
 
     if (!/[A-Z]/.test(password)) {
-      return Err(ErrorCode.VALIDATION_INVALID_PASSWORD);
+      return errResult(ErrorCode.VALIDATION_INVALID_PASSWORD);
     }
 
     if (!/[a-z]/.test(password)) {
-      return Err(ErrorCode.VALIDATION_INVALID_PASSWORD);
+      return errResult(ErrorCode.VALIDATION_INVALID_PASSWORD);
     }
 
     if (!/\d/.test(password)) {
-      return Err(ErrorCode.VALIDATION_INVALID_PASSWORD);
+      return errResult(ErrorCode.VALIDATION_INVALID_PASSWORD);
     }
 
-    return Ok(undefined);
+    return okResult(undefined);
   }
 }

@@ -90,7 +90,7 @@ class ApplicationRouter {
 }
 
 // Create and export the application
- const router = new ApplicationRouter();
- const app = router.getApp();
- 
- export default app;
+const router = new ApplicationRouter();
+const app = router.getApp();
+
+export default app;

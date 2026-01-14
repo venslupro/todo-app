@@ -1,5 +1,5 @@
 // core/services/websocket-service.ts
-import {ErrorCode, Result, Ok, Err} from '../../shared/errors/error-codes';
+import {ErrorCode, Result, okResult, errResult} from '../../shared/errors/error-codes';
 import {SupabaseClient} from '../supabase/client';
 import {AppConfig} from '../../shared/config/config';
 import {Todo} from '../models/todo';
@@ -18,17 +18,17 @@ export class WebSocketService {
     env: AppConfig,
   ): Promise<Result<{ id: string; email?: string }, ErrorCode>> {
     if (!token) {
-      return Err(ErrorCode.AUTH_TOKEN_INVALID);
+      return errResult(ErrorCode.AUTH_TOKEN_INVALID);
     }
 
     const supabase = SupabaseClient.getClient(env);
     const {data: {user}, error} = await supabase.auth.getUser(token);
 
     if (error || !user) {
-      return Err(ErrorCode.AUTH_TOKEN_INVALID);
+      return errResult(ErrorCode.AUTH_TOKEN_INVALID);
     }
 
-    return Ok(user);
+    return okResult(user);
   }
 
   /**
@@ -49,12 +49,12 @@ export class WebSocketService {
       .single<{ created_by: string }>();
 
     if (!todo) {
-      return Ok(false);
+      return okResult(false);
     }
 
     // If creator, allow access
     if (todo.created_by === userId) {
-      return Ok(true);
+      return okResult(true);
     }
 
     // Check if there is share permission
@@ -65,7 +65,7 @@ export class WebSocketService {
       .eq('user_id', userId)
       .single();
 
-    return Ok(!!share);
+    return okResult(!!share);
   }
 
   /**
@@ -91,12 +91,12 @@ export class WebSocketService {
     // Check edit permission
     const canEditResult = await this.checkEditPermission(todoId, userId, env);
     if (canEditResult.isErr()) {
-      return Err(canEditResult.error);
+      return errResult(canEditResult.error);
     }
     const canEdit = canEditResult.value;
     
     if (!canEdit) {
-      return Err(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
+      return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
     // Update TODO
@@ -109,10 +109,10 @@ export class WebSocketService {
       .eq('id', todoId);
 
     if (error) {
-      return Err(ErrorCode.SYSTEM_INTERNAL_ERROR);
+      return errResult(ErrorCode.SYSTEM_INTERNAL_ERROR);
     }
 
-    return Ok(undefined);
+    return okResult(undefined);
   }
 
   /**
@@ -200,12 +200,12 @@ export class WebSocketService {
       .single<{created_by: string}>();
 
     if (!todo) {
-      return Ok(false);
+      return okResult(false);
     }
 
     // If creator, allow editing
     if (todo.created_by === userId) {
-      return Ok(true);
+      return okResult(true);
     }
 
     // Check if there is edit permission share
@@ -216,6 +216,6 @@ export class WebSocketService {
       .eq('user_id', userId)
       .single<{permission: string}>();
 
-    return Ok(share?.permission === 'edit');
+    return okResult(share?.permission === 'edit');
   }
 }

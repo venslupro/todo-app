@@ -1,5 +1,5 @@
 // core/services/media-service.ts
-import {ErrorCode, Result, Ok, Err} from '../../shared/errors/error-codes';
+import {ErrorCode, Result, okResult, errResult} from '../../shared/errors/error-codes';
 import {HttpExceptions} from '../../shared/errors/http-exception';
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
@@ -36,15 +36,15 @@ export class MediaService {
 
     // Apply filters
     if (params.todo_id) {
-      const uuidResult = Validator.validateUUID(params.todo_id, 'todo_id');
+      const uuidResult = Validator.validateUUID(params.todo_id);
       if (uuidResult.isErr()) {
-        return Err(uuidResult.error);
+        return errResult(uuidResult.error);
       }
 
       // Check TODO access permissions
       const hasAccess = await this.checkTodoAccess(params.todo_id, userId);
       if (!hasAccess) {
-        return Err(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
+        return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
       }
 
       query = query.eq('todo_id', params.todo_id);
@@ -63,10 +63,10 @@ export class MediaService {
 
     if (error) {
       console.error('Database error:', error);
-      return Err(ErrorCode.DATABASE_QUERY_FAILED);
+      return errResult(ErrorCode.DATABASE_QUERY_FAILED);
     }
 
-    return Ok(data as Media[]);
+    return okResult(data as Media[]);
   }
 
   /**
@@ -77,12 +77,12 @@ export class MediaService {
     userId: string,
     dto: UploadMedia,
   ): Promise<Result<MediaUploadResult, ErrorCode>> {
-    Validator.validateUUID(todoId, 'todo_id');
+    Validator.validateUUID(todoId);
 
     // Check TODO edit permissions
     const canEdit = await this.checkEditPermission(todoId, userId);
     if (!canEdit) {
-      return Err(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
+      return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
     // Determine media type
@@ -92,7 +92,7 @@ export class MediaService {
     } else if (SUPPORTED_MIME_TYPES[MediaType.VIDEO].includes(dto.mime_type)) {
       mediaType = MediaType.VIDEO;
     } else {
-      return Err(ErrorCode.VALIDATION_INVALID_EMAIL); // 使用验证错误代码
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL); // 使用验证错误代码
     }
 
     // Validate file size
@@ -142,10 +142,10 @@ export class MediaService {
 
     if (mediaError) {
       console.error('Database error:', mediaError);
-      return Err(ErrorCode.SYSTEM_INTERNAL_ERROR);
+      return errResult(ErrorCode.SYSTEM_INTERNAL_ERROR);
     }
 
-    return Ok({
+    return okResult({
       media: media as Media,
       upload_url: uploadData.signedUrl,
     });
@@ -158,7 +158,7 @@ export class MediaService {
     mediaId: string,
     userId: string,
   ): Promise<Media> {
-    Validator.validateUUID(mediaId, 'media_id');
+    Validator.validateUUID(mediaId);
 
     const {data: media, error} = await this.supabase
       .from('media')
@@ -184,7 +184,7 @@ export class MediaService {
    * Delete media file
    */
   async deleteMedia(mediaId: string, userId: string): Promise<void> {
-    Validator.validateUUID(mediaId, 'media_id');
+    Validator.validateUUID(mediaId);
 
     // Get media record
     const {data: media} = await this.supabase
@@ -231,7 +231,7 @@ export class MediaService {
    * Get media file URL
    */
   async getMediaUrl(mediaId: string, userId: string): Promise<string> {
-    Validator.validateUUID(mediaId, 'media_id');
+    Validator.validateUUID(mediaId);
 
     const {data: media} = await this.supabase
       .from('media')

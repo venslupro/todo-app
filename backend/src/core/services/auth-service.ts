@@ -1,4 +1,4 @@
-import {ErrorCode, Result, Ok, Err} from '../../shared/errors/error-codes';
+import {ErrorCode, Result, okResult, errResult} from '../../shared/errors/error-codes';
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
 import {AppConfig} from '../../shared/config/config';
@@ -20,13 +20,13 @@ export class AuthService {
   async register(dto: Register): Promise<Result<AuthResult, ErrorCode>> {
     const emailResult = Validator.validateEmail(dto.email);
     if (emailResult.isErr()) {
-      return Err(emailResult.error);
+      return errResult(emailResult.error);
     }
     const email = emailResult.value;
     
     const passwordResult = Validator.validatePassword(dto.password);
     if (passwordResult.isErr()) {
-      return Err(passwordResult.error);
+      return errResult(passwordResult.error);
     }
 
     const {data, error} = await this.supabase.auth.signUp({
@@ -42,16 +42,16 @@ export class AuthService {
 
     if (error) {
       if (error.message.includes('Email address') || error.message.includes('email')) {
-        return Err(ErrorCode.AUTH_EMAIL_EXISTS);
+        return errResult(ErrorCode.AUTH_EMAIL_EXISTS);
       }
-      return Err(ErrorCode.VALIDATION_INVALID_EMAIL);
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
     if (!data.user) {
-      return Err(ErrorCode.SYSTEM_INTERNAL_ERROR);
+      return errResult(ErrorCode.SYSTEM_INTERNAL_ERROR);
     }
 
-    return Ok({
+    return okResult({
       user: {
         id: data.user.id,
         email: data.user.email!,
@@ -76,13 +76,13 @@ export class AuthService {
   async login(dto: Login): Promise<Result<AuthResult, ErrorCode>> {
     const emailResult = Validator.validateEmail(dto.email);
     if (emailResult.isErr()) {
-      return Err(emailResult.error);
+      return errResult(emailResult.error);
     }
     const email = emailResult.value;
     
     const passwordResult = Validator.sanitizeString(dto.password, 100);
     if (passwordResult.isErr()) {
-      return Err(passwordResult.error);
+      return errResult(passwordResult.error);
     }
     const password = passwordResult.value;
 
@@ -92,14 +92,14 @@ export class AuthService {
     });
 
     if (error) {
-      return Err(ErrorCode.AUTH_INVALID_CREDENTIALS);
+      return errResult(ErrorCode.AUTH_INVALID_CREDENTIALS);
     }
 
     if (!data.user) {
-      return Err(ErrorCode.AUTH_USER_NOT_FOUND);
+      return errResult(ErrorCode.AUTH_USER_NOT_FOUND);
     }
 
-    return Ok({
+    return okResult({
       user: {
         id: data.user.id,
         email: data.user.email!,
@@ -123,7 +123,7 @@ export class AuthService {
    */
   async refreshToken(refreshToken: string): Promise<Result<AuthResult, ErrorCode>> {
     if (!refreshToken) {
-      return Err(ErrorCode.VALIDATION_REQUIRED_FIELD);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
 
     const {data, error} = await this.supabase.auth.refreshSession({
@@ -131,16 +131,16 @@ export class AuthService {
     });
 
     if (error || !data.session) {
-      return Err(ErrorCode.AUTH_TOKEN_INVALID);
+      return errResult(ErrorCode.AUTH_TOKEN_INVALID);
     }
 
     const {data: {user}} = await this.supabase.auth.getUser(data.session.access_token);
 
     if (!user) {
-      return Err(ErrorCode.AUTH_USER_NOT_FOUND);
+      return errResult(ErrorCode.AUTH_USER_NOT_FOUND);
     }
 
-    return Ok({
+    return okResult({
       user: {
         id: user.id,
         email: user.email!,
@@ -178,10 +178,10 @@ export class AuthService {
     const {data: {user}, error} = await this.supabase.auth.getUser(accessToken);
 
     if (error || !user) {
-      return Err(ErrorCode.AUTH_TOKEN_INVALID);
+      return errResult(ErrorCode.AUTH_TOKEN_INVALID);
     }
 
-    return Ok({
+    return okResult({
       id: user.id,
       email: user.email!,
       username: user.user_metadata?.['username'],
