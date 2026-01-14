@@ -5,6 +5,7 @@ compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 logpush = true
 
+# Observability configuration for Wrangler v4
 [observability]
 enabled = true
 # head_sampling_rate = 0.1 # 10% of requests are logged
