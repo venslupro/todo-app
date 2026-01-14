@@ -156,9 +156,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     needs: build
-    if: |
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production') ||
-      (github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.build.result == 'success')
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
     
     steps:
     - name: 🔄 Checkout source code
