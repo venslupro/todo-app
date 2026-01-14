@@ -3,7 +3,7 @@ name = "todo-app-worker"
 main = "src/index.ts"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
-logpush = true
+# logpush = true
 
 # Observability configuration for Wrangler v4
 [observability]
