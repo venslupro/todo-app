@@ -327,7 +327,7 @@ export class WebSocketErrorHandler {
   } {
     const response = this.handleError(error, todoId, userId);
     const closeCode = response.error?.closeCode || WebSocketCloseCode.INTERNAL_ERROR;
-    
+
     return {
       response,
       closeCode,

@@ -8,7 +8,7 @@ describe('Validator', () => {
       if (result.isOk()) {
         expect(result.value).toBe('test@example.com');
       }
-      
+
       const result2 = Validator.validateEmail('user.name+tag@example.co.uk');
       expect(result2.isOk()).toBe(true);
       if (result2.isOk()) {
@@ -22,7 +22,7 @@ describe('Validator', () => {
       
       const result2 = Validator.validateEmail('@example.com');
       expect(result2.isErr()).toBe(true);
-      
+
       const result3 = Validator.validateEmail('test@');
       expect(result3.isErr()).toBe(true);
     });
@@ -38,7 +38,7 @@ describe('Validator', () => {
     it('should return error for invalid UUIDs', () => {
       const result = Validator.validateUUID('invalid-uuid');
       expect(result.isErr()).toBe(true);
-      
+
       const result2 = Validator.validateUUID('');
       expect(result2.isErr()).toBe(true);
     });
@@ -51,7 +51,7 @@ describe('Validator', () => {
       if (result.isOk()) {
         expect(result.value).toBe('test');
       }
-      
+
       const result2 = Validator.sanitizeString('a', 1);
       expect(result2.isOk()).toBe(true);
       if (result2.isOk()) {
@@ -62,7 +62,7 @@ describe('Validator', () => {
     it('should return error for strings outside length limits', () => {
       const result = Validator.sanitizeString('', 10);
       expect(result.isErr()).toBe(true);
-      
+
       const result2 = Validator.sanitizeString('toolongstring', 5);
       expect(result2.isErr()).toBe(true);
     });
@@ -77,13 +77,13 @@ describe('Validator', () => {
     it('should return error for weak passwords', () => {
       const result = Validator.validatePassword('short');
       expect(result.isErr()).toBe(true);
-      
+
       const result2 = Validator.validatePassword('nouppercase123');
       expect(result2.isErr()).toBe(true);
-      
+
       const result3 = Validator.validatePassword('NOLOWERCASE123');
       expect(result3.isErr()).toBe(true);
-      
+
       const result4 = Validator.validatePassword('NoNumbers');
       expect(result4.isErr()).toBe(true);
     });

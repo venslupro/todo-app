@@ -94,7 +94,7 @@ export class WebSocketService {
       return errResult(canEditResult.error);
     }
     const canEdit = canEditResult.value;
-    
+
     if (!canEdit) {
       return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
