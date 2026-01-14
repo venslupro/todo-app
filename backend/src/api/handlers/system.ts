@@ -1,6 +1,6 @@
 // api/handlers/system.ts
 import {Hono} from 'hono';
-import {HttpErrors} from '../../shared/errors/http-errors';
+import {HttpExceptions} from '../../shared/errors/http-exception';
 
 const router = new Hono<{
   Bindings: {
@@ -18,7 +18,7 @@ const router = new Hono<{
  */
 router.get('/', (c) => {
   return c.json(
-    new HttpErrors.OkResponse({
+    new HttpExceptions.SuccessResponse({
       status: 'healthy',
       timestamp: new Date().toISOString(),
       environment: c.env.environment || 'unknown',
@@ -32,7 +32,7 @@ router.get('/', (c) => {
  */
 router.get('/health', (c) => {
   return c.json(
-    new HttpErrors.OkResponse({
+    new HttpExceptions.SuccessResponse({
       status: 'healthy',
       timestamp: new Date().toISOString(),
       environment: c.env.environment || 'unknown',
@@ -46,11 +46,11 @@ router.get('/health', (c) => {
  */
 router.get('/version', (c) => {
   return c.json(
-    new HttpErrors.OkResponse({
+    new HttpExceptions.SuccessResponse({
       name: 'TODO API',
       version: '1.0.0',
       description: 'Real-time collaborative TODO list application',
-      documentation: 'https://api.example.com/docs',
+      documentation: 'https://api.todo.com/docs',
     }),
   );
 });

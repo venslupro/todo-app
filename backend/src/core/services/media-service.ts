@@ -1,13 +1,14 @@
 // core/services/media-service.ts
-import {HttpErrors} from '../../shared/errors/http-errors';
+import {ErrorCode, Result, Ok, Err} from '../../shared/errors/error-codes';
+import {HttpExceptions} from '../../shared/errors/http-exception';
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
 import {
   Media,
   MediaType,
   SUPPORTED_MIME_TYPES,
-  UploadMediaDto,
-  MediaUploadResponse,
+  UploadMedia,
+  MediaUploadResult,
   MediaQueryParams,
 } from '../models/media';
 
@@ -27,7 +28,7 @@ export class MediaService {
   async getMediaList(
     userId: string,
     params: MediaQueryParams,
-  ): Promise<Media[]> {
+  ): Promise<Result<Media[], ErrorCode>> {
     let query = this.supabase
       .from('media')
       .select('*')
@@ -35,12 +36,15 @@ export class MediaService {
 
     // Apply filters
     if (params.todo_id) {
-      Validator.validateUUID(params.todo_id, 'todo_id');
+      const uuidResult = Validator.validateUUID(params.todo_id, 'todo_id');
+      if (uuidResult.isErr()) {
+        return Err(uuidResult.error);
+      }
 
       // Check TODO access permissions
       const hasAccess = await this.checkTodoAccess(params.todo_id, userId);
       if (!hasAccess) {
-        throw new HttpErrors.ForbiddenError('No access to this todo');
+        return Err(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
       }
 
       query = query.eq('todo_id', params.todo_id);
@@ -59,10 +63,10 @@ export class MediaService {
 
     if (error) {
       console.error('Database error:', error);
-      throw new HttpErrors.InternalServerError('Failed to fetch media');
+      return Err(ErrorCode.DATABASE_QUERY_FAILED);
     }
 
-    return data as Media[];
+    return Ok(data as Media[]);
   }
 
   /**
@@ -71,14 +75,14 @@ export class MediaService {
   async getUploadUrl(
     todoId: string,
     userId: string,
-    dto: UploadMediaDto,
-  ): Promise<MediaUploadResponse> {
+    dto: UploadMedia,
+  ): Promise<Result<MediaUploadResult, ErrorCode>> {
     Validator.validateUUID(todoId, 'todo_id');
 
     // Check TODO edit permissions
     const canEdit = await this.checkEditPermission(todoId, userId);
     if (!canEdit) {
-      throw new HttpErrors.ForbiddenError('No permission to upload media to this todo');
+      return Err(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
     // Determine media type
@@ -88,7 +92,7 @@ export class MediaService {
     } else if (SUPPORTED_MIME_TYPES[MediaType.VIDEO].includes(dto.mime_type)) {
       mediaType = MediaType.VIDEO;
     } else {
-      throw new HttpErrors.ValidationError(`Unsupported file type: ${dto.mime_type}`);
+      return Err(ErrorCode.VALIDATION_INVALID_EMAIL); // 使用验证错误代码
     }
 
     // Validate file size
@@ -112,7 +116,7 @@ export class MediaService {
 
     if (uploadError || !uploadData) {
       console.error('Storage error:', uploadError);
-      throw new HttpErrors.InternalServerError('Failed to generate upload URL');
+      throw new HttpExceptions.InternalServerException('Failed to generate upload URL');
     }
 
     // Create media record (pre-creation, update status after upload)
@@ -138,13 +142,13 @@ export class MediaService {
 
     if (mediaError) {
       console.error('Database error:', mediaError);
-      throw new HttpErrors.InternalServerError('Failed to create media record');
+      return Err(ErrorCode.SYSTEM_INTERNAL_ERROR);
     }
 
-    return {
+    return Ok({
       media: media as Media,
       upload_url: uploadData.signedUrl,
-    };
+    });
   }
 
   /**
@@ -163,12 +167,12 @@ export class MediaService {
       .single();
 
     if (error || !media) {
-      throw new HttpErrors.NotFoundError('Media not found');
+      throw new HttpExceptions.NotFoundException('Media not found');
     }
 
     // Check permissions
     if ((media as any).todos.created_by !== userId && (media as any).created_by !== userId) {
-      throw new HttpErrors.ForbiddenError('No permission to update this media');
+      throw new HttpExceptions.ForbiddenException('No permission to update this media');
     }
 
     // Additional validation can be added here, such as checking if file actually exists in storage
@@ -190,7 +194,7 @@ export class MediaService {
       .single();
 
     if (!media) {
-      throw new HttpErrors.NotFoundError('Media not found');
+      throw new HttpExceptions.NotFoundException('Media not found');
     }
 
     // Check permissions (only TODO creator or media uploader can delete)
@@ -198,7 +202,7 @@ export class MediaService {
       (media as any).created_by === userId;
 
     if (!canDelete) {
-      throw new HttpErrors.ForbiddenError('No permission to delete this media');
+      throw new HttpExceptions.ForbiddenException('No permission to delete this media');
     }
 
     // Delete file from storage
@@ -219,7 +223,7 @@ export class MediaService {
 
     if (dbError) {
       console.error('Database error:', dbError);
-      throw new HttpErrors.InternalServerError('Failed to delete media record');
+      throw new HttpExceptions.InternalServerException('Failed to delete media record');
     }
   }
 
@@ -236,13 +240,13 @@ export class MediaService {
       .single();
 
     if (!media) {
-      throw new HttpErrors.NotFoundError('Media not found');
+      throw new HttpExceptions.NotFoundException('Media not found');
     }
 
     // Check TODO access permissions
     const hasAccess = await this.checkTodoAccess((media as any).todo_id, userId);
     if (!hasAccess) {
-      throw new HttpErrors.ForbiddenError('No access to this media');
+      throw new HttpExceptions.ForbiddenException('No access to this media');
     }
 
     // Get file URL

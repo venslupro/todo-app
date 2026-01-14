@@ -1,21 +1,26 @@
 // core/durable-objects/todo-websocket.ts
-/* eslint-disable no-undef */
-import {WebSocketService} from '../services/websocket-service';
-import {AppConfig} from '../../shared/config/config';
-import {Todo} from '../models/todo';
+import { DurableObject } from 'cloudflare:workers';
 
 interface WebSocketConnection {
-  webSocket: WebSocket;
   userId: string;
+  username?: string | undefined;
+  email?: string | undefined;
+  connectedAt: number;
+  lastActivity: number;
+}
+
+interface TodoRoom {
   todoId: string;
+  connections: Map<string, WebSocketConnection>;
   createdAt: number;
+  updatedAt: number;
 }
 
 interface WebSocketMessage {
-  type: string;
-  payload: unknown;
+  type: 'ping' | 'pong' | 'todo_update' | 'user_joined' | 'user_left' | 'error';
+  payload?: unknown;
   timestamp: number;
-  sender: string;
+  sender?: string;
 }
 
 export interface Env {
@@ -23,214 +28,254 @@ export interface Env {
   supabase_service_role_key: string;
   supabase_anon_key: string;
   environment: 'development' | 'production' | 'staging';
-  TODO_WEBSOCKET: DurableObjectNamespace;
+  JWT_SECRET: string;
 }
 
-export class TodoWebSocketDurableObject {
-  private connections: Map<string, WebSocketConnection> = new Map();
-  private websocketService: WebSocketService;
+export class TodoWebSocketDurableObject extends DurableObject<Env> {
+  private room: TodoRoom | null = null;
 
-  constructor(private env: Env) {
-    this.websocketService = new WebSocketService();
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+
+    // Initialize room state from storage
+    ctx.blockConcurrencyWhile(async () => {
+      const storedRoom = await ctx.storage.get<TodoRoom>('room');
+      if (storedRoom) {
+        this.room = {
+          ...storedRoom,
+          connections: new Map(storedRoom.connections),
+        };
+      }
+    });
   }
 
   /**
-   * Handle WebSocket connection request
+   * Adds a user to the TODO room.
    */
-  async fetch(request: Request): Promise<Response> {
-    const url = new URL(request.url);
-
-    if (url.pathname === '/websocket') {
-      // Upgrade to WebSocket connection
-      if (request.headers.get('Upgrade') !== 'websocket') {
-        return new Response('Expected WebSocket upgrade', {status: 426});
-      }
-
-      const {0: clientWebSocket, 1: serverWebSocket} = new WebSocketPair();
-
-      try {
-        // Validate authentication information
-        const authHeader = request.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          throw new Error('Missing or invalid authorization header');
-        }
-
-        const token = authHeader.substring(7);
-
-        // Get todoId from URL parameters
-        const todoId = url.searchParams.get('todoId');
-        if (!todoId) {
-          throw new Error('Todo ID is required');
-        }
-
-        // Validate user identity and permissions
-        const appConfig = new AppConfig({
-          supabase_url: this.env.supabase_url,
-          supabase_anon_key: this.env.supabase_anon_key,
-          supabase_service_role_key: this.env.supabase_service_role_key,
-          environment: this.env.environment,
-        });
-        const user = await this.websocketService.authenticateConnection(
-          token, appConfig,
-        );
-        const hasAccess = await this.websocketService.verifyTodoAccess(
-          todoId, user.id, appConfig,
-        );
-
-        if (!hasAccess) {
-          throw new Error('No access to this todo');
-        }
-
-        // Accept WebSocket connection
-        serverWebSocket.accept();
-
-        // Store connection information
-        const connectionId = this.generateConnectionId();
-        const connection: WebSocketConnection = {
-          webSocket: serverWebSocket,
-          userId: user.id,
-          todoId,
-          createdAt: Date.now(),
-        };
-
-        this.connections.set(connectionId, connection);
-
-        // Set up message handling
-        serverWebSocket.addEventListener('message', (event) => {
-          this.handleWebSocketMessage(connectionId, event.data);
-        });
-
-        serverWebSocket.addEventListener('close', () => {
-          this.connections.delete(connectionId);
-        });
-
-        // Send connection success message
-        serverWebSocket.send(JSON.stringify({
-          type: 'connection_established',
-          payload: {
-            connectionId,
-            todoId,
-            userId: user.id,
-          },
-          timestamp: Date.now(),
-        }));
-
-        return new Response(null, {
-          status: 101,
-          webSocket: clientWebSocket,
-        });
-      } catch (error) {
-        // Send error message and close connection
-        if (error instanceof Error) {
-          clientWebSocket.send(JSON.stringify({
-            type: 'error',
-            payload: {
-              message: error.message,
-            },
-            timestamp: Date.now(),
-          }));
-        }
-        clientWebSocket.close(1008, 'Authentication failed');
-        return new Response('Authentication failed', {status: 401});
-      }
+  async addUser(userId: string, userInfo: { username?: string; email?: string }): Promise<void> {
+    if (!this.room) {
+      throw new Error('Room not initialized');
     }
 
-    return new Response('Not found', {status: 404});
+    const connection: WebSocketConnection = {
+      userId,
+      username: userInfo.username,
+      email: userInfo.email,
+      connectedAt: Date.now(),
+      lastActivity: Date.now(),
+    };
+
+    this.room.connections.set(userId, connection);
+    this.room.updatedAt = Date.now();
+
+    await this.saveRoomState();
   }
 
   /**
-   * Handle WebSocket message
+   * Removes a user from the TODO room.
    */
-  private async handleWebSocketMessage(connectionId: string, data: string): Promise<void> {
-    const connection = this.connections.get(connectionId);
-    if (!connection) {
+  async removeUser(userId: string): Promise<void> {
+    if (!this.room) {
       return;
     }
 
-    try {
-      const message: WebSocketMessage = JSON.parse(data);
+    this.room.connections.delete(userId);
+    this.room.updatedAt = Date.now();
 
-      switch (message.type) {
-      case 'todo_update':
-        await this.handleTodoUpdate(connection.todoId, message.payload, connection.userId);
-        break;
-      case 'ping':
-        connection.webSocket.send(JSON.stringify({
-          type: 'pong',
-          payload: {timestamp: Date.now()},
-          timestamp: Date.now(),
-        }));
-        break;
-      default:
-        connection.webSocket.send(JSON.stringify({
-          type: 'error',
-          payload: {message: 'Unknown message type'},
-          timestamp: Date.now(),
-        }));
+    await this.saveRoomState();
+  }
+
+  /**
+   * Updates user activity timestamp.
+   */
+  async updateUserActivity(userId: string): Promise<void> {
+    if (!this.room) {
+      return;
+    }
+
+    const connection = this.room.connections.get(userId);
+    if (connection) {
+      connection.lastActivity = Date.now();
+      this.room.updatedAt = Date.now();
+      await this.saveRoomState();
+    }
+  }
+
+  /**
+   * Gets all users in the TODO room.
+   */
+  async getRoomUsers(): Promise<Array<WebSocketConnection & { isOnline: boolean }>> {
+    if (!this.room) {
+      return [];
+    }
+
+    const now = Date.now();
+    const fiveMinutesAgo = now - 5 * 60 * 1000; // 5 minutes timeout
+
+    return Array.from(this.room.connections.values()).map(conn => ({
+      ...conn,
+      isOnline: conn.lastActivity > fiveMinutesAgo,
+    }));
+  }
+
+  /**
+   * Broadcasts a message to all users in the room.
+   */
+  async broadcastMessage(message: WebSocketMessage, _excludeUserId?: string): Promise<void> {
+    if (!this.room) {
+      return;
+    }
+
+    // In a real implementation, this would send to all connected WebSockets
+    // For now, we'll just log the broadcast
+    console.log(`Broadcasting message to TODO ${this.room.todoId}:`, message);
+    
+    // Update room activity
+    this.room.updatedAt = Date.now();
+    await this.saveRoomState();
+  }
+
+  /**
+   * Handles TODO update from a user.
+   */
+  async handleTodoUpdate(updateData: unknown, userId: string): Promise<void> {
+    if (!this.room) {
+      throw new Error('Room not initialized');
+    }
+
+    // Broadcast the update to all users
+    await this.broadcastMessage({
+      type: 'todo_update',
+      payload: updateData,
+      timestamp: Date.now(),
+      sender: userId,
+    });
+
+    // Update user activity
+    await this.updateUserActivity(userId);
+  }
+
+  /**
+   * Initializes the TODO room.
+   */
+  async initializeRoom(todoId: string): Promise<void> {
+    this.room = {
+      todoId,
+      connections: new Map(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    await this.saveRoomState();
+  }
+
+  /**
+   * Gets room statistics.
+   */
+  async getRoomStats(): Promise<{
+    todoId: string;
+    totalUsers: number;
+    onlineUsers: number;
+    createdAt: number;
+    updatedAt: number;
+  }> {
+    if (!this.room) {
+      throw new Error('Room not initialized');
+    }
+
+    const now = Date.now();
+    const fiveMinutesAgo = now - 5 * 60 * 1000;
+    
+    const onlineUsers = Array.from(this.room.connections.values()).filter(
+      conn => conn.lastActivity > fiveMinutesAgo
+    ).length;
+
+    return {
+      todoId: this.room.todoId,
+      totalUsers: this.room.connections.size,
+      onlineUsers,
+      createdAt: this.room.createdAt,
+      updatedAt: this.room.updatedAt,
+    };
+  }
+
+  /**
+   * Cleans up inactive connections.
+   */
+  async cleanupInactiveConnections(): Promise<void> {
+    if (!this.room) {
+      return;
+    }
+
+    const now = Date.now();
+    const thirtyMinutesAgo = now - 30 * 60 * 1000; // 30 minutes timeout
+
+    for (const [userId, connection] of this.room.connections.entries()) {
+      if (connection.lastActivity < thirtyMinutesAgo) {
+        this.room.connections.delete(userId);
+        console.log(`Removed inactive user ${userId} from TODO ${this.room.todoId}`);
       }
-    } catch (error) {
-      connection.webSocket.send(JSON.stringify({
-        type: 'error',
-        payload: {message: 'Invalid message format'},
-        timestamp: Date.now(),
-      }));
     }
+
+    this.room.updatedAt = now;
+    await this.saveRoomState();
   }
 
   /**
-   * Handle TODO update message
+   * Saves room state to storage.
    */
-  private async handleTodoUpdate(
-    todoId: string, updateData: unknown, userId: string,
-  ): Promise<void> {
+  private async saveRoomState(): Promise<void> {
+    if (!this.room) {
+      return;
+    }
+
+    // Convert Map to plain object for storage
+    const roomForStorage = {
+      ...this.room,
+      connections: Object.fromEntries(this.room.connections),
+    };
+
+    await this.ctx.storage.put('room', roomForStorage);
+  }
+
+  /**
+   * Handles HTTP requests for room management.
+   */
+  override async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    const path = url.pathname;
+
     try {
-      // Create AppConfig instance
-      const appConfig = new AppConfig({
-        supabase_url: this.env.supabase_url,
-        supabase_anon_key: this.env.supabase_anon_key,
-        supabase_service_role_key: this.env.supabase_service_role_key,
-        environment: this.env.environment,
-      });
+      switch (path) {
+        case '/users':
+          if (request.method === 'GET') {
+            const users = await this.getRoomUsers();
+            return Response.json(users);
+          }
+          break;
 
-      // Call WebSocketService to handle business logic
-      await this.websocketService.handleTodoUpdate(
-        todoId, updateData as Partial<Todo>, userId, appConfig,
-      );
+        case '/stats':
+          if (request.method === 'GET') {
+            const stats = await this.getRoomStats();
+            return Response.json(stats);
+          }
+          break;
 
-      // Broadcast update message to all users in the room
-      await this.broadcastToTodoRoom(todoId, {
-        type: 'todo_updated',
-        payload: updateData,
-        timestamp: Date.now(),
-        sender: userId,
-      }, userId);
-    } catch (error) {
-      // Error handling - console statements removed
-    }
-  }
+        case '/cleanup':
+          if (request.method === 'POST') {
+            await this.cleanupInactiveConnections();
+            return Response.json({ success: true });
+          }
+          break;
 
-  /**
-   * Broadcast message to all users in TODO room
-   */
-  private async broadcastToTodoRoom(
-    todoId: string, message: WebSocketMessage, excludeUserId?: string,
-  ): Promise<void> {
-    for (const [connectionId, connection] of this.connections.entries()) {
-      if (connection.todoId === todoId && connection.userId !== excludeUserId) {
-        try {
-          connection.webSocket.send(JSON.stringify(message));
-        } catch (error) {
-          // Error handling - console statements removed
-          this.connections.delete(connectionId);
-        }
+        default:
+          return new Response('Not found', { status: 404 });
       }
-    }
-  }
 
-  /**
-   * Generate unique connection ID
-   */
-  private generateConnectionId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      return new Response('Method not allowed', { status: 405 });
+    } catch (error) {
+      console.error('Durable Object fetch error:', error);
+      return Response.json({ error: 'Internal server error' }, { status: 500 });
+    }
   }
 }

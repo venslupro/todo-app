@@ -3,84 +3,134 @@ import {Validator} from '../shared/validation/validator';
 describe('Validator', () => {
   describe('validateEmail', () => {
     it('should validate correct email addresses', () => {
-      expect(Validator.validateEmail('test@example.com')).toBe('test@example.com');
-      expect(Validator.validateEmail('user.name+tag@example.co.uk'))
-        .toBe('user.name+tag@example.co.uk');
+      const result = Validator.validateEmail('test@example.com');
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value).toBe('test@example.com');
+      }
+      
+      const result2 = Validator.validateEmail('user.name+tag@example.co.uk');
+      expect(result2.isOk()).toBe(true);
+      if (result2.isOk()) {
+        expect(result2.value).toBe('user.name+tag@example.co.uk');
+      }
     });
 
-    it('should throw error for invalid email addresses', () => {
-      expect(() => Validator.validateEmail('invalid')).toThrow();
-      expect(() => Validator.validateEmail('@example.com')).toThrow();
-      expect(() => Validator.validateEmail('test@')).toThrow();
+    it('should return error for invalid email addresses', () => {
+      const result = Validator.validateEmail('invalid');
+      expect(result.isErr()).toBe(true);
+      
+      const result2 = Validator.validateEmail('@example.com');
+      expect(result2.isErr()).toBe(true);
+      
+      const result3 = Validator.validateEmail('test@');
+      expect(result3.isErr()).toBe(true);
     });
   });
 
   describe('validateUUID', () => {
     it('should validate correct UUIDs', () => {
       const validUUID = '123e4567-e89b-12d3-a456-426614174000';
-      expect(() => Validator.validateUUID(validUUID)).not.toThrow();
+      const result = Validator.validateUUID(validUUID);
+      expect(result.isOk()).toBe(true);
     });
 
-    it('should throw error for invalid UUIDs', () => {
-      expect(() => Validator.validateUUID('invalid-uuid')).toThrow();
-      expect(() => Validator.validateUUID('')).toThrow();
+    it('should return error for invalid UUIDs', () => {
+      const result = Validator.validateUUID('invalid-uuid');
+      expect(result.isErr()).toBe(true);
+      
+      const result2 = Validator.validateUUID('');
+      expect(result2.isErr()).toBe(true);
     });
   });
 
   describe('sanitizeString', () => {
     it('should sanitize strings within length limits', () => {
-      expect(Validator.sanitizeString('test', 10)).toBe('test');
-      expect(Validator.sanitizeString('a', 1)).toBe('a');
+      const result = Validator.sanitizeString('test', 10);
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value).toBe('test');
+      }
+      
+      const result2 = Validator.sanitizeString('a', 1);
+      expect(result2.isOk()).toBe(true);
+      if (result2.isOk()) {
+        expect(result2.value).toBe('a');
+      }
     });
 
-    it('should throw error for strings outside length limits', () => {
-      expect(() => Validator.sanitizeString('', 10)).toThrow();
-      expect(() => Validator.sanitizeString('toolongstring', 5)).toThrow();
+    it('should return error for strings outside length limits', () => {
+      const result = Validator.sanitizeString('', 10);
+      expect(result.isErr()).toBe(true);
+      
+      const result2 = Validator.sanitizeString('toolongstring', 5);
+      expect(result2.isErr()).toBe(true);
     });
   });
 
   describe('validatePassword', () => {
     it('should validate strong passwords', () => {
-      expect(() => Validator.validatePassword('StrongPass123')).not.toThrow();
+      const result = Validator.validatePassword('StrongPass123');
+      expect(result.isOk()).toBe(true);
     });
 
-    it('should throw error for weak passwords', () => {
-      expect(() => Validator.validatePassword('short')).toThrow();
-      expect(() => Validator.validatePassword('nouppercase123')).toThrow();
-      expect(() => Validator.validatePassword('NOLOWERCASE123')).toThrow();
-      expect(() => Validator.validatePassword('NoNumbers')).toThrow();
+    it('should return error for weak passwords', () => {
+      const result = Validator.validatePassword('short');
+      expect(result.isErr()).toBe(true);
+      
+      const result2 = Validator.validatePassword('nouppercase123');
+      expect(result2.isErr()).toBe(true);
+      
+      const result3 = Validator.validatePassword('NOLOWERCASE123');
+      expect(result3.isErr()).toBe(true);
+      
+      const result4 = Validator.validatePassword('NoNumbers');
+      expect(result4.isErr()).toBe(true);
     });
   });
 
   describe('validateDate', () => {
     it('should validate correct date formats', () => {
-      const date = Validator.validateDate('2023-01-01');
-      expect(date).toBeInstanceOf(Date);
-      expect(date.getFullYear()).toBe(2023);
+      const result = Validator.validateDate('2023-01-01');
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value).toBeInstanceOf(Date);
+        expect(result.value.getFullYear()).toBe(2023);
+      }
     });
 
-    it('should throw error for invalid date formats', () => {
-      expect(() => Validator.validateDate('invalid-date')).toThrow();
+    it('should return error for invalid date formats', () => {
+      const result = Validator.validateDate('invalid-date');
+      expect(result.isErr()).toBe(true);
     });
   });
 
   describe('validatePagination', () => {
     it('should validate pagination parameters', () => {
       const result = Validator.validatePagination(10, 20);
-      expect(result.limit).toBe(10);
-      expect(result.offset).toBe(20);
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value.limit).toBe(10);
+        expect(result.value.offset).toBe(20);
+      }
     });
 
     it('should use default values', () => {
       const result = Validator.validatePagination();
-      expect(result.limit).toBe(50);
-      expect(result.offset).toBe(0);
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value.limit).toBe(50);
+        expect(result.value.offset).toBe(0);
+      }
     });
 
     it('should clamp values to valid ranges', () => {
       const result = Validator.validatePagination(-5, -10);
-      expect(result.limit).toBe(1);
-      expect(result.offset).toBe(0);
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value.limit).toBe(1);
+        expect(result.value.offset).toBe(0);
+      }
     });
   });
 });

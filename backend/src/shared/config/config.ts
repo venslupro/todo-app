@@ -1,22 +1,22 @@
 /**
  * Environment variable keys used throughout the application.
  */
-const EnvKeys = {
-  name: 'name',
-  environment: 'environment',
-  supabaseUrl: 'supabase_url',
-  supabaseAnonKey: 'supabase_anon_key',
-  supabaseServiceRoleKey: 'supabase_service_role_key',
-  logLevel: 'log_level',
+const ENV_KEYS = {
+  NAME: 'name',
+  ENVIRONMENT: 'environment',
+  SUPABASE_URL: 'supabase_url',
+  SUPABASE_ANON_KEY: 'supabase_anon_key',
+  SUPABASE_SERVICE_ROLE_KEY: 'supabase_service_role_key',
+  LOG_LEVEL: 'log_level',
 } as const;
 
-export interface Env {
-  [EnvKeys.name]?: string;
-  [EnvKeys.environment]?: string;
-  [EnvKeys.supabaseUrl]?: string;
-  [EnvKeys.supabaseAnonKey]?: string;
-  [EnvKeys.supabaseServiceRoleKey]?: string;
-  [EnvKeys.logLevel]?: string;
+export interface EnvironmentVariables {
+  [ENV_KEYS.NAME]?: string;
+  [ENV_KEYS.ENVIRONMENT]?: string;
+  [ENV_KEYS.SUPABASE_URL]?: string;
+  [ENV_KEYS.SUPABASE_ANON_KEY]?: string;
+  [ENV_KEYS.SUPABASE_SERVICE_ROLE_KEY]?: string;
+  [ENV_KEYS.LOG_LEVEL]?: string;
   [key: string]: unknown;
 }
 
@@ -27,7 +27,7 @@ export enum LogLevel {
   ERROR = 'error',
   WARN = 'warn',
   INFO = 'info',
-  DEBUG = 'debug'
+  DEBUG = 'debug',
 }
 
 /**
@@ -36,7 +36,7 @@ export enum LogLevel {
 export enum Environment {
   DEVELOPMENT = 'development',
   PRODUCTION = 'production',
-  STAGING = 'staging'
+  STAGING = 'staging',
 }
 
 /**
@@ -45,7 +45,7 @@ export enum Environment {
 export interface Config {
   /**
    * Validates the configuration object.
-   * @throws {ConfigValidationError} When validation fails
+   * @throws {ConfigValidationException} When validation fails
    */
   validate(): void;
 }
@@ -165,16 +165,16 @@ export class AppConfig implements Config {
   private common: CommonConfig;
   private supabase: SupabaseConfig;
 
-  constructor(env: Env) {
+  constructor(env: EnvironmentVariables) {
     this.common = new CommonConfig(
-      env[EnvKeys.name],
-      env[EnvKeys.environment] as Environment,
-      env[EnvKeys.logLevel] as LogLevel,
+      env[ENV_KEYS.NAME],
+      env[ENV_KEYS.ENVIRONMENT] as Environment,
+      env[ENV_KEYS.LOG_LEVEL] as LogLevel,
     );
     this.supabase = new SupabaseConfig(
-      env[EnvKeys.supabaseUrl],
-      env[EnvKeys.supabaseAnonKey],
-      env[EnvKeys.supabaseServiceRoleKey],
+      env[ENV_KEYS.SUPABASE_URL],
+      env[ENV_KEYS.SUPABASE_ANON_KEY],
+      env[ENV_KEYS.SUPABASE_SERVICE_ROLE_KEY],
     );
   }
 

@@ -1,8 +1,8 @@
-import {HttpErrors} from '../../shared/errors/http-errors';
+import {ErrorCode, Result, Ok, Err} from '../../shared/errors/error-codes';
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
 import {AppConfig} from '../../shared/config/config';
-import {User, AuthResponse, RegisterDto, LoginDto} from '../models/user';
+import {User, AuthResult, Register, Login} from '../models/user';
 
 /**
  * Authentication service class.
@@ -17,10 +17,17 @@ export class AuthService {
   /**
    * User registration
    */
-  async register(dto: RegisterDto): Promise<AuthResponse> {
-    // Validate input
-    const email = Validator.validateEmail(dto.email);
-    Validator.validatePassword(dto.password);
+  async register(dto: Register): Promise<Result<AuthResult, ErrorCode>> {
+    const emailResult = Validator.validateEmail(dto.email);
+    if (emailResult.isErr()) {
+      return Err(emailResult.error);
+    }
+    const email = emailResult.value;
+    
+    const passwordResult = Validator.validatePassword(dto.password);
+    if (passwordResult.isErr()) {
+      return Err(passwordResult.error);
+    }
 
     const {data, error} = await this.supabase.auth.signUp({
       email,
@@ -34,18 +41,17 @@ export class AuthService {
     });
 
     if (error) {
-      // Handle specific Supabase validation errors
       if (error.message.includes('Email address') || error.message.includes('email')) {
-        throw new HttpErrors.ValidationError(error.message);
+        return Err(ErrorCode.AUTH_EMAIL_EXISTS);
       }
-      throw new HttpErrors.ValidationError(error.message);
+      return Err(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
     if (!data.user) {
-      throw new HttpErrors.InternalServerError('Registration failed');
+      return Err(ErrorCode.SYSTEM_INTERNAL_ERROR);
     }
 
-    return {
+    return Ok({
       user: {
         id: data.user.id,
         email: data.user.email!,
@@ -61,16 +67,24 @@ export class AuthService {
         refresh_token: data.session?.refresh_token,
         expires_in: data.session?.expires_in || 3600,
       },
-    };
+    });
   }
 
   /**
    * User login
    */
-  async login(dto: LoginDto): Promise<AuthResponse> {
-    // Validate input
-    const email = Validator.validateEmail(dto.email);
-    const password = Validator.sanitizeString(dto.password, 100);
+  async login(dto: Login): Promise<Result<AuthResult, ErrorCode>> {
+    const emailResult = Validator.validateEmail(dto.email);
+    if (emailResult.isErr()) {
+      return Err(emailResult.error);
+    }
+    const email = emailResult.value;
+    
+    const passwordResult = Validator.sanitizeString(dto.password, 100);
+    if (passwordResult.isErr()) {
+      return Err(passwordResult.error);
+    }
+    const password = passwordResult.value;
 
     const {data, error} = await this.supabase.auth.signInWithPassword({
       email,
@@ -78,15 +92,14 @@ export class AuthService {
     });
 
     if (error) {
-      console.error('Login error:', error);
-      throw new HttpErrors.UnauthorizedError('Invalid email or password');
+      return Err(ErrorCode.AUTH_INVALID_CREDENTIALS);
     }
 
     if (!data.user) {
-      throw new HttpErrors.UnauthorizedError('Invalid email or password');
+      return Err(ErrorCode.AUTH_USER_NOT_FOUND);
     }
 
-    return {
+    return Ok({
       user: {
         id: data.user.id,
         email: data.user.email!,
@@ -102,15 +115,15 @@ export class AuthService {
         refresh_token: data.session.refresh_token,
         expires_in: data.session.expires_in,
       },
-    };
+    });
   }
 
   /**
    * Refresh token
    */
-  async refreshToken(refreshToken: string): Promise<AuthResponse> {
+  async refreshToken(refreshToken: string): Promise<Result<AuthResult, ErrorCode>> {
     if (!refreshToken) {
-      throw new HttpErrors.ValidationError('Refresh token is required');
+      return Err(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
 
     const {data, error} = await this.supabase.auth.refreshSession({
@@ -118,18 +131,16 @@ export class AuthService {
     });
 
     if (error || !data.session) {
-      console.error('Token refresh error:', error);
-      throw new HttpErrors.UnauthorizedError('Invalid refresh token');
+      return Err(ErrorCode.AUTH_TOKEN_INVALID);
     }
 
-    // Get user information
     const {data: {user}} = await this.supabase.auth.getUser(data.session.access_token);
 
     if (!user) {
-      throw new HttpErrors.UnauthorizedError('User not found');
+      return Err(ErrorCode.AUTH_USER_NOT_FOUND);
     }
 
-    return {
+    return Ok({
       user: {
         id: user.id,
         email: user.email!,
@@ -145,7 +156,7 @@ export class AuthService {
         refresh_token: data.session.refresh_token,
         expires_in: data.session.expires_in,
       },
-    };
+    });
   }
 
   /**
@@ -163,14 +174,14 @@ export class AuthService {
   /**
    * Get current user information
    */
-  async getCurrentUser(accessToken: string): Promise<User> {
+  async getCurrentUser(accessToken: string): Promise<Result<User, ErrorCode>> {
     const {data: {user}, error} = await this.supabase.auth.getUser(accessToken);
 
     if (error || !user) {
-      throw new HttpErrors.UnauthorizedError('Invalid or expired token');
+      return Err(ErrorCode.AUTH_TOKEN_INVALID);
     }
 
-    return {
+    return Ok({
       id: user.id,
       email: user.email!,
       username: user.user_metadata?.['username'],
@@ -179,13 +190,13 @@ export class AuthService {
       role: 'user' as any,
       created_at: user.created_at || new Date().toISOString(),
       updated_at: user.updated_at || new Date().toISOString(),
-    };
+    });
   }
 
   /**
    * Verify JWT token
    */
-  async verifyToken(token: string): Promise<User> {
+  async verifyToken(token: string): Promise<Result<User, ErrorCode>> {
     return this.getCurrentUser(token);
   }
 }

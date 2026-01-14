@@ -1,36 +1,35 @@
-import {HttpErrors} from '../../shared/errors/http-errors';
+import {ErrorCode, Result, Ok, Err} from '../../shared/errors/error-codes';
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
 import {AppConfig} from '../../shared/config/config';
 import type {Database} from '../supabase/database.types';
 import {
   Todo,
-  CreateTodoDto,
-  UpdateTodoDto,
+  CreateTodo,
+  UpdateTodo,
   TodoQueryParams,
-  TodoListResponse,
+  TodoListResult,
   TodoStatus,
   TodoPriority,
 } from '../models/todo';
 
 /**
- * TODO service class.
+ * Service class for managing TODO operations.
  */
 export class TodoService {
-  private supabase: ReturnType<typeof SupabaseClient.getClient>;
+  private readonly supabase: ReturnType<typeof SupabaseClient.getClient>;
 
   constructor(config: AppConfig) {
     this.supabase = SupabaseClient.getClient(config);
   }
 
   /**
-   * Get TODO list
+   * Retrieves a list of TODOs for the specified user.
    */
   async getTodos(
     userId: string,
     params: TodoQueryParams,
-  ): Promise<TodoListResponse> {
-    // Build query - get user created and shared TODOs
+  ): Promise<Result<TodoListResult, ErrorCode>> {
     let query = this.supabase
       .from('todos')
       .select('*', {count: 'exact'})
@@ -77,29 +76,41 @@ export class TodoService {
     const {data, error, count} = await query;
 
     if (error) {
-      throw new HttpErrors.InternalServerError('Failed to fetch todos');
+      return Err(ErrorCode.DATABASE_QUERY_FAILED);
     }
 
-    return {
+    return Ok({
       todos: data as Todo[],
       total: count || 0,
       limit,
       offset,
-    };
+    });
   }
 
   /**
    * Create TODO
    */
-  async createTodo(
+  async create(
     userId: string,
-    dto: CreateTodoDto,
-  ): Promise<Todo> {
+    dto: CreateTodo,
+  ): Promise<Result<Todo, ErrorCode>> {
+    const nameResult = Validator.sanitizeString(dto.name, 200);
+    if (nameResult.isErr()) {
+      return Err(nameResult.error);
+    }
+    
+    let descriptionValue: string | null = null;
+    if (dto.description) {
+      const descriptionResult = Validator.sanitizeString(dto.description, 1000);
+      if (descriptionResult.isErr()) {
+        return Err(descriptionResult.error);
+      }
+      descriptionValue = descriptionResult.value;
+    }
+    
     const todoData: Database['public']['Tables']['todos']['Insert'] = {
-      name: Validator.sanitizeString(dto.name, 200),
-      description: dto.description ?
-        Validator.sanitizeString(dto.description, 1000) :
-        null,
+      name: nameResult.value,
+      description: descriptionValue,
       status: dto.status || TodoStatus.NOT_STARTED,
       priority: dto.priority || TodoPriority.MEDIUM,
       tags: dto.tags || null,
@@ -124,7 +135,7 @@ export class TodoService {
         .single();
 
       if (!parentTodo) {
-        throw new HttpErrors.NotFoundError('Parent todo not found or no access');
+        return Err(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
       }
 
       todoData.parent_id = dto.parent_id;
@@ -137,16 +148,16 @@ export class TodoService {
       .single();
 
     if (error) {
-      throw new HttpErrors.InternalServerError(`Failed to create todo: ${error.message}`);
+      return Err(ErrorCode.DATABASE_QUERY_FAILED);
     }
 
-    return data as Todo;
+    return Ok(data as Todo);
   }
 
   /**
    * Get single TODO
    */
-  async getTodo(todoId: string, userId: string): Promise<Todo> {
+  async getTodo(todoId: string, userId: string): Promise<Result<Todo, ErrorCode>> {
     Validator.validateUUID(todoId, 'todo_id');
 
     const {data: todo, error} = await this.supabase
@@ -157,16 +168,16 @@ export class TodoService {
       .single();
 
     if (error || !todo) {
-      throw new HttpErrors.NotFoundError('Todo not found');
+      return Err(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
     }
 
     // Check permissions
     const canAccess = await this.checkTodoAccess(todoId, userId);
     if (!canAccess) {
-      throw new HttpErrors.ForbiddenError('No access to this todo');
+      return Err(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
-    return todo as Todo;
+    return Ok(todo as Todo);
   }
 
   /**
@@ -175,14 +186,14 @@ export class TodoService {
   async updateTodo(
     todoId: string,
     userId: string,
-    dto: UpdateTodoDto,
-  ): Promise<Todo> {
+    dto: UpdateTodo,
+  ): Promise<Result<Todo, ErrorCode>> {
     Validator.validateUUID(todoId, 'todo_id');
 
     // Check edit permissions
     const canEdit = await this.checkEditPermission(todoId, userId);
     if (!canEdit) {
-      throw new HttpErrors.ForbiddenError('No permission to edit this todo');
+      return Err(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
     const updateData: Partial<Todo> = {
@@ -190,13 +201,23 @@ export class TodoService {
     };
 
     if (dto.name !== undefined) {
-      updateData.name = Validator.sanitizeString(dto.name, 200);
+      const nameResult = Validator.sanitizeString(dto.name, 200);
+      if (nameResult.isErr()) {
+        return Err(nameResult.error);
+      }
+      updateData.name = nameResult.value;
     }
 
     if (dto.description !== undefined) {
-      updateData.description = dto.description ?
-        Validator.sanitizeString(dto.description, 1000) :
-        null;
+      if (dto.description) {
+        const descriptionResult = Validator.sanitizeString(dto.description, 1000);
+        if (descriptionResult.isErr()) {
+          return Err(descriptionResult.error);
+        }
+        updateData.description = descriptionResult.value;
+      } else {
+        updateData.description = null;
+      }
     }
 
     if (dto.status !== undefined) {
@@ -217,9 +238,15 @@ export class TodoService {
     }
 
     if (dto.due_date !== undefined) {
-      updateData.due_date = dto.due_date ?
-        Validator.validateDate(dto.due_date, 'due_date').toISOString() :
-        null;
+      if (dto.due_date) {
+        const dateResult = Validator.validateDate(dto.due_date, 'due_date');
+        if (dateResult.isErr()) {
+          return Err(dateResult.error);
+        }
+        updateData.due_date = dateResult.value.toISOString();
+      } else {
+        updateData.due_date = null;
+      }
     }
 
     if (dto.parent_id !== undefined) {
@@ -236,12 +263,12 @@ export class TodoService {
           .single();
 
         if (!parentTodo) {
-          throw new HttpErrors.NotFoundError('Parent todo not found or no access');
+          return Err(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
         }
 
         // Check for circular references
         if (dto.parent_id === todoId) {
-          throw new HttpErrors.ValidationError('Cannot set todo as its own parent');
+          return Err(ErrorCode.VALIDATION_INVALID_EMAIL);
         }
 
         updateData.parent_id = dto.parent_id;
@@ -258,17 +285,20 @@ export class TodoService {
       .single();
 
     if (error) {
-      throw new HttpErrors.InternalServerError(`Failed to update todo: ${error.message}`);
+      return Err(ErrorCode.SYSTEM_INTERNAL_ERROR);
     }
 
-    return data as Todo;
+    return Ok(data as Todo);
   }
 
   /**
    * Delete TODO (soft delete)
    */
-  async deleteTodo(todoId: string, userId: string): Promise<void> {
-    Validator.validateUUID(todoId, 'todo_id');
+  async deleteTodo(todoId: string, userId: string): Promise<Result<void, ErrorCode>> {
+    const uuidResult = Validator.validateUUID(todoId, 'todo_id');
+    if (uuidResult.isErr()) {
+      return Err(uuidResult.error);
+    }
 
     // Check if user is the creator
     const todoResponse = await this.supabase
@@ -281,11 +311,11 @@ export class TodoService {
     const todo = todoResponse.data as {created_by: string} | null;
 
     if (!todo) {
-      throw new HttpErrors.NotFoundError('Todo not found');
+      return Err(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
     }
 
     if (todo.created_by !== userId) {
-      throw new HttpErrors.ForbiddenError('Only creator can delete todo');
+      return Err(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
     const {error} = await (this.supabase as any)
@@ -297,8 +327,10 @@ export class TodoService {
       .eq('id', todoId);
 
     if (error) {
-      throw new HttpErrors.InternalServerError(`Failed to delete todo: ${error.message}`);
+      return Err(ErrorCode.SYSTEM_INTERNAL_ERROR);
     }
+
+    return Ok(undefined);
   }
 
   /**

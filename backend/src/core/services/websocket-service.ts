@@ -1,44 +1,44 @@
 // core/services/websocket-service.ts
-import {WebSocketErrors} from '../../shared/errors/websocket-errors';
+import {ErrorCode, Result, Ok, Err} from '../../shared/errors/error-codes';
 import {SupabaseClient} from '../supabase/client';
 import {AppConfig} from '../../shared/config/config';
 import {Todo} from '../models/todo';
 
 /**
- * WebSocket service class
+ * WebSocket service class.
  */
 export class WebSocketService {
   constructor() {}
 
   /**
-   * Authenticate WebSocket connection
+   * Authenticates WebSocket connection.
    */
   async authenticateConnection(
     token: string,
     env: AppConfig,
-  ): Promise<{ id: string; email?: string }> {
+  ): Promise<Result<{ id: string; email?: string }, ErrorCode>> {
     if (!token) {
-      throw new WebSocketErrors.WebSocketAuthError('Authentication token required');
+      return Err(ErrorCode.AUTH_TOKEN_INVALID);
     }
 
     const supabase = SupabaseClient.getClient(env);
     const {data: {user}, error} = await supabase.auth.getUser(token);
 
     if (error || !user) {
-      throw new WebSocketErrors.WebSocketAuthError('Invalid or expired token');
+      return Err(ErrorCode.AUTH_TOKEN_INVALID);
     }
 
-    return user;
+    return Ok(user);
   }
 
   /**
-   * Validate TODO access permissions
+   * Validates TODO access permissions.
    */
   async verifyTodoAccess(
     todoId: string,
     userId: string,
     env: AppConfig,
-  ): Promise<boolean> {
+  ): Promise<Result<boolean, ErrorCode>> {
     const supabase = SupabaseClient.getClient(env);
 
     const {data: todo} = await supabase
@@ -49,12 +49,12 @@ export class WebSocketService {
       .single<{ created_by: string }>();
 
     if (!todo) {
-      return false;
+      return Ok(false);
     }
 
     // If creator, allow access
     if (todo.created_by === userId) {
-      return true;
+      return Ok(true);
     }
 
     // Check if there is share permission
@@ -65,11 +65,11 @@ export class WebSocketService {
       .eq('user_id', userId)
       .single();
 
-    return !!share;
+    return Ok(!!share);
   }
 
   /**
-   * Broadcast message to all users in TODO room
+   * Broadcasts message to all users in TODO room.
    */
   async broadcastToTodoRoom(): Promise<void> {
     // This should implement logic to broadcast messages to WebSocket connections
@@ -78,20 +78,25 @@ export class WebSocketService {
   }
 
   /**
-   * Handle TODO update message
+   * Handles TODO update message.
    */
-  async handleTodoUpdate(
+  async updateTodo(
     todoId: string,
     updateData: Partial<Todo>,
     userId: string,
     env: AppConfig,
-  ): Promise<void> {
+  ): Promise<Result<void, ErrorCode>> {
     const supabase = SupabaseClient.getClient(env);
 
     // Check edit permission
-    const canEdit = await this.checkEditPermission(todoId, userId, env);
+    const canEditResult = await this.checkEditPermission(todoId, userId, env);
+    if (canEditResult.isErr()) {
+      return Err(canEditResult.error);
+    }
+    const canEdit = canEditResult.value;
+    
     if (!canEdit) {
-      throw new WebSocketErrors.WebSocketAuthError('No permission to edit this todo');
+      return Err(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
     // Update TODO
@@ -104,12 +109,14 @@ export class WebSocketService {
       .eq('id', todoId);
 
     if (error) {
-      throw new Error(`Failed to update todo: ${error.message}`);
+      return Err(ErrorCode.SYSTEM_INTERNAL_ERROR);
     }
+
+    return Ok(undefined);
   }
 
   /**
-   * Get TODO room user list
+   * Gets TODO room user list.
    */
   async getTodoRoomUsers(
     todoId: string,
@@ -176,13 +183,13 @@ export class WebSocketService {
   }
 
   /**
-   * Check edit permission
+   * Checks edit permission.
    */
   private async checkEditPermission(
     todoId: string,
     userId: string,
     env: AppConfig,
-  ): Promise<boolean> {
+  ): Promise<Result<boolean, ErrorCode>> {
     const supabase = SupabaseClient.getClient(env);
 
     const {data: todo} = await supabase
@@ -193,12 +200,12 @@ export class WebSocketService {
       .single<{created_by: string}>();
 
     if (!todo) {
-      return false;
+      return Ok(false);
     }
 
     // If creator, allow editing
     if (todo.created_by === userId) {
-      return true;
+      return Ok(true);
     }
 
     // Check if there is edit permission share
@@ -209,6 +216,6 @@ export class WebSocketService {
       .eq('user_id', userId)
       .single<{permission: string}>();
 
-    return share?.permission === 'edit';
+    return Ok(share?.permission === 'edit');
   }
 }

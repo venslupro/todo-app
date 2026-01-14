@@ -1,14 +1,9 @@
-// index.ts
 import {Hono} from 'hono';
 import {HonoAppType} from './shared/types/hono-types';
 
-// Import middleware
-import {errorMiddleware} from './api/middleware/error';
 import {corsMiddleware} from './api/middleware/cors';
-import {authMiddleware} from './api/middleware/auth';
 import {globalRateLimit} from './api/middleware/rate-limit';
 
-// Import handlers
 import systemRoutes from './api/handlers/system';
 import authRoutes from './api/handlers/auth';
 import todoRoutes from './api/handlers/todo';
@@ -16,44 +11,86 @@ import mediaRoutes from './api/handlers/media';
 import teamRoutes from './api/handlers/team';
 import websocketRoutes from './api/handlers/websocket';
 
-// Create Hono application
-const app = new Hono<HonoAppType>();
+/**
+ * Application router class that organizes all routes and middleware.
+ */
+class ApplicationRouter {
+  private app: Hono<HonoAppType>;
 
-// Global middleware
-app.use('*', corsMiddleware);
-app.use('*', errorMiddleware);
+  constructor() {
+    this.app = new Hono<HonoAppType>();
+    this.setupGlobalMiddleware();
+    this.setupRoutes();
+    this.setupErrorHandling();
+  }
 
-// System routes (no authentication required)
-app.route('/', systemRoutes);
+  /**
+   * Sets up global middleware for the application.
+   */
+  private setupGlobalMiddleware(): void {
+    this.app.use('*', corsMiddleware);
+  }
 
-// Authentication routes (no authentication required)
-app.route('/api/v1/auth', authRoutes);
+  /**
+   * Sets up all application routes.
+   */
+  private setupRoutes(): void {
+    // System routes (no authentication required)
+    this.app.route('/', systemRoutes);
 
-// API routes (authentication required) - exclude authentication routes
-app.use('/api/v1/todos/*', authMiddleware);
-app.use('/api/v1/todos/*', globalRateLimit);
-app.use('/api/v1/media/*', authMiddleware);
-app.use('/api/v1/media/*', globalRateLimit);
-app.use('/api/v1/team/*', authMiddleware);
-app.use('/api/v1/team/*', globalRateLimit);
-app.route('/api/v1/todos', todoRoutes);
-app.route('/api/v1/media', mediaRoutes);
-app.route('/api/v1/team', teamRoutes);
+    // Authentication routes (no authentication required)
+    this.app.route('/api/v1/auth', authRoutes);
 
-// WebSocket routes
-app.route('/ws/v1', websocketRoutes);
+    // Protected API routes
+    this.setupProtectedRoutes();
 
-// 404 handling
-app.notFound((c) => {
-  return c.json(
-    {
-      error: {
-        code: 'NOT_FOUND',
-        message: 'The requested resource was not found',
-      },
-    },
-    404,
-  );
-});
+    // WebSocket routes
+    this.app.route('/ws/v1', websocketRoutes);
+  }
 
-export default app;
+  /**
+   * Sets up protected routes with authentication and rate limiting.
+   */
+  private setupProtectedRoutes(): void {
+    const protectedRoutes = [
+      {path: '/api/v1/todos', handler: todoRoutes},
+      {path: '/api/v1/media', handler: mediaRoutes},
+      {path: '/api/v1/team', handler: teamRoutes},
+    ];
+
+    protectedRoutes.forEach((route) => {
+      this.app.use(`${route.path}/*`, globalRateLimit);
+      this.app.route(route.path, route.handler);
+    });
+  }
+
+  /**
+   * Sets up error handling for the application.
+   */
+  private setupErrorHandling(): void {
+    this.app.notFound((c) => {
+      return c.json(
+        {
+          error: {
+            code: 'NOT_FOUND',
+            message: 'The requested resource was not found',
+          },
+        },
+        404,
+      );
+    });
+  }
+
+  /**
+   * Returns the Hono application instance.
+   */
+  public getApp(): Hono<HonoAppType> {
+    return this.app;
+  }
+}
+
+// Create and export the application
+ const router = new ApplicationRouter();
+ const app = router.getApp();
+ 
+ export default app;

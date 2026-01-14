@@ -32,9 +32,9 @@ export interface UserSession {
 }
 
 /**
- * Authentication response
+ * Authentication result
  */
-export interface AuthResponse {
+export interface AuthResult {
   user: User;
   session: {
     access_token: string;
@@ -44,9 +44,9 @@ export interface AuthResponse {
 }
 
 /**
- * User registration DTO
+ * User registration data
  */
-export interface RegisterDto {
+export interface Register {
   email: string;
   password: string;
   username?: string;
@@ -54,9 +54,9 @@ export interface RegisterDto {
 }
 
 /**
- * User login DTO
+ * User login data
  */
-export interface LoginDto {
+export interface Login {
   email: string;
   password: string;
 }

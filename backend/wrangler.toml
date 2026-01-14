@@ -5,6 +5,11 @@ compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 # logpush = true
 
+# Durable Objects configuration
+[[durable_objects.bindings]]
+name = "TODO_WEBSOCKET"
+class_name = "TodoWebSocketDurableObject"
+
 # Observability configuration for Wrangler v4
 [observability]
 enabled = true

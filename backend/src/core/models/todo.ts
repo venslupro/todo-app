@@ -38,27 +38,27 @@ export interface Todo {
 }
 
 /**
- * Create TODO DTO
+ * Create TODO data
  */
-export interface CreateTodoDto {
+export interface CreateTodo {
   name: string;
   description?: string;
   due_date?: string;
-  status?: TodoStatus;
-  priority?: TodoPriority;
+  priority: TodoPriority;
+  status: TodoStatus;
   tags?: string[];
   parent_id?: string;
 }
 
 /**
- * Update TODO DTO
+ * Update TODO data
  */
-export interface UpdateTodoDto {
+export interface UpdateTodo {
   name?: string;
   description?: string;
   due_date?: string;
-  status?: TodoStatus;
   priority?: TodoPriority;
+  status?: TodoStatus;
   tags?: string[];
   parent_id?: string;
 }
@@ -80,9 +80,9 @@ export interface TodoQueryParams {
 }
 
 /**
- * TODO list response
+ * TODO list result
  */
-export interface TodoListResponse {
+export interface TodoListResult {
   todos: Todo[];
   total: number;
   limit: number;
