@@ -1,5 +1,6 @@
 // core/durable-objects/todo-websocket.ts
 import {DurableObject} from 'cloudflare:workers';
+import type {DurableObjectState} from '@cloudflare/workers-types';
 interface WebSocketConnection {
   userId: string;
   username?: string | undefined;
@@ -95,25 +96,29 @@ export class TodoWebSocketDurableObject extends DurableObject<Env> {
    * Gets all users in the TODO room.
    */
   async getRoomUsers(): Promise<Array<WebSocketConnection & {isOnline: boolean}>> {
-  if (!this.room) {
-    return [];
-   }
-  const now = Date.now();
-  const fiveMinutesAgo = now - 5 * 60 * 1000; // 5 minutes timeout
-  return Array.from(this.room.connections.values()).map((conn) => ({
-    ...conn,
-    isOnline: conn.lastActivity > fiveMinutesAgo}));
+    if (!this.room) {
+      return [];
+    }
+
+    const now = Date.now();
+    const fiveMinutesAgo = now - 5 * 60 * 1000; // 5 minutes timeout
+
+    return Array.from(this.room.connections.values()).map((conn) => ({
+      ...conn,
+      isOnline: conn.lastActivity > fiveMinutesAgo,
+    }));
   }
   /**
    * Broadcasts a message to all users in the room.
    */
-  async broadcastMessage(message: WebSocketMessage, _excludeUserId?: string): Promise<void> {
+  async broadcastMessage(message: WebSocketMessage): Promise<void> {
     if (!this.room) {
       return;
     }
 
     // In a real implementation, this would send to all connected WebSockets
     // For now, we'll just log the broadcast
+    // eslint-disable-next-line no-console
     console.log(`Broadcasting message to TODO ${this.room.todoId}:`, message);
 
     // Update room activity
@@ -170,7 +175,7 @@ export class TodoWebSocketDurableObject extends DurableObject<Env> {
     const fiveMinutesAgo = now - 5 * 60 * 1000;
 
     const onlineUsers = Array.from(this.room.connections.values()).filter(
-      (conn) => conn.lastActivity > fiveMinutesAgo
+      (conn) => conn.lastActivity > fiveMinutesAgo,
     ).length;
 
     return {
@@ -195,6 +200,7 @@ export class TodoWebSocketDurableObject extends DurableObject<Env> {
     for (const [userId, connection] of this.room.connections.entries()) {
       if (connection.lastActivity < thirtyMinutesAgo) {
         this.room.connections.delete(userId);
+        // eslint-disable-next-line no-console
         console.log(`Removed inactive user ${userId} from TODO ${this.room.todoId}`);
       }
     }
@@ -226,29 +232,30 @@ export class TodoWebSocketDurableObject extends DurableObject<Env> {
     const path = url.pathname;
     try {
       switch (path) {
-        case '/users':
-          if (request.method === 'GET') {
-            const users = await this.getRoomUsers();
-            return Response.json(users);
-          }
-          break;
-        case '/stats':
-          if (request.method === 'GET') {
-            const stats = await this.getRoomStats();
-            return Response.json(stats);
-          }
-          break;
-        case '/cleanup':
-          if (request.method === 'POST') {
-            await this.cleanupInactiveConnections();
-            return Response.json({success: true});
-          }
-          break;
-        default:
-          return new Response('Not found', {status: 404});
+      case '/users':
+        if (request.method === 'GET') {
+          const users = await this.getRoomUsers();
+          return Response.json(users);
+        }
+        break;
+      case '/stats':
+        if (request.method === 'GET') {
+          const stats = await this.getRoomStats();
+          return Response.json(stats);
+        }
+        break;
+      case '/cleanup':
+        if (request.method === 'POST') {
+          await this.cleanupInactiveConnections();
+          return Response.json({success: true});
+        }
+        break;
+      default:
+        return new Response('Not found', {status: 404});
       }
       return new Response('Method not allowed', {status: 405});
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Durable Object fetch error:', error);
       return Response.json({error: 'Internal server error'}, {status: 500});
     }
