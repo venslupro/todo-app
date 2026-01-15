@@ -23,7 +23,7 @@ export class AuthService {
       return errResult(emailResult.error);
     }
     const email = emailResult.value;
-    
+
     const passwordResult = Validator.validatePassword(dto.password);
     if (passwordResult.isErr()) {
       return errResult(passwordResult.error);
@@ -79,7 +79,7 @@ export class AuthService {
       return errResult(emailResult.error);
     }
     const email = emailResult.value;
-    
+
     const passwordResult = Validator.sanitizeString(dto.password, 100);
     if (passwordResult.isErr()) {
       return errResult(passwordResult.error);
