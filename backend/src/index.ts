@@ -11,6 +11,9 @@ import mediaRoutes from './api/handlers/media';
 import teamRoutes from './api/handlers/team';
 import websocketRoutes from './api/handlers/websocket';
 
+// Durable Objects exports
+export {TodoWebSocketDurableObject} from './core/durable-objects/todo-websocket';
+
 /**
  * Application router class that organizes all routes and middleware.
  */

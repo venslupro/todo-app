@@ -10,6 +10,11 @@ compatibility_flags = ["nodejs_compat"]
 name = "TODO_WEBSOCKET"
 class_name = "TodoWebSocketDurableObject"
 
+# Durable Objects migrations
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["TodoWebSocketDurableObject"]
+
 # Observability configuration for Wrangler v4
 [observability]
 enabled = true
