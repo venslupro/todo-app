@@ -37,7 +37,9 @@ export const rateLimitMiddleware = (options: {
 
     if (!result.allowed) {
       throw new HTTPException(429, {
-        message: `Rate limit exceeded. Try again in ${result.reset - Math.floor(Date.now() / 1000)} seconds`,
+        message: `Rate limit exceeded. Try again in ${
+          result.reset - Math.floor(Date.now() / 1000)
+        } seconds`,
       });
     }
 
