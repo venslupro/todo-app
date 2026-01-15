@@ -23,6 +23,12 @@ type JwtVariables = {
   };
 };
 
+interface RoomUser {
+  userId: string;
+  username?: string;
+  email?: string;
+}
+
 const router = new Hono<HonoAppType & {
   Variables: JwtVariables;
 }>();
@@ -33,13 +39,7 @@ const router = new Hono<HonoAppType & {
 function createWebSocketService(_c: {env: Record<string, unknown>}): WebSocketService {
   return new WebSocketService();
 }
-/**
- * Creates a WebSocket service for the TODO room.
- */
-function createTodoWebSocketService(todoId: string): any {
-  // TODO: Implement actual WebSocket service
-  return {todoId};
-}
+
 
 /**
  * JWT middleware for protected routes.
@@ -88,7 +88,6 @@ router.get('/todo/:id/stats', jwtMiddleware, async (c) => {
       return c.json(response);
     }
     // Get room statistics from WebSocket service
-    const todoWebSocketService = createTodoWebSocketService(todoId);
     const stats = {
       userCount: 0,
       users: [],
@@ -119,9 +118,9 @@ router.get('/todo/:id/users', jwtMiddleware, async (c) => {
       const response = WebSocketResponseUtil.error(error, todoId, userId);
       return c.json(response);
     }
+
     // Get room users from WebSocket service
-    const todoWebSocketService = createTodoWebSocketService(todoId);
-    const users: any[] = [];
+    const users: RoomUser[] = [];
     const response = WebSocketResponseUtil.roomUsers(users, todoId);
     return c.json(response);
   } catch (error) {
@@ -148,7 +147,6 @@ router.post('/todo/:id/cleanup', jwtMiddleware, async (c) => {
       return c.json(response);
     }
     // Cleanup inactive connections in WebSocket service
-    const todoWebSocketService = createTodoWebSocketService(todoId);
     const response = WebSocketResponseUtil.success({success: true}, todoId, userId);
     return c.json(response);
   } catch (error) {
@@ -193,10 +191,10 @@ router.get('/todo/:id/connect', jwtMiddleware, async (c) => {
       const response = WebSocketResponseUtil.error(error, todoId, userId);
       return c.json(response);
     }
-    const userInfo = userResult.value;
     // Initialize TODO room in WebSocket service
-    const todoWebSocketService = createTodoWebSocketService(todoId);
     // Add user to the TODO room
+    // const userInfo = userResult.value;
+    // const todoWebSocketService = createTodoWebSocketService(todoId);
     // await todoWebSocketService.addUser(userId, {
     //   username: userInfo.email, // Using email as username for now
     //   email: userInfo.email,
@@ -242,7 +240,7 @@ router.post('/todo/:id/update', jwtMiddleware, async (c) => {
       return c.json(response);
     }
     // Broadcast update to all users in the room
-    const todoWebSocketService = createTodoWebSocketService(todoId);
+    // const todoWebSocketService = createTodoWebSocketService(todoId);
     // await todoWebSocketService.broadcastMessage({
     //   type: 'todo_update',
     //   payload: body.data || {},
