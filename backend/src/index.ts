@@ -9,10 +9,10 @@ import authRoutes from './api/handlers/auth';
 import todoRoutes from './api/handlers/todo';
 import mediaRoutes from './api/handlers/media';
 import teamRoutes from './api/handlers/team';
-import websocketRoutes from './api/handlers/websocket';
+// import websocketRoutes from './api/handlers/websocket'; // WebSocket temporarily disabled
 
-// Durable Objects exports
-export {TodoWebSocketDurableObject} from './core/durable-objects/todo-websocket';
+// Durable Objects exports (temporarily disabled)
+// export {TodoWebSocketDurableObject} from './core/durable-objects/todo-websocket';
 
 /**
  * Application router class that organizes all routes and middleware.
@@ -47,8 +47,8 @@ class ApplicationRouter {
     // Protected API routes
     this.setupProtectedRoutes();
 
-    // WebSocket routes
-    this.app.route('/ws/v1', websocketRoutes);
+    // WebSocket routes (temporarily disabled)
+    // this.app.route('/ws/v1', websocketRoutes);
   }
 
   /**
