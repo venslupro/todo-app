@@ -6,7 +6,7 @@ import {
 } from '../../core/models/todo';
 import {
   MediaType,
-  SUPPORTED_MIME_TYPES,
+  MimeTypes,
 } from '../../core/models/media';
 import {
   SharePermission,
@@ -82,7 +82,7 @@ export class Validator {
    * Validate media file type
    */
   static validateMediaType(mimeType: string, mediaType: MediaType): Result<void, ErrorCode> {
-    const supportedTypes = SUPPORTED_MIME_TYPES[mediaType];
+    const supportedTypes = MimeTypes[mediaType];
 
     if (!supportedTypes.includes(mimeType.toLowerCase())) {
       return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);

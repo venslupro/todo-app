@@ -6,7 +6,7 @@ import {SupabaseClient} from '../supabase/client';
 import {
   Media,
   MediaType,
-  SUPPORTED_MIME_TYPES,
+  MimeTypes,
   UploadMedia,
   MediaUploadResult,
   MediaQueryParams,
@@ -87,9 +87,9 @@ export class MediaService {
 
     // Determine media type
     let mediaType: MediaType;
-    if (SUPPORTED_MIME_TYPES[MediaType.IMAGE].includes(dto.mime_type)) {
+    if (MimeTypes[MediaType.IMAGE].includes(dto.mime_type)) {
       mediaType = MediaType.IMAGE;
-    } else if (SUPPORTED_MIME_TYPES[MediaType.VIDEO].includes(dto.mime_type)) {
+    } else if (MimeTypes[MediaType.VIDEO].includes(dto.mime_type)) {
       mediaType = MediaType.VIDEO;
     } else {
       return errResult(ErrorCode.VALIDATION_INVALID_EMAIL); // 使用验证错误代码

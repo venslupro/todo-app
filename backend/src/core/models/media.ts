@@ -10,7 +10,7 @@ export enum MediaType {
 /**
  * Supported MIME types
  */
-export const SUPPORTED_MIME_TYPES = {
+export const MimeTypes = {
   [MediaType.IMAGE]: [
     'image/jpeg',
     'image/jpg',
