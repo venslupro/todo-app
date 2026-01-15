@@ -32,12 +32,12 @@ export class ShareService {
     if (todoIdResult.isErr()) {
       return errResult(todoIdResult.error);
     }
-    
+
     const userIdResult = Validator.validateUUID(dto.user_id);
     if (userIdResult.isErr()) {
       return errResult(userIdResult.error);
     }
-    
+
     const permissionResult = Validator.validateSharePermission(dto.permission);
     if (permissionResult.isErr()) {
       return errResult(permissionResult.error);

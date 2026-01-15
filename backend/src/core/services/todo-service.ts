@@ -98,7 +98,7 @@ export class TodoService {
     if (nameResult.isErr()) {
       return errResult(nameResult.error);
     }
-    
+
     let descriptionValue: string | null = null;
     if (dto.description) {
       const descriptionResult = Validator.sanitizeString(dto.description, 1000);
@@ -107,7 +107,7 @@ export class TodoService {
       }
       descriptionValue = descriptionResult.value;
     }
-    
+
     const todoData: Database['public']['Tables']['todos']['Insert'] = {
       name: nameResult.value,
       description: descriptionValue,
