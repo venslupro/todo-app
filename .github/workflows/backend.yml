@@ -137,7 +137,7 @@ jobs:
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        command: deploy
+        command: deploy --env=staging
         workingDirectory: ${{ env.WORKING_DIRECTORY }}
       env:
         supabase_url: ${{ vars.SUPABASE_URL }}
@@ -147,18 +147,14 @@ jobs:
     - name: 📝 Deployment Summary
       run: |
         echo "✅ Successfully deployed to Staging Environment"
-        echo "🔗 Worker URL: https://staging.your-worker.workers.dev"
-        echo "📊 GitHub Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-      if: success()
+        echo "URL: https://stg-todo-worker.venslu-pro.workers.dev"
 
   deploy-production:
     name: 🚀 Deploy to Production
     runs-on: ubuntu-latest
     environment: production
     needs: build
-    if: |
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production') ||
-      (github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.build.result == 'success')
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
     
     steps:
     - name: 🔄 Checkout source code
@@ -184,7 +180,7 @@ jobs:
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        command: deploy
+        command: deploy --env=production
         workingDirectory: ${{ env.WORKING_DIRECTORY }}
       env:
         supabase_url: ${{ vars.SUPABASE_URL }}

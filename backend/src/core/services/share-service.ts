@@ -1,12 +1,13 @@
 // core/services/share-service.ts
-import {HttpErrors} from '../../shared/errors/http-errors';
+import {ErrorCode, Result, okResult, errResult} from '../../shared/errors/error-codes';
+import {HttpExceptions} from '../../shared/errors/http-exception';
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
 import {
   TodoShare,
   // SharePermission,
-  CreateShareDto,
-  UpdateShareDto,
+  CreateShare,
+  UpdateShare,
   ShareQueryParams,
 } from '../models/share';
 
@@ -25,15 +26,27 @@ export class ShareService {
    */
   async createShare(
     userId: string,
-    dto: CreateShareDto,
-  ): Promise<TodoShare> {
-    Validator.validateUUID(dto.todo_id, 'todo_id');
-    Validator.validateUUID(dto.user_id, 'user_id');
-    const permission = Validator.validateSharePermission(dto.permission);
+    dto: CreateShare,
+  ): Promise<Result<TodoShare, ErrorCode>> {
+    const todoIdResult = Validator.validateUUID(dto.todo_id);
+    if (todoIdResult.isErr()) {
+      return errResult(todoIdResult.error);
+    }
+
+    const userIdResult = Validator.validateUUID(dto.user_id);
+    if (userIdResult.isErr()) {
+      return errResult(userIdResult.error);
+    }
+
+    const permissionResult = Validator.validateSharePermission(dto.permission);
+    if (permissionResult.isErr()) {
+      return errResult(permissionResult.error);
+    }
+    const permission = permissionResult.value;
 
     // Cannot share with yourself
     if (dto.user_id === userId) {
-      throw new HttpErrors.ValidationError('Cannot share with yourself');
+      return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
     // Check if TODO exists and belongs to current user
@@ -45,18 +58,18 @@ export class ShareService {
       .single();
 
     if (!todo) {
-      throw new HttpErrors.NotFoundError('Todo not found');
+      return errResult(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
     }
 
     if ((todo as {created_by: string}).created_by !== userId) {
-      throw new HttpErrors.ForbiddenError('You can only share your own todos');
+      return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
     // Check if target user exists
     const {data: targetUser} = await this.supabase.auth.admin.getUserById(dto.user_id);
 
     if (!targetUser) {
-      throw new HttpErrors.NotFoundError('Target user not found');
+      return errResult(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
     }
 
     // Check if already shared
@@ -68,7 +81,7 @@ export class ShareService {
       .single();
 
     if (existingShare) {
-      throw new HttpErrors.ConflictError('Todo already shared with this user');
+      throw new HttpExceptions.ConflictException('Todo already shared with this user');
     }
 
     // Create share
@@ -86,10 +99,10 @@ export class ShareService {
       .single();
 
     if (error) {
-      throw new HttpErrors.InternalServerError(`Failed to create share: ${error.message}`);
+      throw new HttpExceptions.InternalServerException(`Failed to create share: ${error.message}`);
     }
 
-    return data as TodoShare;
+    return okResult(data as TodoShare);
   }
 
   /**
@@ -98,7 +111,7 @@ export class ShareService {
   async getShares(
     userId: string,
     params: ShareQueryParams,
-  ): Promise<TodoShare[]> {
+  ): Promise<Result<TodoShare[], ErrorCode>> {
     let query = this.supabase
       .from('todo_shares')
       .select('*')
@@ -106,7 +119,7 @@ export class ShareService {
 
     // Apply filters
     if (params.todo_id) {
-      Validator.validateUUID(params.todo_id, 'todo_id');
+      Validator.validateUUID(params.todo_id);
 
       // Check if user has permission to view shares for this TODO
       const {data: todo} = await this.supabase
@@ -117,18 +130,18 @@ export class ShareService {
         .single();
 
       if (!todo) {
-        throw new HttpErrors.NotFoundError('Todo not found');
+        return errResult(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
       }
 
       if ((todo as {created_by: string}).created_by !== userId) {
-        throw new HttpErrors.ForbiddenError('You can only view shares of your own todos');
+        return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
       }
 
       query = query.eq('todo_id', params.todo_id);
     }
 
     if (params.user_id) {
-      Validator.validateUUID(params.user_id, 'user_id');
+      Validator.validateUUID(params.user_id);
       query = query.eq('user_id', params.user_id);
     }
 
@@ -144,17 +157,17 @@ export class ShareService {
     const {data, error} = await query;
 
     if (error) {
-      throw new HttpErrors.InternalServerError(`Failed to fetch shares: ${error.message}`);
+      return errResult(ErrorCode.SYSTEM_INTERNAL_ERROR);
     }
 
-    return data as TodoShare[];
+    return okResult(data as TodoShare[]);
   }
 
   /**
    * Get single share
    */
-  async getShare(shareId: string, userId: string): Promise<TodoShare> {
-    Validator.validateUUID(shareId, 'share_id');
+  async getShare(shareId: string, userId: string): Promise<Result<TodoShare, ErrorCode>> {
+    Validator.validateUUID(shareId);
 
     const {data: share, error} = await this.supabase
       .from('todo_shares')
@@ -163,16 +176,16 @@ export class ShareService {
       .single();
 
     if (error || !share) {
-      throw new HttpErrors.NotFoundError('Share not found');
+      return errResult(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
     }
 
     // Check permissions
     if (((share as {todos: {created_by: string}, user_id: string}).todos.created_by !== userId) &&
         ((share as {todos: {created_by: string}, user_id: string}).user_id !== userId)) {
-      throw new HttpErrors.ForbiddenError('No permission to view this share');
+      return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
-    return share as TodoShare;
+    return okResult(share as TodoShare);
   }
 
   /**
@@ -181,9 +194,9 @@ export class ShareService {
   async updateShare(
     shareId: string,
     userId: string,
-    dto: UpdateShareDto,
-  ): Promise<TodoShare> {
-    Validator.validateUUID(shareId, 'share_id');
+    dto: UpdateShare,
+  ): Promise<Result<TodoShare, ErrorCode>> {
+    Validator.validateUUID(shareId);
     const permission = Validator.validateSharePermission(dto.permission);
 
     // Get share information
@@ -194,14 +207,12 @@ export class ShareService {
       .single();
 
     if (!share) {
-      throw new HttpErrors.NotFoundError(
-        'Share not found',
-      );
+      return errResult(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
     }
 
     // Check permissions
     if (((share as {todos: {created_by: string}}).todos.created_by !== userId)) {
-      throw new HttpErrors.ForbiddenError('You can only update shares of your own todos');
+      return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
     // Update share permissions
@@ -216,17 +227,20 @@ export class ShareService {
       .single();
 
     if (error) {
-      throw new HttpErrors.InternalServerError(`Failed to update share: ${error.message}`);
+      throw new HttpExceptions.InternalServerException(`Failed to update share: ${error.message}`);
     }
 
-    return data as TodoShare;
+    return okResult(data as TodoShare);
   }
 
   /**
    * Delete share
    */
-  async deleteShare(shareId: string, userId: string): Promise<void> {
-    Validator.validateUUID(shareId, 'share_id');
+  async deleteShare(shareId: string, userId: string): Promise<Result<void, ErrorCode>> {
+    const uuidResult = Validator.validateUUID(shareId);
+    if (uuidResult.isErr()) {
+      return errResult(uuidResult.error);
+    }
 
     // Get share information
     const {data: share} = await this.supabase
@@ -236,13 +250,13 @@ export class ShareService {
       .single();
 
     if (!share) {
-      throw new HttpErrors.NotFoundError('Share not found');
+      return errResult(ErrorCode.BUSINESS_RESOURCE_NOT_FOUND);
     }
 
     // Check permissions
     if (((share as {todos: {created_by: string}, shared_by: string}).todos.created_by !== userId) &&
         ((share as {todos: {created_by: string}, shared_by: string}).shared_by !== userId)) {
-      throw new HttpErrors.ForbiddenError('You can only delete shares you created or received');
+      return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
     const {error} = await (this.supabase as any)
@@ -251,7 +265,9 @@ export class ShareService {
       .eq('id', shareId);
 
     if (error) {
-      throw new HttpErrors.InternalServerError(`Failed to delete share: ${error.message}`);
+      return errResult(ErrorCode.SYSTEM_INTERNAL_ERROR);
     }
+
+    return okResult(undefined);
   }
 }

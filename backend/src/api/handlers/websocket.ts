@@ -1,272 +1,315 @@
 // api/handlers/websocket.ts
 import {Hono} from 'hono';
-import {WebSocketErrors} from '../../shared/errors/websocket-errors';
+import {jwt} from 'hono/jwt';
+import {HonoAppType} from '../../shared/types/hono-types';
 import {WebSocketService} from '../../core/services/websocket-service';
 import {AppConfig} from '../../shared/config/config';
-import type {HonoAppType} from '../../shared/types/hono-types';
-
-const router = new Hono<HonoAppType>();
-
-const websocketService = new WebSocketService();
+import {TodoWebSocketDurableObject} from '../../core/durable-objects/todo-websocket';
+import type {DurableObjectNamespace} from '@cloudflare/workers-types';
+import {
+  WebSocketResponseUtil,
+  WebSocketAuthError,
+  WebSocketPermissionError,
+  WebSocketRoomError,
+  WebSocketConnectionError,
+  WebSocketResponse,
+} from '../../shared/errors/websocket-errors';
+// Define JWT variables type for type safety
+type JwtVariables = {
+  jwtPayload: {
+    sub: string;
+    email?: string;
+    iat: number;
+    exp: number;
+  };
+};
+// Define Durable Object bindings
+type DurableObjectBindings = {
+  TODO_WEBSOCKET: DurableObjectNamespace<TodoWebSocketDurableObject>;
+};
+const router = new Hono<HonoAppType & {
+  Variables: JwtVariables;
+  Bindings: DurableObjectBindings;
+}>();
+/**
+ * Creates a WebSocketService instance.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function createWebSocketService(_c: {env: Record<string, unknown>}): WebSocketService {
+  return new WebSocketService();
+}
+/**
+ * Creates a Durable Object stub for the TODO room.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createTodoWebSocketStub(c: any, todoId: string) {
+  const id = c.env.TODO_WEBSOCKET.idFromName(todoId);
+  return c.env.TODO_WEBSOCKET.get(id);
+}
 
 /**
- * WebSocket connection handling using Durable Objects
- * GET /ws/v1/todo/:id
+ * JWT middleware for protected routes.
  */
-router.get('/todo/:id', async (c) => {
-  const todoId = c.req.param('id');
-  const authHeader = c.req.header('Authorization');
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new WebSocketErrors.WebSocketAuthError('Missing authorization header');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const jwtMiddleware = (c: any, next: any) => {
+  const jwtMiddleware = jwt({
+    secret: c.env.JWT_SECRET,
+    alg: 'HS256',
+  });
+  return jwtMiddleware(c, next);
+};
+/**
+ * Creates an AppConfig instance.
+ */
+function createAppConfig(c: {env: Record<string, unknown>}): AppConfig {
+  return new AppConfig(c.env);
+}
+/**
+ * Handles WebSocket service errors and converts to WebSocket response.
+ */
+function handleServiceError(error: unknown, todoId?: string, userId?: string): WebSocketResponse {
+  if (error instanceof Error) {
+    const wsError = new WebSocketConnectionError(error.message);
+    return WebSocketResponseUtil.error(wsError, todoId, userId);
   }
-
-  const token = authHeader.substring(7);
-
+  const wsError = new WebSocketConnectionError('Unknown service error');
+  return WebSocketResponseUtil.error(wsError, todoId, userId);
+}
+/**
+ * Get TODO room statistics.
+ * GET /api/v1/websocket/todo/:id/stats
+ */
+router.get('/todo/:id/stats', jwtMiddleware, async (c) => {
   try {
-    // Create AppConfig instance from environment
-    const appConfig = new AppConfig({
-      supabase_url: c.env?.['supabase_url'] || '',
-      supabase_anon_key: c.env?.['supabase_anon_key'] || '',
-      supabase_service_role_key: c.env?.['supabase_service_role_key'] || '',
-      environment: (c.env?.['environment'] as 'development' | 'production' | 'staging') ||
-        'development',
-    });
-
-    // Verify user identity
-    const user = await websocketService.authenticateConnection(
-      token, appConfig,
-    );
-
-    // Check TODO access permissions
-    const hasAccess = await websocketService.verifyTodoAccess(
-      todoId, user.id, appConfig,
-    );
-
-    if (!hasAccess) {
-      throw new WebSocketErrors.WebSocketAuthError('No access to this todo');
+    const todoId = c.req.param('id');
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+    // Verify TODO access permissions
+    const websocketService = createWebSocketService(c);
+    const appConfig = createAppConfig(c);
+    const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
+    if (accessResult.isErr()) {
+      const error = new WebSocketPermissionError('Access denied');
+      const response = WebSocketResponseUtil.error(error, todoId, userId);
+      return c.json(response);
     }
-
-    // Use Durable Objects to handle WebSocket connections
-    if (!c.env.TODO_WEBSOCKET) {
-      throw new Error('Durable Objects not configured');
+    // Get room statistics from Durable Object
+    const todoWebSocketStub = createTodoWebSocketStub(c, todoId);
+    const statsResponse = await todoWebSocketStub.fetch('/stats');
+    if (!statsResponse.ok) {
+      const error = new WebSocketRoomError('Failed to get room stats');
+      const response = WebSocketResponseUtil.error(error, todoId, userId);
+      return c.json(response);
     }
-
-    // Get Durable Object ID (based on TODO ID)
-    const durableObjectId = c.env.TODO_WEBSOCKET.idFromName(todoId);
-
-    // Get Durable Object stub
-    const durableObjectStub = c.env.TODO_WEBSOCKET.get(durableObjectId);
-
-    // Build WebSocket connection URL
-    const websocketUrl = new URL('https://dummy-url/websocket');
-    websocketUrl.searchParams.set('todoId', todoId);
-
-    // Create WebSocket connection request
-    const websocketRequest = new Request(websocketUrl.toString(), {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Upgrade': 'websocket',
-      },
-    });
-
-    // Forward request to Durable Object
-    return durableObjectStub.fetch(websocketRequest);
+    const stats = await statsResponse.json();
+    const response = WebSocketResponseUtil.roomStats(stats, todoId);
+    return c.json(response);
   } catch (error) {
-    if (error instanceof WebSocketErrors.WebSocketAuthError) {
-      return c.json(
-        {
-          error: {
-            code: error.code,
-            message: error.message,
-          },
-        },
-        401,
-      );
-    }
-
-    return c.json(
-      {
-        error: {
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to establish WebSocket connection',
-        },
-      },
-      500,
-    );
+    const response = handleServiceError(error);
+    return c.json(response, 500);
   }
 });
-
 /**
- * Get TODO room user list
- * GET /ws/v1/todo/:id/users
+ * Get TODO room users.
+ * GET /api/v1/websocket/todo/:id/users
  */
-router.get('/todo/:id/users', async (c) => {
-  const todoId = c.req.param('id');
-  const authHeader = c.req.header('Authorization');
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new WebSocketErrors.WebSocketAuthError('Missing authorization header');
-  }
-
-  const token = authHeader.substring(7);
-
+router.get('/todo/:id/users', jwtMiddleware, async (c) => {
   try {
-    // Create AppConfig instance from environment
-    const appConfig = new AppConfig({
-      supabase_url: c.env?.['supabase_url'] || '',
-      supabase_anon_key: c.env?.['supabase_anon_key'] || '',
-      supabase_service_role_key: c.env?.['supabase_service_role_key'] || '',
-      environment: (c.env?.['environment'] as 'development' | 'production' | 'staging') ||
-        'development',
-    });
-
-    // Verify user identity
-    const user = await websocketService.authenticateConnection(
-      token, appConfig,
-    );
-
-    // Check TODO access permissions
-    const hasAccess = await websocketService.verifyTodoAccess(
-      todoId, user.id, appConfig,
-    );
-
-    if (!hasAccess) {
-      throw new WebSocketErrors.WebSocketAuthError('No access to this todo');
+    const todoId = c.req.param('id');
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+    // Verify TODO access permissions
+    const websocketService = createWebSocketService(c);
+    const appConfig = createAppConfig(c);
+    const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
+    if (accessResult.isErr()) {
+      const error = new WebSocketPermissionError('Access denied');
+      const response = WebSocketResponseUtil.error(error, todoId, userId);
+      return c.json(response);
     }
-
-    // Get TODO room user list
-    const users = await websocketService.getTodoRoomUsers(todoId, appConfig);
-
-    return c.json({
-      todo_id: todoId,
-      users,
-    });
+    // Get room users from Durable Object
+    const todoWebSocketStub = createTodoWebSocketStub(c, todoId);
+    const usersResponse = await todoWebSocketStub.fetch('/users');
+    if (!usersResponse.ok) {
+      const error = new WebSocketRoomError('Failed to get room users');
+      const response = WebSocketResponseUtil.error(error, todoId, userId);
+      return c.json(response);
+    }
+    const users = await usersResponse.json();
+    const response = WebSocketResponseUtil.roomUsers(users, todoId);
+    return c.json(response);
   } catch (error) {
-    if (error instanceof WebSocketErrors.WebSocketAuthError) {
-      return c.json(
-        {
-          error: {
-            code: error.code,
-            message: error.message,
-          },
-        },
-        401,
-      );
-    }
-
-    return c.json(
-      {
-        error: {
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to fetch room users',
-        },
-      },
-      500,
-    );
+    const response = handleServiceError(error);
+    return c.json(response, 500);
   }
 });
-
 /**
- * Send message to TODO room
- * POST /ws/v1/todo/:id/message
+ * Cleanup inactive connections.
+ * POST /api/v1/websocket/todo/:id/cleanup
  */
-router.post('/todo/:id/message', async (c) => {
-  const todoId = c.req.param('id');
-  const authHeader = c.req.header('Authorization');
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new WebSocketErrors.WebSocketAuthError('Missing authorization header');
-  }
-
-  const token = authHeader.substring(7);
-
+router.post('/todo/:id/cleanup', jwtMiddleware, async (c) => {
   try {
-    // Create AppConfig instance from environment
-    const appConfig = new AppConfig({
-      supabase_url: c.env?.['supabase_url'] || '',
-      supabase_anon_key: c.env?.['supabase_anon_key'] || '',
-      supabase_service_role_key: c.env?.['supabase_service_role_key'] || '',
-      environment: (c.env?.['environment'] as 'development' | 'production' | 'staging') ||
-        'development',
-    });
-
-    // Verify user identity
-    const user = await websocketService.authenticateConnection(
-      token, appConfig,
-    );
-
-    // Check TODO access permissions
-    const hasAccess = await websocketService.verifyTodoAccess(
-      todoId, user.id, appConfig,
-    );
-
-    if (!hasAccess) {
-      throw new WebSocketErrors.WebSocketAuthError('No access to this todo');
+    const todoId = c.req.param('id');
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+    // Verify TODO access permissions (admin only)
+    const websocketService = createWebSocketService(c);
+    const appConfig = createAppConfig(c);
+    const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
+    if (accessResult.isErr()) {
+      const error = new WebSocketPermissionError('Access denied');
+      const response = WebSocketResponseUtil.error(error, todoId, userId);
+      return c.json(response);
     }
-
-    // Parse message body
-    const messageData = await c.req.json();
-
-    // Get Durable Object ID
-    if (!c.env.TODO_WEBSOCKET) {
-      throw new Error('Durable Objects not configured');
-    }
-    const durableObjectId = c.env.TODO_WEBSOCKET.idFromName(todoId);
-
-    // Get Durable Object stub
-    const durableObjectStub = c.env.TODO_WEBSOCKET.get(durableObjectId);
-
-    // Build message sending request
-    const messageRequest = new Request('https://dummy-url/message', {
+    // Cleanup inactive connections in Durable Object
+    const todoWebSocketStub = createTodoWebSocketStub(c, todoId);
+    const cleanupResponse = await todoWebSocketStub.fetch('/cleanup', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        type: 'message',
-        payload: messageData,
-        timestamp: Date.now(),
-        sender: user.id,
-      }),
     });
-
-    // Forward message to Durable Object
-    const response = await durableObjectStub.fetch(messageRequest);
-
-    if (response.ok) {
-      return c.json({
-        message: 'Message sent successfully',
-        todo_id: todoId,
-      });
-    } else {
-      throw new Error('Failed to send message');
+    if (!cleanupResponse.ok) {
+      const error = new WebSocketRoomError('Failed to cleanup connections');
+      const response = WebSocketResponseUtil.error(error, todoId, userId);
+      return c.json(response);
     }
+    const response = WebSocketResponseUtil.success({success: true}, todoId, userId);
+    return c.json(response);
   } catch (error) {
-    if (error instanceof WebSocketErrors.WebSocketAuthError) {
-      return c.json(
-        {
-          error: {
-            code: error.code,
-            message: error.message,
-          },
-        },
-        401,
-      );
-    }
-
-    return c.json(
-      {
-        error: {
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to send message',
-        },
-      },
-      500,
-    );
+    const response = handleServiceError(error);
+    return c.json(response, 500);
   }
 });
-
+/**
+ * Handle WebSocket connection request.
+ * This endpoint is called by the client to establish a WebSocket connection.
+ * The actual WebSocket handling is done by the Durable Object.
+ */
+router.get('/todo/:id/connect', jwtMiddleware, async (c) => {
+  try {
+    const todoId = c.req.param('id');
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+    const appConfig = createAppConfig(c);
+    const websocketService = createWebSocketService(c);
+    // Verify TODO access permissions
+    const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
+    if (accessResult.isErr()) {
+      const error = new WebSocketPermissionError('Access denied');
+      const response = WebSocketResponseUtil.error(error, todoId, userId);
+      return c.json(response);
+    }
+    const hasAccess = accessResult.value;
+    if (!hasAccess) {
+      const error = new WebSocketPermissionError('No access to this todo');
+      const response = WebSocketResponseUtil.error(error, todoId, userId);
+      return c.json(response);
+    }
+    // Get user information
+    const userResult = await websocketService.authenticateConnection(
+      // For WebSocket connections, we'd need to handle token differently
+      // For now, return basic user info
+      '', // This would be the JWT token in a real WebSocket connection
+      appConfig,
+    );
+    if (userResult.isErr()) {
+      const error = new WebSocketAuthError('Authentication failed');
+      const response = WebSocketResponseUtil.error(error, todoId, userId);
+      return c.json(response);
+    }
+    const userInfo = userResult.value;
+    // Initialize TODO room in Durable Object
+    const todoWebSocketStub = createTodoWebSocketStub(c, todoId);
+    await todoWebSocketStub.initializeRoom(todoId);
+    // Add user to the TODO room
+    await todoWebSocketStub.addUser(userId, {
+      username: userInfo.email, // Using email as username for now
+      email: userInfo.email,
+    });
+    // eslint-disable-next-line no-console
+    console.log(`User ${userId} connected to TODO ${todoId}`);
+    const response = WebSocketResponseUtil.connected(todoId, userId);
+    return c.json(response);
+  } catch (error) {
+    const response = handleServiceError(error);
+    return c.json(response, 500);
+  }
+});
+/**
+ * Handle TODO update via WebSocket-like API.
+ * POST /api/v1/websocket/todo/:id/update
+ */
+router.post('/todo/:id/update', jwtMiddleware, async (c) => {
+  try {
+    const todoId = c.req.param('id');
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+    const body = await c.req.json();
+    const appConfig = createAppConfig(c);
+    const websocketService = createWebSocketService(c);
+    // Verify TODO access permissions
+    const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
+    if (accessResult.isErr()) {
+      const error = new WebSocketPermissionError('Access denied');
+      const response = WebSocketResponseUtil.error(error, todoId, userId);
+      return c.json(response);
+    }
+    // Handle TODO update
+    const updateResult = await websocketService.updateTodo(
+      todoId,
+      body.data || {},
+      userId,
+      appConfig,
+    );
+    if (updateResult.isErr()) {
+      const error = new WebSocketRoomError('Failed to update todo');
+      const response = WebSocketResponseUtil.error(error, todoId, userId);
+      return c.json(response);
+    }
+    // Broadcast update to all users in the room
+    const todoWebSocketStub = createTodoWebSocketStub(c, todoId);
+    await todoWebSocketStub.handleTodoUpdate(body.data || {}, userId);
+    const response = WebSocketResponseUtil.todoUpdated(body.data || {}, todoId, userId);
+    return c.json(response);
+  } catch (error) {
+    const response = handleServiceError(error);
+    return c.json(response, 500);
+  }
+});
+/**
+ * WebSocket message handler for real-time WebSocket connections.
+ * This would be used in a real WebSocket implementation.
+ */
+router.get('/todo/:id/ws', jwtMiddleware, async (c) => {
+  try {
+    const todoId = c.req.param('id');
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+    const appConfig = createAppConfig(c);
+    const websocketService = createWebSocketService(c);
+    // Verify TODO access permissions
+    const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
+    if (accessResult.isErr()) {
+      const error = new WebSocketPermissionError('Access denied');
+      const response = WebSocketResponseUtil.error(error, todoId, userId);
+      return c.json(response);
+    }
+    const hasAccess = accessResult.value;
+    if (!hasAccess) {
+      const error = new WebSocketPermissionError('No access to this todo');
+      const response = WebSocketResponseUtil.error(error, todoId, userId);
+      return c.json(response);
+    }
+    // In a real implementation, this would upgrade to WebSocket
+    // For now, return WebSocket connection information
+    const response = WebSocketResponseUtil.success({
+      message: 'WebSocket endpoint ready',
+      todoId,
+      userId,
+      note: 'In production, this would upgrade to a WebSocket connection',
+    }, todoId, userId);
+    return c.json(response);
+  } catch (error) {
+    const response = handleServiceError(error);
+    return c.json(response, 500);
+  }
+});
 export default router;
-

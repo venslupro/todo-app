@@ -1,5 +1,6 @@
 // api/middleware/rate-limit.ts
 import {Context, Next} from 'hono';
+import {HTTPException} from 'hono/http-exception';
 import {RateLimitService} from '../../core/services/rate-limit-service';
 
 /**
@@ -35,9 +36,11 @@ export const rateLimitMiddleware = (options: {
     );
 
     if (!result.allowed) {
-      throw new Error(
-        `Rate limit exceeded. Try again in ${result.reset - Math.floor(Date.now() / 1000)} seconds`,
-      );
+      throw new HTTPException(429, {
+        message: `Rate limit exceeded. Try again in ${
+          result.reset - Math.floor(Date.now() / 1000)
+        } seconds`,
+      });
     }
 
     // Add rate limit headers

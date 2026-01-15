@@ -1,12 +1,12 @@
 // shared/validation/validator.ts
-import {HttpErrors} from '../errors/http-errors';
+import {ErrorCode, Result, okResult, errResult} from '../errors/error-codes';
 import {
   TodoStatus,
   TodoPriority,
 } from '../../core/models/todo';
 import {
   MediaType,
-  SUPPORTED_MIME_TYPES,
+  MimeTypes,
 } from '../../core/models/media';
 import {
   SharePermission,
@@ -19,116 +19,115 @@ export class Validator {
   /**
    * Validate UUID format
    */
-  static validateUUID(id: string, fieldName = 'id'): void {
+  static validateUUID(id: string): Result<void, ErrorCode> {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {
-      throw new HttpErrors.ValidationError(`Invalid ${fieldName} format`);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
+    return okResult(undefined);
   }
 
   /**
    * Validate TODO status
    */
-  static validateTodoStatus(status: string): TodoStatus {
+  static validateTodoStatus(status: string): Result<TodoStatus, ErrorCode> {
     if (!Object.values(TodoStatus).includes(status as TodoStatus)) {
-      throw new HttpErrors.ValidationError(`Invalid status: ${status}`);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
-    return status as TodoStatus;
+    return okResult(status as TodoStatus);
   }
 
   /**
    * Validate TODO priority
    */
-  static validateTodoPriority(priority: string): TodoPriority {
+  static validateTodoPriority(priority: string): Result<TodoPriority, ErrorCode> {
     if (!Object.values(TodoPriority).includes(priority as TodoPriority)) {
-      throw new HttpErrors.ValidationError(`Invalid priority: ${priority}`);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
-    return priority as TodoPriority;
+    return okResult(priority as TodoPriority);
   }
 
   /**
    * Validate share permissions
    */
-  static validateSharePermission(permission: string): SharePermission {
+  static validateSharePermission(permission: string): Result<SharePermission, ErrorCode> {
     if (!Object.values(SharePermission).includes(permission as SharePermission)) {
-      throw new HttpErrors.ValidationError(`Invalid permission: ${permission}`);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
-    return permission as SharePermission;
+    return okResult(permission as SharePermission);
   }
 
   /**
    * Validate date format
    */
-  static validateDate(dateString: string, fieldName = 'date'): Date {
+  static validateDate(dateString: string): Result<Date, ErrorCode> {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      throw new HttpErrors.ValidationError(`Invalid ${fieldName} format`);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
-    return date;
+    return okResult(date);
   }
 
   /**
    * Validate file size
    */
-  static validateFileSize(fileSize: number, maxSizeBytes: number): void {
+  static validateFileSize(fileSize: number, maxSizeBytes: number): Result<void, ErrorCode> {
     if (fileSize > maxSizeBytes) {
-      const maxSizeMB = (maxSizeBytes / (1024 * 1024)).toFixed(2);
-      throw new HttpErrors.ValidationError(`File size exceeds limit of ${maxSizeMB} MB`);
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
+    return okResult(undefined);
   }
 
   /**
    * Validate media file type
    */
-  static validateMediaType(mimeType: string, mediaType: MediaType): void {
-    const supportedTypes = SUPPORTED_MIME_TYPES[mediaType];
+  static validateMediaType(mimeType: string, mediaType: MediaType): Result<void, ErrorCode> {
+    const supportedTypes = MimeTypes[mediaType];
 
     if (!supportedTypes.includes(mimeType.toLowerCase())) {
-      throw new HttpErrors.ValidationError(
-        `Unsupported ${mediaType} type. Supported types: ${supportedTypes.join(', ')}`,
-      );
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
+    return okResult(undefined);
   }
 
   /**
    * Validate video duration
    */
-  static validateVideoDuration(durationSeconds: number): void {
+  static validateVideoDuration(durationSeconds: number): Result<void, ErrorCode> {
     const MAX_VIDEO_DURATION = 4 * 60; // 4 minutes
     if (durationSeconds > MAX_VIDEO_DURATION) {
-      throw new HttpErrors.ValidationError('Video duration exceeds limit of 4 minutes');
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
+    return okResult(undefined);
   }
 
   /**
    * Sanitize and validate input string
    */
-  static sanitizeString(input: string, maxLength: number): string {
+  static sanitizeString(input: string, maxLength: number): Result<string, ErrorCode> {
     if (!input || typeof input !== 'string') {
-      throw new HttpErrors.ValidationError('Invalid string input');
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
 
     const sanitized = input.trim();
     if (sanitized.length === 0) {
-      throw new HttpErrors.ValidationError('Input cannot be empty');
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
 
     if (sanitized.length > maxLength) {
-      throw new HttpErrors.ValidationError(
-        `Input exceeds maximum length of ${maxLength} characters`,
-      );
+      return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
 
-    return sanitized;
+    return okResult(sanitized);
   }
 
   /**
    * Validate pagination parameters
    */
-  static validatePagination(limit?: number, offset?: number): {
+  static validatePagination(limit?: number, offset?: number): Result<{
     limit: number;
     offset: number;
-  } {
+  }, ErrorCode> {
     const DEFAULT_LIMIT = 50;
     const MAX_LIMIT = 1000;
 
@@ -140,73 +139,81 @@ export class Validator {
       Math.max(0, Math.floor(offset)) :
       0;
 
-    return {
+    return okResult({
       limit: validatedLimit,
       offset: validatedOffset,
-    };
+    });
   }
 
   /**
    * Validate email format
    */
-  static validateEmail(email: string): string {
+  static validateEmail(email: string): Result<string, ErrorCode> {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const sanitized = this.sanitizeString(email, 255);
+    const sanitizedResult = this.sanitizeString(email, 255);
+
+    if (sanitizedResult.isErr()) {
+      return sanitizedResult;
+    }
+
+    const sanitized = sanitizedResult.value;
 
     if (!emailRegex.test(sanitized)) {
-      throw new HttpErrors.ValidationError('Invalid email format');
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
     // Additional email validation rules
     if (sanitized.length > 254) {
-      throw new HttpErrors.ValidationError('Email address is too long');
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
     const [localPart, domain] = sanitized.split('@');
 
     // Ensure both parts exist after split
     if (!localPart || !domain) {
-      throw new HttpErrors.ValidationError('Invalid email format');
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
     if (localPart.length > 64) {
-      throw new HttpErrors.ValidationError('Email local part is too long');
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
     if (domain.length > 253) {
-      throw new HttpErrors.ValidationError('Email domain is too long');
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
     // Check for common invalid patterns
     if (domain.includes('..')) {
-      throw new HttpErrors.ValidationError('Invalid email domain format');
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
     if (localPart.startsWith('.') || localPart.endsWith('.')) {
-      throw new HttpErrors.ValidationError('Invalid email local part format');
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL);
     }
 
-    return sanitized;
+    return okResult(sanitized);
   }
 
   /**
    * Validate password strength
    */
-  static validatePassword(password: string): void {
+  static validatePassword(password: string): Result<void, ErrorCode> {
     if (password.length < 8) {
-      throw new HttpErrors.ValidationError('Password must be at least 8 characters long');
+      return errResult(ErrorCode.VALIDATION_INVALID_PASSWORD);
     }
 
     if (!/[A-Z]/.test(password)) {
-      throw new HttpErrors.ValidationError('Password must contain at least one uppercase letter');
+      return errResult(ErrorCode.VALIDATION_INVALID_PASSWORD);
     }
 
     if (!/[a-z]/.test(password)) {
-      throw new HttpErrors.ValidationError('Password must contain at least one lowercase letter');
+      return errResult(ErrorCode.VALIDATION_INVALID_PASSWORD);
     }
 
     if (!/\d/.test(password)) {
-      throw new HttpErrors.ValidationError('Password must contain at least one number');
+      return errResult(ErrorCode.VALIDATION_INVALID_PASSWORD);
     }
+
+    return okResult(undefined);
   }
 }

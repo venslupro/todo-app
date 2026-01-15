@@ -1,13 +1,14 @@
 // core/services/media-service.ts
-import {HttpErrors} from '../../shared/errors/http-errors';
+import {ErrorCode, Result, okResult, errResult} from '../../shared/errors/error-codes';
+import {HttpExceptions} from '../../shared/errors/http-exception';
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
 import {
   Media,
   MediaType,
-  SUPPORTED_MIME_TYPES,
-  UploadMediaDto,
-  MediaUploadResponse,
+  MimeTypes,
+  UploadMedia,
+  MediaUploadResult,
   MediaQueryParams,
 } from '../models/media';
 
@@ -27,7 +28,7 @@ export class MediaService {
   async getMediaList(
     userId: string,
     params: MediaQueryParams,
-  ): Promise<Media[]> {
+  ): Promise<Result<Media[], ErrorCode>> {
     let query = this.supabase
       .from('media')
       .select('*')
@@ -35,12 +36,15 @@ export class MediaService {
 
     // Apply filters
     if (params.todo_id) {
-      Validator.validateUUID(params.todo_id, 'todo_id');
+      const uuidResult = Validator.validateUUID(params.todo_id);
+      if (uuidResult.isErr()) {
+        return errResult(uuidResult.error);
+      }
 
       // Check TODO access permissions
       const hasAccess = await this.checkTodoAccess(params.todo_id, userId);
       if (!hasAccess) {
-        throw new HttpErrors.ForbiddenError('No access to this todo');
+        return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
       }
 
       query = query.eq('todo_id', params.todo_id);
@@ -59,10 +63,10 @@ export class MediaService {
 
     if (error) {
       console.error('Database error:', error);
-      throw new HttpErrors.InternalServerError('Failed to fetch media');
+      return errResult(ErrorCode.DATABASE_QUERY_FAILED);
     }
 
-    return data as Media[];
+    return okResult(data as Media[]);
   }
 
   /**
@@ -71,24 +75,24 @@ export class MediaService {
   async getUploadUrl(
     todoId: string,
     userId: string,
-    dto: UploadMediaDto,
-  ): Promise<MediaUploadResponse> {
-    Validator.validateUUID(todoId, 'todo_id');
+    dto: UploadMedia,
+  ): Promise<Result<MediaUploadResult, ErrorCode>> {
+    Validator.validateUUID(todoId);
 
     // Check TODO edit permissions
     const canEdit = await this.checkEditPermission(todoId, userId);
     if (!canEdit) {
-      throw new HttpErrors.ForbiddenError('No permission to upload media to this todo');
+      return errResult(ErrorCode.BUSINESS_OPERATION_NOT_ALLOWED);
     }
 
     // Determine media type
     let mediaType: MediaType;
-    if (SUPPORTED_MIME_TYPES[MediaType.IMAGE].includes(dto.mime_type)) {
+    if (MimeTypes[MediaType.IMAGE].includes(dto.mime_type)) {
       mediaType = MediaType.IMAGE;
-    } else if (SUPPORTED_MIME_TYPES[MediaType.VIDEO].includes(dto.mime_type)) {
+    } else if (MimeTypes[MediaType.VIDEO].includes(dto.mime_type)) {
       mediaType = MediaType.VIDEO;
     } else {
-      throw new HttpErrors.ValidationError(`Unsupported file type: ${dto.mime_type}`);
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL); // Using validation error code
     }
 
     // Validate file size
@@ -112,7 +116,7 @@ export class MediaService {
 
     if (uploadError || !uploadData) {
       console.error('Storage error:', uploadError);
-      throw new HttpErrors.InternalServerError('Failed to generate upload URL');
+      throw new HttpExceptions.InternalServerException('Failed to generate upload URL');
     }
 
     // Create media record (pre-creation, update status after upload)
@@ -138,13 +142,13 @@ export class MediaService {
 
     if (mediaError) {
       console.error('Database error:', mediaError);
-      throw new HttpErrors.InternalServerError('Failed to create media record');
+      return errResult(ErrorCode.SYSTEM_INTERNAL_ERROR);
     }
 
-    return {
+    return okResult({
       media: media as Media,
       upload_url: uploadData.signedUrl,
-    };
+    });
   }
 
   /**
@@ -154,7 +158,7 @@ export class MediaService {
     mediaId: string,
     userId: string,
   ): Promise<Media> {
-    Validator.validateUUID(mediaId, 'media_id');
+    Validator.validateUUID(mediaId);
 
     const {data: media, error} = await this.supabase
       .from('media')
@@ -163,12 +167,12 @@ export class MediaService {
       .single();
 
     if (error || !media) {
-      throw new HttpErrors.NotFoundError('Media not found');
+      throw new HttpExceptions.NotFoundException('Media not found');
     }
 
     // Check permissions
     if ((media as any).todos.created_by !== userId && (media as any).created_by !== userId) {
-      throw new HttpErrors.ForbiddenError('No permission to update this media');
+      throw new HttpExceptions.ForbiddenException('No permission to update this media');
     }
 
     // Additional validation can be added here, such as checking if file actually exists in storage
@@ -180,7 +184,7 @@ export class MediaService {
    * Delete media file
    */
   async deleteMedia(mediaId: string, userId: string): Promise<void> {
-    Validator.validateUUID(mediaId, 'media_id');
+    Validator.validateUUID(mediaId);
 
     // Get media record
     const {data: media} = await this.supabase
@@ -190,7 +194,7 @@ export class MediaService {
       .single();
 
     if (!media) {
-      throw new HttpErrors.NotFoundError('Media not found');
+      throw new HttpExceptions.NotFoundException('Media not found');
     }
 
     // Check permissions (only TODO creator or media uploader can delete)
@@ -198,7 +202,7 @@ export class MediaService {
       (media as any).created_by === userId;
 
     if (!canDelete) {
-      throw new HttpErrors.ForbiddenError('No permission to delete this media');
+      throw new HttpExceptions.ForbiddenException('No permission to delete this media');
     }
 
     // Delete file from storage
@@ -219,7 +223,7 @@ export class MediaService {
 
     if (dbError) {
       console.error('Database error:', dbError);
-      throw new HttpErrors.InternalServerError('Failed to delete media record');
+      throw new HttpExceptions.InternalServerException('Failed to delete media record');
     }
   }
 
@@ -227,7 +231,7 @@ export class MediaService {
    * Get media file URL
    */
   async getMediaUrl(mediaId: string, userId: string): Promise<string> {
-    Validator.validateUUID(mediaId, 'media_id');
+    Validator.validateUUID(mediaId);
 
     const {data: media} = await this.supabase
       .from('media')
@@ -236,13 +240,13 @@ export class MediaService {
       .single();
 
     if (!media) {
-      throw new HttpErrors.NotFoundError('Media not found');
+      throw new HttpExceptions.NotFoundException('Media not found');
     }
 
     // Check TODO access permissions
     const hasAccess = await this.checkTodoAccess((media as any).todo_id, userId);
     if (!hasAccess) {
-      throw new HttpErrors.ForbiddenError('No access to this media');
+      throw new HttpExceptions.ForbiddenException('No access to this media');
     }
 
     // Get file URL

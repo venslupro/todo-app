@@ -10,7 +10,7 @@ export enum MediaType {
 /**
  * Supported MIME types
  */
-export const SUPPORTED_MIME_TYPES = {
+export const MimeTypes = {
   [MediaType.IMAGE]: [
     'image/jpeg',
     'image/jpg',
@@ -48,9 +48,9 @@ export interface Media {
 }
 
 /**
- * Upload media file DTO
+ * Upload media file data
  */
-export interface UploadMediaDto {
+export interface UploadMedia {
   todo_id: string;
   file_name: string;
   file_size: number;
@@ -61,9 +61,9 @@ export interface UploadMediaDto {
 }
 
 /**
- * Media upload response
+ * Media upload result
  */
-export interface MediaUploadResponse {
+export interface MediaUploadResult {
   media: Media;
   upload_url: string;
 }

@@ -6,7 +6,8 @@ This guide provides comprehensive API documentation and development instructions
 
 ### Base URL
 - **Development**: `http://localhost:8787`
-- **Production**: `https://your-worker.your-account.workers.dev`
+- **Staging**: `https://stg-todo-worker.venslu-pro.workers.dev`
+- **Production**: `https://prod-todo-worker.venslu-pro.workers.dev`
 
 ### Authentication
 All API endpoints (except authentication and system endpoints) require JWT Bearer token:
@@ -80,8 +81,7 @@ Content-Type: application/json
 {
   "email": "user@example.com",
   "password": "securepassword123",
-  "username": "johndoe",
-  "full_name": "John Doe"
+  "username": "johndoe"
 }
 ```
 
@@ -92,8 +92,7 @@ Content-Type: application/json
     "user": {
       "id": "user-uuid",
       "email": "user@example.com",
-      "username": "johndoe",
-      "full_name": "John Doe"
+      "username": "johndoe"
     },
     "token": "jwt-token"
   }
@@ -118,8 +117,7 @@ Content-Type: application/json
     "user": {
       "id": "user-uuid",
       "email": "user@example.com",
-      "username": "johndoe",
-      "full_name": "John Doe"
+      "username": "johndoe"
     },
     "token": "jwt-token"
   }
@@ -132,7 +130,7 @@ POST /api/v1/auth/refresh
 Content-Type: application/json
 
 {
-  "refresh_token": "refresh-token"
+  "token": "current-jwt-token"
 }
 ```
 
@@ -148,14 +146,14 @@ Content-Type: application/json
 ### Logout User
 ```http
 POST /api/v1/auth/logout
-Authorization: Bearer <token>
+Authorization: Bearer <jwt-token>
 ```
 
 **Response:**
 ```json
 {
   "data": {
-    "success": true
+    "message": "Logged out successfully"
   }
 }
 ```
@@ -163,7 +161,7 @@ Authorization: Bearer <token>
 ### Get Current User
 ```http
 GET /api/v1/auth/me
-Authorization: Bearer <token>
+Authorization: Bearer <jwt-token>
 ```
 
 **Response:**
@@ -173,32 +171,19 @@ Authorization: Bearer <token>
     "user": {
       "id": "user-uuid",
       "email": "user@example.com",
-      "username": "johndoe",
-      "full_name": "John Doe"
+      "username": "johndoe"
     }
   }
 }
 ```
 
-## Todo Management API
+## TODO API
 
-### Get Todo List
+### Get All TODOs
 ```http
-GET /api/v1/todos?status=in_progress&priority=high&limit=10
-Authorization: Bearer <token>
+GET /api/v1/todos
+Authorization: Bearer <jwt-token>
 ```
-
-**Query Parameters:**
-- `status`: `not_started`, `in_progress`, `completed`
-- `priority`: `low`, `medium`, `high`, `urgent`
-- `limit`: Number of items (default: 20)
-- `offset`: Pagination offset
-- `search`: Text search
-- `tags`: Comma-separated tag list
-- `due_date_before`: Filter by due date before
-- `due_date_after`: Filter by due date after
-- `sort_by`: Field to sort by
-- `sort_order`: `asc` or `desc`
 
 **Response:**
 ```json
@@ -208,34 +193,26 @@ Authorization: Bearer <token>
       {
         "id": "todo-uuid",
         "name": "Complete project",
-        "description": "Finish the backend implementation",
+        "description": "Finish the backend API",
         "status": "in_progress",
-        "priority": "high",
-        "due_date": "2024-01-15T00:00:00Z",
-        "tags": ["work", "urgent"],
-        "created_by": "user-uuid",
-        "created_at": "2024-01-10T10:00:00Z",
+        "created_at": "2024-01-13T10:00:00Z",
         "updated_at": "2024-01-13T10:00:00Z"
       }
-    ],
-    "total": 1
+    ]
   }
 }
 ```
 
-### Create Todo
+### Create TODO
 ```http
 POST /api/v1/todos
+Authorization: Bearer <jwt-token>
 Content-Type: application/json
-Authorization: Bearer <token>
 
 {
-  "name": "New Todo",
-  "description": "Todo description",
-  "status": "not_started",
-  "priority": "medium",
-  "due_date": "2024-01-20T00:00:00Z",
-  "tags": ["work"]
+  "name": "New TODO",
+  "description": "TODO description",
+  "status": "not_started"
 }
 ```
 
@@ -243,52 +220,49 @@ Authorization: Bearer <token>
 ```json
 {
   "data": {
-    "id": "todo-uuid",
-    "name": "New Todo",
-    "description": "Todo description",
-    "status": "not_started",
-    "priority": "medium",
-    "due_date": "2024-01-20T00:00:00Z",
-    "tags": ["work"],
-    "created_by": "user-uuid",
-    "created_at": "2024-01-13T10:00:00Z",
-    "updated_at": "2024-01-13T10:00:00Z"
+    "todo": {
+      "id": "todo-uuid",
+      "name": "New TODO",
+      "description": "TODO description",
+      "status": "not_started",
+      "created_at": "2024-01-13T10:00:00Z",
+      "updated_at": "2024-01-13T10:00:00Z"
+    }
   }
 }
 ```
 
-### Get Single Todo
+### Get TODO by ID
 ```http
-GET /api/v1/todos/:id
-Authorization: Bearer <token>
+GET /api/v1/todos/{id}
+Authorization: Bearer <jwt-token>
 ```
 
 **Response:**
 ```json
 {
   "data": {
-    "id": "todo-uuid",
-    "name": "Complete project",
-    "description": "Finish the backend implementation",
-    "status": "in_progress",
-    "priority": "high",
-    "due_date": "2024-01-15T00:00:00Z",
-    "tags": ["work", "urgent"],
-    "created_by": "user-uuid",
-    "created_at": "2024-01-10T10:00:00Z",
-    "updated_at": "2024-01-13T10:00:00Z"
+    "todo": {
+      "id": "todo-uuid",
+      "name": "Complete project",
+      "description": "Finish the backend API",
+      "status": "in_progress",
+      "created_at": "2024-01-13T10:00:00Z",
+      "updated_at": "2024-01-13T10:00:00Z"
+    }
   }
 }
 ```
 
-### Update Todo
+### Update TODO
 ```http
-PUT /api/v1/todos/:id
+PUT /api/v1/todos/{id}
+Authorization: Bearer <jwt-token>
 Content-Type: application/json
-Authorization: Bearer <token>
 
 {
-  "name": "Updated Todo",
+  "name": "Updated TODO",
+  "description": "Updated description",
   "status": "completed"
 }
 ```
@@ -297,48 +271,40 @@ Authorization: Bearer <token>
 ```json
 {
   "data": {
-    "id": "todo-uuid",
-    "name": "Updated Todo",
-    "description": "Finish the backend implementation",
-    "status": "completed",
-    "priority": "high",
-    "due_date": "2024-01-15T00:00:00Z",
-    "tags": ["work", "urgent"],
-    "created_by": "user-uuid",
-    "created_at": "2024-01-10T10:00:00Z",
-    "updated_at": "2024-01-13T10:00:00Z"
+    "todo": {
+      "id": "todo-uuid",
+      "name": "Updated TODO",
+      "description": "Updated description",
+      "status": "completed",
+      "created_at": "2024-01-13T10:00:00Z",
+      "updated_at": "2024-01-13T11:00:00Z"
+    }
   }
 }
 ```
 
-### Delete Todo
+### Delete TODO
 ```http
-DELETE /api/v1/todos/:id
-Authorization: Bearer <token>
+DELETE /api/v1/todos/{id}
+Authorization: Bearer <jwt-token>
 ```
 
 **Response:**
 ```json
 {
   "data": {
-    "success": true
+    "message": "TODO deleted successfully"
   }
 }
 ```
 
 ## Media API
 
-### Get Media List
+### Get All Media
 ```http
-GET /api/v1/media?todo_id=todo-uuid&media_type=image&limit=10
-Authorization: Bearer <token>
+GET /api/v1/media
+Authorization: Bearer <jwt-token>
 ```
-
-**Query Parameters:**
-- `todo_id`: Filter by todo ID
-- `media_type`: `image`, `video`, `document`, `audio`
-- `limit`: Number of items (default: 20)
-- `offset`: Pagination offset
 
 **Response:**
 ```json
@@ -347,11 +313,9 @@ Authorization: Bearer <token>
     "media": [
       {
         "id": "media-uuid",
-        "todo_id": "todo-uuid",
-        "filename": "document.pdf",
-        "size": 102400,
-        "mime_type": "application/pdf",
-        "media_type": "document",
+        "filename": "image.jpg",
+        "mime_type": "image/jpeg",
+        "size": 1024000,
         "created_at": "2024-01-13T10:00:00Z"
       }
     ]
@@ -359,16 +323,15 @@ Authorization: Bearer <token>
 }
 ```
 
-### Get Upload URL
+### Generate Upload URL
 ```http
 POST /api/v1/media/upload-url
+Authorization: Bearer <jwt-token>
 Content-Type: application/json
-Authorization: Bearer <token>
 
 {
-  "todoId": "todo-uuid",
-  "filename": "document.pdf",
-  "mime_type": "application/pdf"
+  "filename": "image.jpg",
+  "mime_type": "image/jpeg"
 }
 ```
 
@@ -376,7 +339,7 @@ Authorization: Bearer <token>
 ```json
 {
   "data": {
-    "upload_url": "https://storage.supabase.co/upload-url",
+    "upload_url": "https://storage.example.com/upload-url",
     "media_id": "media-uuid"
   }
 }
@@ -384,8 +347,13 @@ Authorization: Bearer <token>
 
 ### Confirm Upload
 ```http
-POST /api/v1/media/:id/confirm
-Authorization: Bearer <token>
+POST /api/v1/media/{id}/confirm
+Authorization: Bearer <jwt-token>
+Content-Type: application/json
+
+{
+  "upload_success": true
+}
 ```
 
 **Response:**
@@ -394,12 +362,9 @@ Authorization: Bearer <token>
   "data": {
     "media": {
       "id": "media-uuid",
-      "todo_id": "todo-uuid",
-      "filename": "document.pdf",
-      "size": 102400,
-      "mime_type": "application/pdf",
-      "media_type": "document",
-      "url": "https://storage.supabase.co/files/media-uuid",
+      "filename": "image.jpg",
+      "mime_type": "image/jpeg",
+      "size": 1024000,
       "created_at": "2024-01-13T10:00:00Z"
     }
   }
@@ -408,77 +373,69 @@ Authorization: Bearer <token>
 
 ### Get Media URL
 ```http
-GET /api/v1/media/:id/url
-Authorization: Bearer <token>
+GET /api/v1/media/{id}/url
+Authorization: Bearer <jwt-token>
 ```
 
 **Response:**
 ```json
 {
   "data": {
-    "url": "https://storage.supabase.co/files/media-uuid"
+    "url": "https://storage.example.com/media-uuid"
   }
 }
 ```
 
 ### Delete Media
 ```http
-DELETE /api/v1/media/:id
-Authorization: Bearer <token>
+DELETE /api/v1/media/{id}
+Authorization: Bearer <jwt-token>
 ```
 
 **Response:**
 ```json
 {
   "data": {
-    "success": true
+    "message": "Media deleted successfully"
   }
 }
 ```
 
-## Team Collaboration API
+## Team API
 
-### Share Todo
+### Share TODO
 ```http
 POST /api/v1/team/shares
+Authorization: Bearer <jwt-token>
 Content-Type: application/json
-Authorization: Bearer <token>
 
 {
   "todo_id": "todo-uuid",
-  "user_id": "target-user-uuid",
+  "user_id": "user-uuid",
   "permission": "read"
 }
 ```
 
-**Permissions:** `read`, `write`, `admin`
-
 **Response:**
 ```json
 {
   "data": {
-    "id": "share-uuid",
-    "todo_id": "todo-uuid",
-    "user_id": "target-user-uuid",
-    "permission": "read",
-    "shared_by": "user-uuid",
-    "created_at": "2024-01-13T10:00:00Z"
+    "share": {
+      "id": "share-uuid",
+      "todo_id": "todo-uuid",
+      "user_id": "user-uuid",
+      "permission": "read",
+      "created_at": "2024-01-13T10:00:00Z"
+    }
   }
 }
 ```
 
-### Get Share List
+### Get Shared TODOs
 ```http
-GET /api/v1/team/shares?todo_id=todo-uuid&user_id=user-uuid&permission=read
-Authorization: Bearer <token>
+GET /api/v1/team/shares
+Authorization: Bearer <jwt-token>
 ```
-
-**Query Parameters:**
-- `todo_id`: Filter by todo ID
-- `user_id`: Filter by user ID
-- `permission`: `read`, `write`, `admin`
-- `limit`: Number of items (default: 20)
-- `offset`: Pagination offset
 
 **Response:**
 ```json
@@ -488,9 +445,8 @@ Authorization: Bearer <token>
       {
         "id": "share-uuid",
         "todo_id": "todo-uuid",
-        "user_id": "target-user-uuid",
+        "user_id": "user-uuid",
         "permission": "read",
-        "shared_by": "user-uuid",
         "created_at": "2024-01-13T10:00:00Z"
       }
     ]
@@ -498,31 +454,32 @@ Authorization: Bearer <token>
 }
 ```
 
-### Get Single Share
+### Get Share by ID
 ```http
-GET /api/v1/team/shares/:id
-Authorization: Bearer <token>
+GET /api/v1/team/shares/{id}
+Authorization: Bearer <jwt-token>
 ```
 
 **Response:**
 ```json
 {
   "data": {
-    "id": "share-uuid",
-    "todo_id": "todo-uuid",
-    "user_id": "target-user-uuid",
-    "permission": "read",
-    "shared_by": "user-uuid",
-    "created_at": "2024-01-13T10:00:00Z"
+    "share": {
+      "id": "share-uuid",
+      "todo_id": "todo-uuid",
+      "user_id": "user-uuid",
+      "permission": "read",
+      "created_at": "2024-01-13T10:00:00Z"
+    }
   }
 }
 ```
 
 ### Update Share Permission
 ```http
-PUT /api/v1/team/shares/:id
+PUT /api/v1/team/shares/{id}
+Authorization: Bearer <jwt-token>
 Content-Type: application/json
-Authorization: Bearer <token>
 
 {
   "permission": "write"
@@ -533,137 +490,208 @@ Authorization: Bearer <token>
 ```json
 {
   "data": {
-    "id": "share-uuid",
-    "todo_id": "todo-uuid",
-    "user_id": "target-user-uuid",
-    "permission": "write",
-    "shared_by": "user-uuid",
-    "created_at": "2024-01-13T10:00:00Z"
+    "share": {
+      "id": "share-uuid",
+      "todo_id": "todo-uuid",
+      "user_id": "user-uuid",
+      "permission": "write",
+      "created_at": "2024-01-13T10:00:00Z"
+    }
   }
 }
 ```
 
 ### Delete Share
 ```http
-DELETE /api/v1/team/shares/:id
-Authorization: Bearer <token>
+DELETE /api/v1/team/shares/{id}
+Authorization: Bearer <jwt-token>
 ```
 
 **Response:**
 ```json
 {
   "data": {
-    "success": true
+    "message": "Share deleted successfully"
   }
 }
 ```
 
-## WebSocket API
+## WebSocket API (Temporarily Disabled)
 
-### Connect to Todo Updates
+> **Note**: WebSocket functionality is currently disabled to simplify deployment. It can be re-enabled when needed.
+
+### TODO Statistics
 ```http
-GET /ws/v1/todo/:id
-Authorization: Bearer <token>
+GET /ws/v1/todo/{id}/stats
+Authorization: Bearer <jwt-token>
 ```
 
-**Response (Placeholder):**
-```json
-{
-  "message": "WebSocket endpoint",
-  "todo_id": "todo-uuid",
-  "user_id": "user-uuid",
-  "note": "In production, this would upgrade to a WebSocket connection"
-}
+### TODO Users
+```http
+GET /ws/v1/todo/{id}/users
+Authorization: Bearer <jwt-token>
 ```
 
-**WebSocket Events (Production):**
-- `todo_updated` - Todo modified
-- `comment_added` - New comment
-- `user_joined` - User viewing todo
-- `user_left` - User stopped viewing
-
-## Error Handling
-
-### Common Error Codes
-- `UNAUTHORIZED` - Invalid or missing authentication
-- `NOT_FOUND` - Resource not found
-- `VALIDATION_ERROR` - Invalid request data
-- `RATE_LIMIT_EXCEEDED` - Too many requests
-- `FORBIDDEN` - Insufficient permissions
-- `INTERNAL_SERVER_ERROR` - Server error
-
-### Example Error Response
-```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Email is required"
-  }
-}
+### TODO Cleanup
+```http
+POST /ws/v1/todo/{id}/cleanup
+Authorization: Bearer <jwt-token>
 ```
 
-## Development
-
-### Code Structure
-```
-src/
-├── api/handlers/          # Route handlers
-│   ├── auth.ts           # Authentication endpoints
-│   ├── todo.ts           # Todo CRUD operations
-│   ├── media.ts          # File upload/download
-│   ├── team.ts           # Sharing and collaboration
-│   ├── websocket.ts      # Real-time connections
-│   └── system.ts         # System endpoints
-├── core/services/        # Business logic
-│   ├── auth-service.ts   # User authentication
-│   ├── todo-service.ts   # Todo operations
-│   ├── media-service.ts  # Media file management
-│   ├── share-service.ts  # Sharing functionality
-│   └── websocket-service.ts # Real-time management
-└── shared/errors/        # Error classes
+### TODO Connect
+```http
+GET /ws/v1/todo/{id}/connect
+Authorization: Bearer <jwt-token>
 ```
 
-### Adding New Endpoints
-1. Create handler in `src/api/handlers/`
-2. Add service logic in `src/core/services/`
-3. Define data models in `src/core/models/`
-4. Add validation in `src/shared/validation/`
+### TODO Update
+```http
+POST /ws/v1/todo/{id}/update
+Authorization: Bearer <jwt-token>
+```
+
+### TODO WebSocket
+```http
+GET /ws/v1/todo/{id}/ws
+Authorization: Bearer <jwt-token>
+```
+
+## Error Codes
+
+### Authentication Errors
+- `auth invalid credentials` - Invalid email or password
+- `auth token invalid` - Invalid or expired JWT token
+- `auth user not found` - User does not exist
+- `auth email exists` - Email already registered
+
+### Validation Errors
+- `validation invalid email` - Invalid email format
+- `validation invalid password` - Password does not meet requirements
+- `validation required field` - Required field is missing
+
+### Database Errors
+- `database query failed` - Database query execution failed
+- `database unique constraint` - Unique constraint violation
+
+### Business Logic Errors
+- `business resource not found` - Requested resource not found
+- `business operation not allowed` - Operation not permitted
+
+### System Errors
+- `system internal error` - Internal server error
+
+## Development Setup
+
+### Prerequisites
+- Node.js 20+
+- npm or yarn
+- Cloudflare account
+- Supabase account
+
+### Installation
+```bash
+cd backend
+npm install
+```
+
+### Environment Configuration
+Create a `.dev.vars` file in the backend directory:
+```env
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+JWT_SECRET=your_jwt_secret
+ENVIRONMENT=development
+```
+
+### Development
+```bash
+npm run dev
+```
 
 ### Testing
 ```bash
-# Run all tests
 npm test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run specific test file
-npm test -- src/__tests__/todo.test.ts
 ```
 
-### Environment Variables
-Set in `.dev.vars` for development:
-```
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-JWT_SECRET=your-jwt-secret
+### Linting
+```bash
+npm run lint
 ```
 
-## Rate Limiting
-
-API endpoints are rate limited to prevent abuse:
-- Authentication endpoints: 10 requests per minute
-- Todo management endpoints: 100 requests per minute
-- Media upload endpoints: 20 requests per minute
-
-## Security
-
-- JWT tokens expire after 24 hours
-- Refresh tokens expire after 30 days
-- All passwords are hashed using bcrypt
-- Database uses row-level security (RLS)
-- CORS is properly configured
+### Type Checking
+```bash
+npm run type-check
+```
 
 ## Deployment
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
+### Manual Deployment
+```bash
+npm run deploy
+```
+
+### CI/CD Deployment
+This project uses GitHub Actions for automated CI/CD:
+- Push to `dev` branch → Deploy to staging
+- Push to `main` branch → Deploy to production
+
+### Environment Variables
+Configure the following secrets in your deployment environment:
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+## Architecture
+
+### Tech Stack
+- **Framework**: Hono.js
+- **Language**: TypeScript
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: JWT
+- **Deployment**: Cloudflare Workers
+- **Testing**: Jest
+- **Linting**: ESLint + Google Code Style
+
+### Project Structure
+```
+backend/src/
+├── api/
+│   ├── handlers/          # API route handlers
+│   ├── middleware/        # Authentication and rate limiting
+├── core/
+│   ├── services/          # Business logic services
+│   ├── models/            # Data models
+│   ├── durable-objects/   # WebSocket Durable Objects
+├── shared/
+│   ├── errors/           # Error handling
+│   ├── validation/        # Input validation
+│   ├── config/           # Configuration
+└── __tests__/            # Test files
+```
+
+### Error Handling
+The project uses the `neverthrow` library for functional error handling:
+- Services return `Result<T, ErrorCode>`
+- Handlers convert service results to HTTP responses
+- Consistent error codes and messages
+
+## Contributing
+
+### Code Style
+- Follow Google TypeScript Style Guide
+- Use ESLint for code quality
+- Write tests for new functionality
+- Use meaningful commit messages
+
+### Testing
+- Write unit tests for services
+- Test error scenarios
+- Maintain test coverage
+
+### Documentation
+- Update this guide when adding new features
+- Document API changes
+- Include examples for new endpoints

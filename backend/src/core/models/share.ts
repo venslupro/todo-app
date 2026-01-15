@@ -21,18 +21,18 @@ export interface TodoShare {
 }
 
 /**
- * Create share DTO
+ * Create share data
  */
-export interface CreateShareDto {
+export interface CreateShare {
   todo_id: string;
   user_id: string;
   permission: SharePermission;
 }
 
 /**
- * Update share permission DTO
+ * Update share permission data
  */
-export interface UpdateShareDto {
+export interface UpdateShare {
   permission: SharePermission;
 }
 
