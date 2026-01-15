@@ -1,6 +1,6 @@
 // core/durable-objects/todo-websocket.ts
-// Durable Object implementation for WebSocket connections
-// Note: This is temporarily simplified due to type compatibility issues
+// Simplified WebSocket service for TODO rooms
+// Note: This is a temporary implementation until Durable Objects type issues are resolved
 
 interface WebSocketConnection {
   userId: string;

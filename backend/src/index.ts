@@ -89,7 +89,7 @@ class ApplicationRouter {
         console.error('HTTPException:', error.message);
         return error.getResponse();
       }
-      
+
       console.error('Unhandled error:', error);
       return c.json(
         {
