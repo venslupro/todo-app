@@ -133,11 +133,11 @@ jobs:
         key: build-${{ github.sha }}
         
     - name: 🚀 Deploy to Cloudflare Workers (Staging)
-      uses: cloudflare/wrangler-action@v3
+      uses: cloudflare/wrangler-action@v4
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        command: deploy
+        command: deploy --env=staging
         workingDirectory: ${{ env.WORKING_DIRECTORY }}
       env:
         supabase_url: ${{ vars.SUPABASE_URL }}
@@ -147,9 +147,7 @@ jobs:
     - name: 📝 Deployment Summary
       run: |
         echo "✅ Successfully deployed to Staging Environment"
-        echo "🔗 Worker URL: https://staging.your-worker.workers.dev"
-        echo "📊 GitHub Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-      if: success()
+        echo "URL: https://stg-todo-worker.venslu-pro.workers.dev"
 
   deploy-production:
     name: 🚀 Deploy to Production
@@ -178,11 +176,11 @@ jobs:
         echo "🔍 Last commit: ${{ github.event.head_commit.message }}"
         
     - name: 🚀 Deploy to Cloudflare Workers (Production)
-      uses: cloudflare/wrangler-action@v3
+      uses: cloudflare/wrangler-action@v4
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        command: deploy
+        command: deploy --env=production
         workingDirectory: ${{ env.WORKING_DIRECTORY }}
       env:
         supabase_url: ${{ vars.SUPABASE_URL }}
