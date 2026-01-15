@@ -73,7 +73,7 @@ router.post('/register', async (c) => {
     const result = await authService.register(body);
 
     if (result.isErr()) {
-      return new HttpExceptions.BadRequestException(`Bad Request`, result.error).getResponse();
+      return new HttpExceptions.BadRequestException('Bad Request', result.error).getResponse();
     }
 
     return c.json(new HttpExceptions.SuccessResponse(result.value), 201);
