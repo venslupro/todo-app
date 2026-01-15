@@ -11,9 +11,9 @@ compatibility_flags = ["nodejs_compat"]
 # class_name = "TodoWebSocketDurableObject"
 
 # Durable Objects migrations - delete existing Durable Objects
-[[migrations]]
-tag = "v2"
-deleted_classes = ["TodoWebSocketDurableObject"]
+# [[migrations]]
+# tag = "v2"
+# deleted_classes = ["TodoWebSocketDurableObject"]
 
 # Observability configuration for Wrangler v4
 [observability]
