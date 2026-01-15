@@ -92,7 +92,7 @@ export class MediaService {
     } else if (MimeTypes[MediaType.VIDEO].includes(dto.mime_type)) {
       mediaType = MediaType.VIDEO;
     } else {
-      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL); // 使用验证错误代码
+      return errResult(ErrorCode.VALIDATION_INVALID_EMAIL); // Using validation error code
     }
 
     // Validate file size
