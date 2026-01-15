@@ -19,7 +19,7 @@ describe('Validator', () => {
     it('should return error for invalid email addresses', () => {
       const result = Validator.validateEmail('invalid');
       expect(result.isErr()).toBe(true);
-      
+
       const result2 = Validator.validateEmail('@example.com');
       expect(result2.isErr()).toBe(true);
 
