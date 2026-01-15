@@ -133,7 +133,7 @@ jobs:
         key: build-${{ github.sha }}
         
     - name: 🚀 Deploy to Cloudflare Workers (Staging)
-      uses: cloudflare/wrangler-action@v4
+      uses: cloudflare/wrangler-action@v3
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -176,7 +176,7 @@ jobs:
         echo "🔍 Last commit: ${{ github.event.head_commit.message }}"
         
     - name: 🚀 Deploy to Cloudflare Workers (Production)
-      uses: cloudflare/wrangler-action@v4
+      uses: cloudflare/wrangler-action@v3
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
