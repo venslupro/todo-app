@@ -79,9 +79,9 @@ router.post('/register', async (c) => {
     return c.json(new HttpExceptions.SuccessResponse(result.value), 201);
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Registration failed', error);
+    return new HttpExceptions.InternalServerException('Registration failed', error).getResponse();
   }
 });
 
@@ -103,9 +103,9 @@ router.post('/login', async (c) => {
     return c.json(new HttpExceptions.SuccessResponse(result.value));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Login failed', error);
+    return new HttpExceptions.InternalServerException('Login failed', error).getResponse();
   }
 });
 
@@ -131,9 +131,9 @@ router.post('/refresh', async (c) => {
     return c.json(new HttpExceptions.SuccessResponse(result.value));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Token refresh failed', error);
+    return new HttpExceptions.InternalServerException('Token refresh failed', error).getResponse();
   }
 });
 
@@ -149,9 +149,9 @@ router.post('/logout', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse({success: true}));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Logout failed', error);
+    return new HttpExceptions.InternalServerException('Logout failed', error).getResponse();
   }
 });
 
@@ -174,9 +174,9 @@ router.get('/me', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse(result.value));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Get user failed', error);
+    return new HttpExceptions.InternalServerException('Get user failed', error).getResponse();
   }
 });
 

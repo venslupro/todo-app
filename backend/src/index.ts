@@ -1,4 +1,5 @@
 import {Hono} from 'hono';
+import {HTTPException} from 'hono/http-exception';
 import {HonoAppType} from './shared/types/hono-types';
 
 import {corsMiddleware} from './api/middleware/cors';
@@ -80,6 +81,24 @@ class ApplicationRouter {
           },
         },
         404,
+      );
+    });
+
+    this.app.onError((error: unknown, c) => {
+      if (error instanceof HTTPException) {
+        console.error('HTTPException:', error.message);
+        return error.getResponse();
+      }
+      
+      console.error('Unhandled error:', error);
+      return c.json(
+        {
+          error: {
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'An internal server error occurred',
+          },
+        },
+        500,
       );
     });
   }

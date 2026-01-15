@@ -61,9 +61,9 @@ router.post('/shares', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse(result.value), 201);
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Create share failed', error);
+    return new HttpExceptions.InternalServerException('Create share failed', error).getResponse();
   }
 });
 
@@ -95,9 +95,9 @@ router.get('/shares', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse({shares: result.value}));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Get shares failed', error);
+    return new HttpExceptions.InternalServerException('Get shares failed', error).getResponse();
   }
 });
 
@@ -121,9 +121,9 @@ router.get('/shares/:id', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse(result.value));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Get share failed', error);
+    return new HttpExceptions.InternalServerException('Get share failed', error).getResponse();
   }
 });
 
@@ -148,9 +148,9 @@ router.put('/shares/:id', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse(result.value));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Update share failed', error);
+    return new HttpExceptions.InternalServerException('Update share failed', error).getResponse();
   }
 });
 
@@ -174,9 +174,9 @@ router.delete('/shares/:id', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse({success: true}));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Delete share failed', error);
+    return new HttpExceptions.InternalServerException('Delete share failed', error).getResponse();
   }
 });
 

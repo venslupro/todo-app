@@ -68,9 +68,9 @@ router.get('/', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse({media: result.value}));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Get media list failed', error);
+    return new HttpExceptions.InternalServerException('Get media list failed', error).getResponse();
   }
 });
 
@@ -100,9 +100,9 @@ router.post('/upload-url', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse(result.value));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Get upload URL failed', error);
+    return new HttpExceptions.InternalServerException('Get upload URL failed', error).getResponse();
   }
 });
 
@@ -122,9 +122,9 @@ router.post('/:id/confirm', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse({media}));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Confirm upload failed', error);
+    return new HttpExceptions.InternalServerException('Confirm upload failed', error).getResponse();
   }
 });
 
@@ -144,9 +144,9 @@ router.get('/:id/url', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse({url}));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Get media URL failed', error);
+    return new HttpExceptions.InternalServerException('Get media URL failed', error).getResponse();
   }
 });
 
@@ -166,9 +166,9 @@ router.delete('/:id', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse({success: true}));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Delete media failed', error);
+    return new HttpExceptions.InternalServerException('Delete media failed', error).getResponse();
   }
 });
 

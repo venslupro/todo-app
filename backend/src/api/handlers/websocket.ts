@@ -4,8 +4,7 @@ import {jwt} from 'hono/jwt';
 import {HonoAppType} from '../../shared/types/hono-types';
 import {WebSocketService} from '../../core/services/websocket-service';
 import {AppConfig} from '../../shared/config/config';
-import {TodoWebSocketDurableObject} from '../../core/durable-objects/todo-websocket';
-import type {DurableObjectNamespace} from '@cloudflare/workers-types';
+import {TodoWebSocketService} from '../../core/durable-objects/todo-websocket';
 import {
   WebSocketResponseUtil,
   WebSocketAuthError,
@@ -23,13 +22,13 @@ type JwtVariables = {
     exp: number;
   };
 };
-// Define Durable Object bindings
-type DurableObjectBindings = {
-  TODO_WEBSOCKET: DurableObjectNamespace<TodoWebSocketDurableObject>;
+// Define WebSocket service type
+type WebSocketServiceType = {
+  todoWebSocketServices: Map<string, TodoWebSocketService>;
 };
+
 const router = new Hono<HonoAppType & {
   Variables: JwtVariables;
-  Bindings: DurableObjectBindings;
 }>();
 /**
  * Creates a WebSocketService instance.
@@ -39,12 +38,10 @@ function createWebSocketService(_c: {env: Record<string, unknown>}): WebSocketSe
   return new WebSocketService();
 }
 /**
- * Creates a Durable Object stub for the TODO room.
+ * Creates a WebSocket service for the TODO room.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function createTodoWebSocketStub(c: any, todoId: string) {
-  const id = c.env.TODO_WEBSOCKET.idFromName(todoId);
-  return c.env.TODO_WEBSOCKET.get(id);
+function createTodoWebSocketService(todoId: string): TodoWebSocketService {
+  return new TodoWebSocketService(todoId);
 }
 
 /**
@@ -93,15 +90,13 @@ router.get('/todo/:id/stats', jwtMiddleware, async (c) => {
       const response = WebSocketResponseUtil.error(error, todoId, userId);
       return c.json(response);
     }
-    // Get room statistics from Durable Object
-    const todoWebSocketStub = createTodoWebSocketStub(c, todoId);
-    const statsResponse = await todoWebSocketStub.fetch('/stats');
-    if (!statsResponse.ok) {
-      const error = new WebSocketRoomError('Failed to get room stats');
-      const response = WebSocketResponseUtil.error(error, todoId, userId);
-      return c.json(response);
-    }
-    const stats = await statsResponse.json();
+    // Get room statistics from WebSocket service
+    const todoWebSocketService = createTodoWebSocketService(todoId);
+    const stats = {
+      userCount: todoWebSocketService.getUserCount(),
+      users: todoWebSocketService.getUsers(),
+      roomInfo: todoWebSocketService.getRoomInfo(),
+    };
     const response = WebSocketResponseUtil.roomStats(stats, todoId);
     return c.json(response);
   } catch (error) {
@@ -127,15 +122,9 @@ router.get('/todo/:id/users', jwtMiddleware, async (c) => {
       const response = WebSocketResponseUtil.error(error, todoId, userId);
       return c.json(response);
     }
-    // Get room users from Durable Object
-    const todoWebSocketStub = createTodoWebSocketStub(c, todoId);
-    const usersResponse = await todoWebSocketStub.fetch('/users');
-    if (!usersResponse.ok) {
-      const error = new WebSocketRoomError('Failed to get room users');
-      const response = WebSocketResponseUtil.error(error, todoId, userId);
-      return c.json(response);
-    }
-    const users = await usersResponse.json();
+    // Get room users from WebSocket service
+    const todoWebSocketService = createTodoWebSocketService(todoId);
+    const users = todoWebSocketService.getUsers();
     const response = WebSocketResponseUtil.roomUsers(users, todoId);
     return c.json(response);
   } catch (error) {
@@ -161,16 +150,9 @@ router.post('/todo/:id/cleanup', jwtMiddleware, async (c) => {
       const response = WebSocketResponseUtil.error(error, todoId, userId);
       return c.json(response);
     }
-    // Cleanup inactive connections in Durable Object
-    const todoWebSocketStub = createTodoWebSocketStub(c, todoId);
-    const cleanupResponse = await todoWebSocketStub.fetch('/cleanup', {
-      method: 'POST',
-    });
-    if (!cleanupResponse.ok) {
-      const error = new WebSocketRoomError('Failed to cleanup connections');
-      const response = WebSocketResponseUtil.error(error, todoId, userId);
-      return c.json(response);
-    }
+    // Cleanup inactive connections in WebSocket service
+    const todoWebSocketService = createTodoWebSocketService(todoId);
+    await todoWebSocketService.cleanupInactiveUsers();
     const response = WebSocketResponseUtil.success({success: true}, todoId, userId);
     return c.json(response);
   } catch (error) {
@@ -216,11 +198,10 @@ router.get('/todo/:id/connect', jwtMiddleware, async (c) => {
       return c.json(response);
     }
     const userInfo = userResult.value;
-    // Initialize TODO room in Durable Object
-    const todoWebSocketStub = createTodoWebSocketStub(c, todoId);
-    await todoWebSocketStub.initializeRoom(todoId);
+    // Initialize TODO room in WebSocket service
+    const todoWebSocketService = createTodoWebSocketService(todoId);
     // Add user to the TODO room
-    await todoWebSocketStub.addUser(userId, {
+    await todoWebSocketService.addUser(userId, {
       username: userInfo.email, // Using email as username for now
       email: userInfo.email,
     });
@@ -265,8 +246,13 @@ router.post('/todo/:id/update', jwtMiddleware, async (c) => {
       return c.json(response);
     }
     // Broadcast update to all users in the room
-    const todoWebSocketStub = createTodoWebSocketStub(c, todoId);
-    await todoWebSocketStub.handleTodoUpdate(body.data || {}, userId);
+    const todoWebSocketService = createTodoWebSocketService(todoId);
+    await todoWebSocketService.broadcastMessage({
+      type: 'todo_update',
+      payload: body.data || {},
+      timestamp: Date.now(),
+      sender: userId,
+    });
     const response = WebSocketResponseUtil.todoUpdated(body.data || {}, todoId, userId);
     return c.json(response);
   } catch (error) {

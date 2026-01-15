@@ -82,9 +82,9 @@ router.get('/', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse(result.value));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Get todos failed', error);
+    return new HttpExceptions.InternalServerException('Get todos failed', error).getResponse();
   }
 });
 
@@ -108,9 +108,9 @@ router.post('/', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse(result.value), 201);
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Create todo failed', error);
+    return new HttpExceptions.InternalServerException('Create todo failed', error).getResponse();
   }
 });
 
@@ -134,9 +134,9 @@ router.get('/:id', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse(result.value));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Get todo failed', error);
+    return new HttpExceptions.InternalServerException('Get todo failed', error).getResponse();
   }
 });
 
@@ -161,9 +161,9 @@ router.put('/:id', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse(result.value));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Update todo failed', error);
+    return new HttpExceptions.InternalServerException('Update todo failed', error).getResponse();
   }
 });
 
@@ -187,9 +187,9 @@ router.delete('/:id', jwtMiddleware, async (c) => {
     return c.json(new HttpExceptions.SuccessResponse({success: true}));
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Delete todo failed', error);
+    return new HttpExceptions.InternalServerException('Delete todo failed', error).getResponse();
   }
 });
 
