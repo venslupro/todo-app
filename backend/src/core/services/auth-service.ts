@@ -139,7 +139,8 @@ export class AuthService {
     }
 
     // Verify the new session is valid by getting the user
-    const {data: {user}, error: userError} = await this.supabase.auth.getUser(data.session.access_token);
+    const {data: {user}, error: userError} = await this.supabase.auth
+      .getUser(data.session.access_token);
 
     if (userError || !user) {
       console.error('User validation after token refresh failed:', userError);
