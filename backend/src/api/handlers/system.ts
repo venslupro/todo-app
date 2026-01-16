@@ -1,11 +1,11 @@
 // api/handlers/system.ts
 import {Hono} from 'hono';
 import {SuccessResponse} from '../../shared/errors/http-exception';
-import {SupabaseConfig} from '../../shared/types/hono-types';
+import {EnvironmentConfig} from '../../shared/types/hono-types';
 import {BusinessLogger} from '../middleware/logger';
 
 const router = new Hono<{
-  Bindings: SupabaseConfig;
+  Bindings: EnvironmentConfig;
   Variables: {};
 }>();
 

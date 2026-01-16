@@ -10,7 +10,7 @@ import {
   SuccessResponse,
   UnauthorizedException,
 } from '../../shared/errors/http-exception';
-import {SupabaseConfig} from '../../shared/types/hono-types';
+import {EnvironmentConfig} from '../../shared/types/hono-types';
 import {ErrorCode} from '../../shared/errors/error-codes';
 import {BusinessLogger} from '../middleware/logger';
 import {jwtMiddleware} from '../middleware/auth-middleware';
@@ -24,7 +24,7 @@ type JwtVariables = {
 };
 
 const router = new Hono<{
-  Bindings: SupabaseConfig;
+  Bindings: EnvironmentConfig;
   Variables: JwtVariables;
 }>();
 
@@ -33,7 +33,7 @@ const router = new Hono<{
  */
 function createAuthService(
   c: {
-    env: SupabaseConfig;
+    env: EnvironmentConfig;
   },
 ): AuthService {
   const envConfig = {
@@ -54,6 +54,46 @@ router.post('/register', async (c) => {
   try {
     const body = await c.req.json();
 
+    // Validate request body fields
+    const allowedFields = ['email', 'password', 'username', 'full_name'];
+    const receivedFields = Object.keys(body);
+    const invalidFields = receivedFields.filter((field) => !allowedFields.includes(field));
+
+    if (invalidFields.length > 0) {
+      BusinessLogger.warn('Invalid fields in registration request', {
+        invalidFields: invalidFields,
+        allowedFields: allowedFields,
+        environment: c.env.environment || 'unknown',
+      });
+
+      const exception = new BadRequestException(
+        `Invalid field(s): ${invalidFields.join(', ')}. ` +
+        `Supported fields: ${allowedFields.join(', ')}`,
+      );
+      return exception.getResponse();
+    }
+
+    // Check for required fields
+    if (!body.email) {
+      BusinessLogger.warn('Missing required field in registration request', {
+        missingField: 'email',
+        environment: c.env.environment || 'unknown',
+      });
+
+      const exception = new BadRequestException('Email is required for registration');
+      return exception.getResponse();
+    }
+
+    if (!body.password) {
+      BusinessLogger.warn('Missing required field in registration request', {
+        missingField: 'password',
+        environment: c.env.environment || 'unknown',
+      });
+
+      const exception = new BadRequestException('Password is required for registration');
+      return exception.getResponse();
+    }
+
     BusinessLogger.debug('User registration attempt', {
       email: body.email,
       environment: c.env.environment || 'unknown',
@@ -63,19 +103,40 @@ router.post('/register', async (c) => {
     const result = await authService.register(body);
 
     if (result.isErr()) {
+      // Map error codes to user-friendly messages
+      let errorMessage: string;
+      switch (result.error) {
+      case ErrorCode.AUTH_EMAIL_EXISTS:
+        errorMessage = 'Email address is already registered';
+        break;
+      case ErrorCode.VALIDATION_INVALID_EMAIL:
+        errorMessage = 'Invalid email format. Please provide a valid email address';
+        break;
+      case ErrorCode.VALIDATION_INVALID_PASSWORD:
+        errorMessage = 'Password must be at least 8 characters long and contain ' +
+          'uppercase, lowercase letters and numbers';
+        break;
+      case ErrorCode.VALIDATION_REQUIRED_FIELD:
+        errorMessage = 'Required field is missing or invalid';
+        break;
+      default:
+        errorMessage = 'Registration failed. Please try again';
+      }
+
       BusinessLogger.warn('User registration failed', {
         email: body.email,
         error: result.error,
+        errorMessage: errorMessage,
         errorType: result.error === ErrorCode.AUTH_EMAIL_EXISTS ?
           'EMAIL_EXISTS' : 'VALIDATION_ERROR',
       });
 
       // Handle email already exists case specifically
       if (result.error === ErrorCode.AUTH_EMAIL_EXISTS) {
-        const exception = new ConflictException('Email address is already registered');
+        const exception = new ConflictException(errorMessage);
         return exception.getResponse();
       }
-      const exception = new BadRequestException(result.error);
+      const exception = new BadRequestException(errorMessage);
       return exception.getResponse();
     }
 

@@ -3,7 +3,7 @@
 /**
  * Supabase configuration type
  */
-export type SupabaseConfig = {
+export type EnvironmentConfig = {
   supabase_url: string;
   supabase_service_role_key: string;
   supabase_anon_key: string;
@@ -47,7 +47,7 @@ type DurableObjectStub = {
  * Hono application type alias - Complies with Google Code Style line length limit
  */
 export type HonoAppType = {
-  Bindings: SupabaseConfig & {
+  Bindings: EnvironmentConfig & {
     name: string;
     log_level?: 'error' | 'warn' | 'info' | 'debug';
     TODO_WEBSOCKET?: DurableObjectNamespace;

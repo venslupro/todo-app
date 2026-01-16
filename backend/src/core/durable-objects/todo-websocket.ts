@@ -2,7 +2,7 @@
 // Simplified WebSocket service for TODO rooms
 // Note: This is a temporary implementation until Durable Objects type issues are resolved
 
-import {SupabaseConfig} from '../../shared/types/hono-types';
+import {EnvironmentConfig} from '../../shared/types/hono-types';
 
 interface WebSocketConnection {
   userId: string;
@@ -26,7 +26,7 @@ interface WebSocketMessage {
   sender?: string;
 }
 
-export interface Env extends SupabaseConfig {}
+export interface Env extends EnvironmentConfig {}
 
 /**
  * Simplified WebSocket service for TODO rooms

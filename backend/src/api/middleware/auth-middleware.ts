@@ -2,7 +2,7 @@ import {Context, Next} from 'hono';
 import {UnauthorizedException} from '../../shared/errors/http-exception';
 import {SupabaseClient} from '../../core/supabase/client';
 import {AppConfig} from '../../shared/config/app-config';
-import {SupabaseConfig} from '../../shared/types/hono-types';
+import {EnvironmentConfig} from '../../shared/types/hono-types';
 
 // Define JWT variables type for type safety
 type JwtVariables = {
@@ -17,7 +17,7 @@ type JwtVariables = {
  * Extracts token from Authorization header and validates using Supabase.
  */
 export const jwtMiddleware = async (c: Context<{
-  Bindings: SupabaseConfig;
+  Bindings: EnvironmentConfig;
   Variables: JwtVariables;
 }>, next: Next) => {
   try {
@@ -65,7 +65,7 @@ export const jwtMiddleware = async (c: Context<{
  * Optional JWT middleware - allows public access but sets user context if token is provided
  */
 export const optionalJwtMiddleware = async (c: Context<{
-  Bindings: SupabaseConfig;
+  Bindings: EnvironmentConfig;
   Variables: JwtVariables;
 }>, next: Next) => {
   try {
