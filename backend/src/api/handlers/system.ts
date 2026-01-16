@@ -2,6 +2,7 @@
 import {Hono} from 'hono';
 import {SuccessResponse} from '../../shared/errors/http-exception';
 import {SupabaseConfig} from '../../shared/types/hono-types';
+import {BusinessLogger} from '../middleware/logger';
 
 const router = new Hono<{
   Bindings: SupabaseConfig;
@@ -13,6 +14,11 @@ const router = new Hono<{
  * GET /
  */
 router.get('/', (c) => {
+  BusinessLogger.info('Health check requested', {
+    environment: c.env.environment || 'unknown',
+    timestamp: new Date().toISOString()
+  });
+  
   const response = new SuccessResponse({
     status: 'healthy',
     timestamp: new Date().toISOString(),

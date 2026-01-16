@@ -5,6 +5,7 @@ import {InternalServerException, NotFoundException} from './shared/errors/http-e
 
 import {corsMiddleware} from './api/middleware/cors';
 import {globalRateLimit} from './api/middleware/rate-limit';
+import {loggerMiddleware} from './api/middleware/logger';
 
 import systemRoutes from './api/handlers/system';
 import authRoutes from './api/handlers/auth';
@@ -33,6 +34,7 @@ class ApplicationRouter {
    * Sets up global middleware for the application.
    */
   private setupGlobalMiddleware(): void {
+    this.app.use('*', loggerMiddleware);
     this.app.use('*', corsMiddleware);
   }
 
@@ -73,12 +75,12 @@ class ApplicationRouter {
    * Sets up error handling for the application.
    */
   private setupErrorHandling(): void {
-    this.app.notFound((c) => {
+    this.app.notFound(() => {
       const exception = new NotFoundException('The requested resource was not found');
       return exception.getResponse();
     });
 
-    this.app.onError((error: unknown, c) => {
+    this.app.onError((error: unknown) => {
       if (error instanceof HTTPException) {
         // Log HTTP exceptions for debugging
         // console.error('HTTPException:', error.message);

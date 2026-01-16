@@ -16,6 +16,7 @@ import {
   SuccessResponse,
   NotFoundException,
 } from '../../shared/errors/http-exception';
+import {BusinessLogger} from '../middleware/logger';
 
 // Define JWT variables type for type safety
 type JwtVariables = {
@@ -60,6 +61,11 @@ router.get('/', jwtMiddleware, async (c) => {
     const userId = payload.sub;
     const query = c.req.query();
 
+    BusinessLogger.info('Fetching TODO list', {
+      userId: userId,
+      queryParams: query
+    });
+
     const sortBy = query['sort_by'];
     const validSortBy = ['name', 'priority', 'due_date', 'created_at', 'updated_at'];
 
@@ -82,13 +88,26 @@ router.get('/', jwtMiddleware, async (c) => {
     const result = await todoService.getTodos(userId, params);
 
     if (result.isErr()) {
+      BusinessLogger.error('Failed to fetch TODO list', new Error(result.error), {
+        userId: userId,
+        error: result.error
+      });
       const exception = new BadRequestException(result.error);
       return exception.getResponse();
     }
 
+    BusinessLogger.info('Successfully fetched TODO list', {
+      userId: userId,
+      todoCount: result.value.todos.length,
+      totalCount: result.value.total
+    });
+
     const response = new SuccessResponse(result.value);
     return response.getResponse();
   } catch (error) {
+    BusinessLogger.error('Unexpected error while fetching TODO list', error as Error, {
+      userId: c.get('jwtPayload')?.sub
+    });
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
@@ -107,17 +126,36 @@ router.post('/', jwtMiddleware, async (c) => {
     const userId = payload.sub;
     const body = await c.req.json();
 
+    BusinessLogger.info('Creating new TODO', {
+      userId: userId,
+      todoData: {name: body.name, priority: body.priority, status: body.status}
+    });
+
     const todoService = createTodoService(c);
     const result = await todoService.create(userId, body);
 
     if (result.isErr()) {
+      BusinessLogger.error('Failed to create TODO', new Error(result.error), {
+        userId: userId,
+        error: result.error,
+        todoData: body
+      });
       const exception = new BadRequestException(result.error);
       return exception.getResponse();
     }
 
+    BusinessLogger.info('Successfully created TODO', {
+      userId: userId,
+      todoId: result.value.id,
+      todoName: result.value.name
+    });
+
     const response = new SuccessResponse(result.value);
     return response.getResponse();
   } catch (error) {
+    BusinessLogger.error('Unexpected error while creating TODO', error as Error, {
+      userId: c.get('jwtPayload')?.sub
+    });
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
@@ -136,17 +174,37 @@ router.get('/:id', jwtMiddleware, async (c) => {
     const userId = payload.sub;
     const todoId = c.req.param('id');
 
+    BusinessLogger.info('Fetching single TODO', {
+      userId: userId,
+      todoId: todoId
+    });
+
     const todoService = createTodoService(c);
     const result = await todoService.getTodo(todoId, userId);
 
     if (result.isErr()) {
+      BusinessLogger.warn('TODO not found', {
+        userId: userId,
+        todoId: todoId,
+        error: result.error
+      });
       const exception = new NotFoundException(result.error);
       return exception.getResponse();
     }
 
+    BusinessLogger.info('Successfully fetched TODO', {
+      userId: userId,
+      todoId: todoId,
+      todoName: result.value.name
+    });
+
     const response = new SuccessResponse(result.value);
     return response.getResponse();
   } catch (error) {
+    BusinessLogger.error('Unexpected error while fetching TODO', error as Error, {
+      userId: c.get('jwtPayload')?.sub,
+      todoId: c.req.param('id')
+    });
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
@@ -166,17 +224,39 @@ router.put('/:id', jwtMiddleware, async (c) => {
     const todoId = c.req.param('id');
     const body = await c.req.json();
 
+    BusinessLogger.info('Updating TODO', {
+      userId: userId,
+      todoId: todoId,
+      updateData: Object.keys(body)
+    });
+
     const todoService = createTodoService(c);
     const result = await todoService.updateTodo(todoId, userId, body);
 
     if (result.isErr()) {
+      BusinessLogger.error('Failed to update TODO', new Error(result.error), {
+        userId: userId,
+        todoId: todoId,
+        error: result.error,
+        updateData: body
+      });
       const exception = new BadRequestException(result.error);
       return exception.getResponse();
     }
 
+    BusinessLogger.info('Successfully updated TODO', {
+      userId: userId,
+      todoId: todoId,
+      todoName: result.value.name
+    });
+
     const response = new SuccessResponse(result.value);
     return response.getResponse();
   } catch (error) {
+    BusinessLogger.error('Unexpected error while updating TODO', error as Error, {
+      userId: c.get('jwtPayload')?.sub,
+      todoId: c.req.param('id')
+    });
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
@@ -195,17 +275,36 @@ router.delete('/:id', jwtMiddleware, async (c) => {
     const userId = payload.sub;
     const todoId = c.req.param('id');
 
+    BusinessLogger.info('Deleting TODO', {
+      userId: userId,
+      todoId: todoId
+    });
+
     const todoService = createTodoService(c);
     const result = await todoService.deleteTodo(todoId, userId);
 
     if (result.isErr()) {
+      BusinessLogger.error('Failed to delete TODO', new Error(result.error), {
+        userId: userId,
+        todoId: todoId,
+        error: result.error
+      });
       const exception = new BadRequestException(result.error);
       return exception.getResponse();
     }
 
+    BusinessLogger.info('Successfully deleted TODO', {
+      userId: userId,
+      todoId: todoId
+    });
+
     const response = new SuccessResponse({success: true});
     return response.getResponse();
   } catch (error) {
+    BusinessLogger.error('Unexpected error while deleting TODO', error as Error, {
+      userId: c.get('jwtPayload')?.sub,
+      todoId: c.req.param('id')
+    });
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
