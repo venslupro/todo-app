@@ -145,9 +145,9 @@ export class AuthService {
           message: error.message,
           status: error.status,
           name: error.name,
-          refreshTokenLength: refreshToken.length
+          refreshTokenLength: refreshToken.length,
         });
-        
+
         // Handle specific Supabase auth errors
         if (error.message?.includes('Refresh token is not valid')) {
           return errResult(ErrorCode.AUTH_TOKEN_INVALID);
@@ -158,7 +158,7 @@ export class AuthService {
         if (error.message?.includes('expired')) {
           return errResult(ErrorCode.AUTH_TOKEN_EXPIRED);
         }
-        
+
         return errResult(ErrorCode.AUTH_TOKEN_INVALID);
       }
 
