@@ -85,7 +85,7 @@ export class AuthService {
     if (!dto.password || typeof dto.password !== 'string' || dto.password.trim().length === 0) {
       return errResult(ErrorCode.AUTH_INVALID_CREDENTIALS);
     }
-    
+
     const password = dto.password.trim();
 
     const {data, error} = await this.supabase.auth.signInWithPassword({
