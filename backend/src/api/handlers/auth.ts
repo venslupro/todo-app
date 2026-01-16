@@ -72,7 +72,7 @@ router.post('/register', async (c) => {
 
     BusinessLogger.debug('User registration attempt', {
       email: body.email,
-      environment: c.env.environment || 'unknown'
+      environment: c.env.environment || 'unknown',
     });
 
     const authService = createAuthService(c);
@@ -82,9 +82,10 @@ router.post('/register', async (c) => {
       BusinessLogger.warn('User registration failed', {
         email: body.email,
         error: result.error,
-        errorType: result.error === ErrorCode.AUTH_EMAIL_EXISTS ? 'EMAIL_EXISTS' : 'VALIDATION_ERROR'
+        errorType: result.error === ErrorCode.AUTH_EMAIL_EXISTS ?
+          'EMAIL_EXISTS' : 'VALIDATION_ERROR',
       });
-      
+
       // Handle email already exists case specifically
       if (result.error === ErrorCode.AUTH_EMAIL_EXISTS) {
         const exception = new ConflictException('Email address is already registered');
@@ -97,14 +98,14 @@ router.post('/register', async (c) => {
     BusinessLogger.info('User registration successful', {
       userId: result.value.user.id,
       email: result.value.user.email,
-      environment: c.env.environment || 'unknown'
+      environment: c.env.environment || 'unknown',
     });
 
     const response = new SuccessResponse(result.value);
     return response.getResponse();
   } catch (error) {
     BusinessLogger.error('Unexpected error during user registration', error as Error, {
-      email: (await c.req.json()).email
+      email: (await c.req.json()).email,
     });
     if (error instanceof HTTPException) {
       return error.getResponse();
@@ -124,7 +125,7 @@ router.post('/login', async (c) => {
 
     BusinessLogger.debug('User login attempt', {
       email: body.email,
-      environment: c.env.environment || 'unknown'
+      environment: c.env.environment || 'unknown',
     });
 
     const authService = createAuthService(c);
@@ -134,7 +135,7 @@ router.post('/login', async (c) => {
       BusinessLogger.warn('User login failed', {
         email: body.email,
         error: result.error,
-        environment: c.env.environment || 'unknown'
+        environment: c.env.environment || 'unknown',
       });
       const exception = new UnauthorizedException(result.error);
       return exception.getResponse();
@@ -143,14 +144,14 @@ router.post('/login', async (c) => {
     BusinessLogger.info('User login successful', {
       userId: result.value.user.id,
       email: result.value.user.email,
-      environment: c.env.environment || 'unknown'
+      environment: c.env.environment || 'unknown',
     });
 
     const response = new SuccessResponse(result.value);
     return response.getResponse();
   } catch (error) {
     BusinessLogger.error('Unexpected error during user login', error as Error, {
-      email: (await c.req.json()).email
+      email: (await c.req.json()).email,
     });
     if (error instanceof HTTPException) {
       return error.getResponse();
@@ -170,7 +171,7 @@ router.post('/refresh', async (c) => {
 
     BusinessLogger.debug('Token refresh attempt', {
       hasRefreshToken: !!body.refresh_token,
-      environment: c.env.environment || 'unknown'
+      environment: c.env.environment || 'unknown',
     });
 
     if (!body.refresh_token) {
@@ -185,7 +186,7 @@ router.post('/refresh', async (c) => {
     if (result.isErr()) {
       BusinessLogger.warn('Token refresh failed', {
         error: result.error,
-        environment: c.env.environment || 'unknown'
+        environment: c.env.environment || 'unknown',
       });
       const exception = new UnauthorizedException(result.error);
       return exception.getResponse();
@@ -193,14 +194,14 @@ router.post('/refresh', async (c) => {
 
     BusinessLogger.info('Token refresh successful', {
       userId: result.value.user.id,
-      environment: c.env.environment || 'unknown'
+      environment: c.env.environment || 'unknown',
     });
 
     const response = new SuccessResponse(result.value);
     return response.getResponse();
   } catch (error) {
     BusinessLogger.error('Unexpected error during token refresh', error as Error, {
-      hasRefreshToken: !!(await c.req.json()).refresh_token
+      hasRefreshToken: !!(await c.req.json()).refresh_token,
     });
     if (error instanceof HTTPException) {
       return error.getResponse();
@@ -221,7 +222,7 @@ router.post('/logout', jwtMiddleware, async (c) => {
 
     BusinessLogger.debug('User logout attempt', {
       userId: userId,
-      environment: c.env.environment || 'unknown'
+      environment: c.env.environment || 'unknown',
     });
 
     const authService = createAuthService(c);
@@ -229,14 +230,14 @@ router.post('/logout', jwtMiddleware, async (c) => {
 
     BusinessLogger.info('User logout successful', {
       userId: userId,
-      environment: c.env.environment || 'unknown'
+      environment: c.env.environment || 'unknown',
     });
 
     const response = new SuccessResponse({success: true});
     return response.getResponse();
   } catch (error) {
     BusinessLogger.error('Unexpected error during user logout', error as Error, {
-      userId: c.get('jwtPayload')?.sub
+      userId: c.get('jwtPayload')?.sub,
     });
     if (error instanceof HTTPException) {
       return error.getResponse();
@@ -257,7 +258,7 @@ router.get('/me', jwtMiddleware, async (c) => {
 
     BusinessLogger.debug('Fetching current user information', {
       userId: userId,
-      environment: c.env.environment || 'unknown'
+      environment: c.env.environment || 'unknown',
     });
 
     const authService = createAuthService(c);
@@ -267,7 +268,7 @@ router.get('/me', jwtMiddleware, async (c) => {
       BusinessLogger.warn('Failed to fetch current user information', {
         userId: userId,
         error: result.error,
-        environment: c.env.environment || 'unknown'
+        environment: c.env.environment || 'unknown',
       });
       const exception = new UnauthorizedException(result.error);
       return exception.getResponse();
@@ -276,14 +277,14 @@ router.get('/me', jwtMiddleware, async (c) => {
     BusinessLogger.debug('Current user information fetched successfully', {
       userId: userId,
       email: result.value.email,
-      environment: c.env.environment || 'unknown'
+      environment: c.env.environment || 'unknown',
     });
 
     const response = new SuccessResponse(result.value);
     return response.getResponse();
   } catch (error) {
-    BusinessLogger.error('Unexpected error while fetching current user information', error as Error, {
-      userId: c.get('jwtPayload')?.sub
+    BusinessLogger.error('Unexpected error fetching current user info', error as Error, {
+      userId: c.get('jwtPayload')?.sub,
     });
     if (error instanceof HTTPException) {
       return error.getResponse();

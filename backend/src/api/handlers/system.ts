@@ -16,9 +16,9 @@ const router = new Hono<{
 router.get('/', (c) => {
   BusinessLogger.info('Health check requested', {
     environment: c.env.environment || 'unknown',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
-  
+
   const response = new SuccessResponse({
     status: 'healthy',
     timestamp: new Date().toISOString(),

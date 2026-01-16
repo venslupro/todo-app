@@ -1,4 +1,3 @@
-import {Context, Next} from 'hono';
 import {logger as honoLogger} from 'hono/logger';
 
 /**
