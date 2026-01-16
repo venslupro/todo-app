@@ -8,7 +8,12 @@ import {MediaService} from '../../core/services/media-service';
 import {
   MediaType,
 } from '../../core/models/media';
-import {BadRequestException, InternalServerException, SuccessResponse, ValidationException} from '../../shared/errors/http-exception';
+import {
+  BadRequestException,
+  InternalServerException,
+  SuccessResponse,
+  ValidationException,
+} from '../../shared/errors/http-exception';
 
 // Define JWT variables type for type safety
 type JwtVariables = {

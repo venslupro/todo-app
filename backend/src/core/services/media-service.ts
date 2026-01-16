@@ -2,7 +2,11 @@
 import {ErrorCode, Result, okResult, errResult} from '../../shared/errors/error-codes';
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
-import {InternalServerException, NotFoundException, ForbiddenException} from '../../shared/errors/http-exception';
+import {
+  InternalServerException,
+  NotFoundException,
+  ForbiddenException,
+} from '../../shared/errors/http-exception';
 import {
   Media,
   MediaType,

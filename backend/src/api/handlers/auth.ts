@@ -5,7 +5,12 @@ import {HTTPException} from 'hono/http-exception';
 import {Context, Next} from 'hono';
 import {AuthService} from '../../core/services/auth-service';
 import {AppConfig} from '../../shared/config/app-config';
-import {BadRequestException, InternalServerException, SuccessResponse, UnauthorizedException} from '../../shared/errors/http-exception';
+import {
+  BadRequestException,
+  InternalServerException,
+  SuccessResponse,
+  UnauthorizedException,
+} from '../../shared/errors/http-exception';
 import {SupabaseConfig} from '../../shared/types/hono-types';
 
 // Define JWT variables type for type safety

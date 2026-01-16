@@ -38,7 +38,7 @@ router.get('/health', (c) => {
  * Version information
  * GET /version
  */
-router.get('/version', (c) => {
+router.get('/version', () => {
   const response = new SuccessResponse({
     name: 'TODO API',
     version: '1.0.0',

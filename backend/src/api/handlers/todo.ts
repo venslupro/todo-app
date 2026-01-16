@@ -6,14 +6,16 @@ import {Context, Next} from 'hono';
 import {HonoAppType} from '../../shared/types/hono-types';
 import {TodoService} from '../../core/services/todo-service';
 import {
-  CreateTodo,
-  UpdateTodo,
-  TodoQueryParams,
   TodoStatus,
   TodoPriority,
 } from '../../core/models/todo';
 import {AppConfig} from '../../shared/config/app-config';
-import {BadRequestException, InternalServerException, SuccessResponse, NotFoundException} from '../../shared/errors/http-exception';
+import {
+  BadRequestException,
+  InternalServerException,
+  SuccessResponse,
+  NotFoundException,
+} from '../../shared/errors/http-exception';
 
 // Define JWT variables type for type safety
 type JwtVariables = {

@@ -8,7 +8,12 @@ import {ShareService} from '../../core/services/share-service';
 import {
   SharePermission,
 } from '../../core/models/share';
-import {BadRequestException, InternalServerException, SuccessResponse, NotFoundException} from '../../shared/errors/http-exception';
+import {
+  BadRequestException,
+  InternalServerException,
+  SuccessResponse,
+  NotFoundException,
+} from '../../shared/errors/http-exception';
 
 // Define JWT variables type for type safety
 type JwtVariables = {
