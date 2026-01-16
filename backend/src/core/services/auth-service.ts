@@ -80,11 +80,13 @@ export class AuthService {
     }
     const email = emailResult.value;
 
-    const passwordResult = Validator.sanitizeString(dto.password, 100);
-    if (passwordResult.isErr()) {
-      return errResult(passwordResult.error);
+    // For login, we should be more lenient with password validation
+    // and return authentication errors instead of validation errors
+    if (!dto.password || typeof dto.password !== 'string' || dto.password.trim().length === 0) {
+      return errResult(ErrorCode.AUTH_INVALID_CREDENTIALS);
     }
-    const password = passwordResult.value;
+    
+    const password = dto.password.trim();
 
     const {data, error} = await this.supabase.auth.signInWithPassword({
       email,
