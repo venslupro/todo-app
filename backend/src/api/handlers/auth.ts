@@ -1,6 +1,5 @@
 // api/handlers/auth.ts
 import {Hono} from 'hono';
-import {jwt} from 'hono/jwt';
 import {HTTPException} from 'hono/http-exception';
 import {Context, Next} from 'hono';
 import {AuthService} from '../../core/services/auth-service';
@@ -15,21 +14,18 @@ import {
 import {SupabaseConfig} from '../../shared/types/hono-types';
 import {ErrorCode} from '../../shared/errors/error-codes';
 import {BusinessLogger} from '../middleware/logger';
+import {jwtMiddleware} from '../middleware/auth-middleware';
 
 // Define JWT variables type for type safety
 type JwtVariables = {
   jwtPayload: {
     sub: string;
     email?: string;
-    iat: number;
-    exp: number;
   };
 };
 
 const router = new Hono<{
-  Bindings: SupabaseConfig & {
-    JWT_SECRET: string;
-  };
+  Bindings: SupabaseConfig;
   Variables: JwtVariables;
 }>();
 
@@ -51,16 +47,7 @@ function createAuthService(
   return new AuthService(appConfig);
 }
 
-/**
- * JWT middleware for protected routes.
- */
-const jwtMiddleware = (c: Context, next: Next) => {
-  const jwtMiddleware = jwt({
-    secret: c.env.JWT_SECRET,
-    alg: 'HS256',
-  });
-  return jwtMiddleware(c, next);
-};
+
 
 /**
  * User registration.

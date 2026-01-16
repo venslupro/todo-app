@@ -34,6 +34,7 @@ environment = "production"
 supabase_url = ""
 supabase_anon_key = ""
 supabase_service_role_key = ""
+jwt_secret = ""
 log_level = "info"   # "error" | "warn" | "info" | "debug"
 
 [env.staging]
@@ -42,6 +43,7 @@ environment = "staging"
 supabase_url = ""
 supabase_anon_key = ""
 supabase_service_role_key = ""
+jwt_secret = ""
 log_level = "debug"   # "error" | "warn" | "info" | "debug"
 
 # start workers locally
@@ -51,4 +53,5 @@ environment = "development"
 supabase_url = ""
 supabase_anon_key = ""
 supabase_service_role_key = ""
+jwt_secret = ""
 log_level = "debug"   # "error" | "warn" | "info" | "debug"

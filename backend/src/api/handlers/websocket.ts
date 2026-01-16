@@ -1,6 +1,5 @@
 // api/handlers/websocket.ts
 import {Hono} from 'hono';
-import {jwt} from 'hono/jwt';
 import {HonoAppType} from '../../shared/types/hono-types';
 import {WebSocketService} from '../../core/services/websocket-service';
 import {AppConfig} from '../../shared/config/app-config';
@@ -13,13 +12,13 @@ import {
   WebSocketConnectionError,
   WebSocketResponse,
 } from '../../shared/errors/websocket-errors';
+import {jwtMiddleware} from '../middleware/auth-middleware';
+
 // Define JWT variables type for type safety
 type JwtVariables = {
   jwtPayload: {
     sub: string;
     email?: string;
-    iat: number;
-    exp: number;
   };
 };
 
@@ -41,17 +40,7 @@ function createWebSocketService(_c: {env: Record<string, unknown>}): WebSocketSe
 }
 
 
-/**
- * JWT middleware for protected routes.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const jwtMiddleware = (c: any, next: any) => {
-  const jwtMiddleware = jwt({
-    secret: c.env.JWT_SECRET,
-    alg: 'HS256',
-  });
-  return jwtMiddleware(c, next);
-};
+
 /**
  * Creates an AppConfig instance.
  */

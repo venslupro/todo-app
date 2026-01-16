@@ -1,6 +1,5 @@
 // api/handlers/todo.ts
 import {Hono} from 'hono';
-import {jwt} from 'hono/jwt';
 import {HTTPException} from 'hono/http-exception';
 import {Context, Next} from 'hono';
 import {HonoAppType} from '../../shared/types/hono-types';
@@ -17,14 +16,13 @@ import {
   NotFoundException,
 } from '../../shared/errors/http-exception';
 import {BusinessLogger} from '../middleware/logger';
+import {jwtMiddleware} from '../middleware/auth-middleware';
 
 // Define JWT variables type for type safety
 type JwtVariables = {
   jwtPayload: {
     sub: string;
     email?: string;
-    iat: number;
-    exp: number;
   };
 };
 
@@ -40,16 +38,7 @@ function createTodoService(c: {env: Record<string, unknown>}): TodoService {
   return new TodoService(config);
 }
 
-/**
- * JWT middleware for protected routes.
- */
-const jwtMiddleware = (c: Context, next: Next) => {
-  const jwtMiddleware = jwt({
-    secret: c.env.JWT_SECRET,
-    alg: 'HS256',
-  });
-  return jwtMiddleware(c, next);
-};
+
 
 /**
  * Gets TODO list.
