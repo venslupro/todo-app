@@ -1,7 +1,7 @@
 import {Hono} from 'hono';
 import {HTTPException} from 'hono/http-exception';
 import {HonoAppType} from './shared/types/hono-types';
-import {InternalServerException} from './shared/errors/http-exception';
+import {InternalServerException, NotFoundException} from './shared/errors/http-exception';
 
 import {corsMiddleware} from './api/middleware/cors';
 import {globalRateLimit} from './api/middleware/rate-limit';
@@ -74,18 +74,11 @@ class ApplicationRouter {
    */
   private setupErrorHandling(): void {
     this.app.notFound((c) => {
-      return c.json(
-        {
-          error: {
-            code: 'NOT_FOUND',
-            message: 'The requested resource was not found',
-          },
-        },
-        404,
-      );
+      const exception = new NotFoundException('The requested resource was not found');
+      return exception.getResponse();
     });
 
-    this.app.onError((error: unknown) => {
+    this.app.onError((error: unknown, c) => {
       if (error instanceof HTTPException) {
         // Log HTTP exceptions for debugging
         // console.error('HTTPException:', error.message);
