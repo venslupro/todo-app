@@ -19,6 +19,8 @@ Authorization: Bearer <jwt-token>
 All successful responses follow this format:
 ```json
 {
+  "code": 200,
+  "message": "Success",
   "data": {
     // Response data
   }
@@ -29,12 +31,22 @@ All successful responses follow this format:
 All errors follow this format:
 ```json
 {
-  "error": {
-    "code": "ERROR_CODE",
-    "message": "Human readable error message"
-  }
+  "code": 401,
+  "message": "Unauthorized",
+  "details": "auth invalid credentials"
 }
 ```
+
+**Common HTTP Status Codes:**
+- `200` - Success
+- `400` - Bad Request
+- `401` - Unauthorized
+- `403` - Forbidden
+- `404` - Not Found
+- `409` - Conflict
+- `422` - Validation Failed
+- `429` - Too Many Requests
+- `500` - Internal Server Error
 
 ## System API
 
@@ -47,6 +59,8 @@ GET /health
 **Response:**
 ```json
 {
+  "code": 200,
+  "message": "Success",
   "data": {
     "status": "healthy",
     "timestamp": "2024-01-13T10:00:00Z",
@@ -63,6 +77,8 @@ GET /version
 **Response:**
 ```json
 {
+  "code": 200,
+  "message": "Success",
   "data": {
     "name": "TODO API",
     "version": "1.0.0",
@@ -88,14 +104,34 @@ Content-Type: application/json
 **Response:**
 ```json
 {
+  "code": 200,
+  "message": "Success",
   "data": {
     "user": {
       "id": "user-uuid",
       "email": "user@example.com",
-      "username": "johndoe"
+      "username": "johndoe",
+      "full_name": "John Doe",
+      "avatar_url": null,
+      "role": "user",
+      "created_at": "2024-01-13T10:00:00Z",
+      "updated_at": "2024-01-13T10:00:00Z"
     },
-    "token": "jwt-token"
+    "session": {
+      "access_token": "jwt-access-token",
+      "refresh_token": "jwt-refresh-token",
+      "expires_in": 3600
+    }
   }
+}
+```
+
+**Error Response (Invalid Credentials):**
+```json
+{
+  "code": 401,
+  "message": "Unauthorized",
+  "details": "auth invalid credentials"
 }
 ```
 
@@ -113,14 +149,34 @@ Content-Type: application/json
 **Response:**
 ```json
 {
+  "code": 200,
+  "message": "Success",
   "data": {
     "user": {
       "id": "user-uuid",
       "email": "user@example.com",
-      "username": "johndoe"
+      "username": "johndoe",
+      "full_name": "John Doe",
+      "avatar_url": null,
+      "role": "user",
+      "created_at": "2024-01-13T10:00:00Z",
+      "updated_at": "2024-01-13T10:00:00Z"
     },
-    "token": "jwt-token"
+    "session": {
+      "access_token": "jwt-access-token",
+      "refresh_token": "jwt-refresh-token",
+      "expires_in": 3600
+    }
   }
+}
+```
+
+**Error Response (Invalid Credentials):**
+```json
+{
+  "code": 401,
+  "message": "Unauthorized",
+  "details": "auth invalid credentials"
 }
 ```
 
@@ -130,16 +186,41 @@ POST /api/v1/auth/refresh
 Content-Type: application/json
 
 {
-  "token": "current-jwt-token"
+  "refresh_token": "current-refresh-token"
 }
 ```
 
 **Response:**
 ```json
 {
+  "code": 200,
+  "message": "Success",
   "data": {
-    "token": "new-jwt-token"
+    "user": {
+      "id": "user-uuid",
+      "email": "user@example.com",
+      "username": "johndoe",
+      "full_name": "John Doe",
+      "avatar_url": null,
+      "role": "user",
+      "created_at": "2024-01-13T10:00:00Z",
+      "updated_at": "2024-01-13T10:00:00Z"
+    },
+    "session": {
+      "access_token": "new-jwt-access-token",
+      "refresh_token": "new-jwt-refresh-token",
+      "expires_in": 3600
+    }
   }
+}
+```
+
+**Error Response (Invalid Token):**
+```json
+{
+  "code": 401,
+  "message": "Unauthorized",
+  "details": "auth token invalid"
 }
 ```
 
@@ -152,6 +233,8 @@ Authorization: Bearer <jwt-token>
 **Response:**
 ```json
 {
+  "code": 200,
+  "message": "Success",
   "data": {
     "message": "Logged out successfully"
   }
@@ -167,11 +250,18 @@ Authorization: Bearer <jwt-token>
 **Response:**
 ```json
 {
+  "code": 200,
+  "message": "Success",
   "data": {
     "user": {
       "id": "user-uuid",
       "email": "user@example.com",
-      "username": "johndoe"
+      "username": "johndoe",
+      "full_name": "John Doe",
+      "avatar_url": null,
+      "role": "user",
+      "created_at": "2024-01-13T10:00:00Z",
+      "updated_at": "2024-01-13T10:00:00Z"
     }
   }
 }
@@ -188,6 +278,8 @@ Authorization: Bearer <jwt-token>
 **Response:**
 ```json
 {
+  "code": 200,
+  "message": "Success",
   "data": {
     "todos": [
       {
@@ -195,10 +287,20 @@ Authorization: Bearer <jwt-token>
         "name": "Complete project",
         "description": "Finish the backend API",
         "status": "in_progress",
+        "priority": "medium",
+        "due_date": null,
+        "tags": ["backend", "api"],
+        "created_by": "user-uuid",
         "created_at": "2024-01-13T10:00:00Z",
-        "updated_at": "2024-01-13T10:00:00Z"
+        "updated_at": "2024-01-13T10:00:00Z",
+        "completed_at": null,
+        "parent_id": null,
+        "is_deleted": false
       }
-    ]
+    ],
+    "total": 1,
+    "limit": 50,
+    "offset": 0
   }
 }
 ```
@@ -219,15 +321,22 @@ Content-Type: application/json
 **Response:**
 ```json
 {
+  "code": 200,
+  "message": "Success",
   "data": {
-    "todo": {
-      "id": "todo-uuid",
-      "name": "New TODO",
-      "description": "TODO description",
-      "status": "not_started",
-      "created_at": "2024-01-13T10:00:00Z",
-      "updated_at": "2024-01-13T10:00:00Z"
-    }
+    "id": "todo-uuid",
+    "name": "New TODO",
+    "description": "TODO description",
+    "status": "not_started",
+    "priority": "medium",
+    "due_date": null,
+    "tags": null,
+    "created_by": "user-uuid",
+    "created_at": "2024-01-13T10:00:00Z",
+    "updated_at": "2024-01-13T10:00:00Z",
+    "completed_at": null,
+    "parent_id": null,
+    "is_deleted": false
   }
 }
 ```
@@ -241,15 +350,22 @@ Authorization: Bearer <jwt-token>
 **Response:**
 ```json
 {
+  "code": 200,
+  "message": "Success",
   "data": {
-    "todo": {
-      "id": "todo-uuid",
-      "name": "Complete project",
-      "description": "Finish the backend API",
-      "status": "in_progress",
-      "created_at": "2024-01-13T10:00:00Z",
-      "updated_at": "2024-01-13T10:00:00Z"
-    }
+    "id": "todo-uuid",
+    "name": "Complete project",
+    "description": "Finish the backend API",
+    "status": "in_progress",
+    "priority": "medium",
+    "due_date": null,
+    "tags": ["backend", "api"],
+    "created_by": "user-uuid",
+    "created_at": "2024-01-13T10:00:00Z",
+    "updated_at": "2024-01-13T10:00:00Z",
+    "completed_at": null,
+    "parent_id": null,
+    "is_deleted": false
   }
 }
 ```
@@ -270,15 +386,22 @@ Content-Type: application/json
 **Response:**
 ```json
 {
+  "code": 200,
+  "message": "Success",
   "data": {
-    "todo": {
-      "id": "todo-uuid",
-      "name": "Updated TODO",
-      "description": "Updated description",
-      "status": "completed",
-      "created_at": "2024-01-13T10:00:00Z",
-      "updated_at": "2024-01-13T11:00:00Z"
-    }
+    "id": "todo-uuid",
+    "name": "Updated TODO",
+    "description": "Updated description",
+    "status": "completed",
+    "priority": "medium",
+    "due_date": null,
+    "tags": ["updated"],
+    "created_by": "user-uuid",
+    "created_at": "2024-01-13T10:00:00Z",
+    "updated_at": "2024-01-13T11:00:00Z",
+    "completed_at": "2024-01-13T11:00:00Z",
+    "parent_id": null,
+    "is_deleted": false
   }
 }
 ```
@@ -292,6 +415,8 @@ Authorization: Bearer <jwt-token>
 **Response:**
 ```json
 {
+  "code": 200,
+  "message": "Success",
   "data": {
     "message": "TODO deleted successfully"
   }
