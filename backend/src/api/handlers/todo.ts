@@ -1,7 +1,6 @@
 // api/handlers/todo.ts
 import {Hono} from 'hono';
 import {HTTPException} from 'hono/http-exception';
-import {Context, Next} from 'hono';
 import {HonoAppType} from '../../shared/types/hono-types';
 import {TodoService} from '../../core/services/todo-service';
 import {
@@ -37,7 +36,6 @@ function createTodoService(c: {env: Record<string, unknown>}): TodoService {
   const config = new AppConfig(c.env);
   return new TodoService(config);
 }
-
 
 
 /**

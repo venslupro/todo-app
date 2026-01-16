@@ -1,7 +1,6 @@
 // api/handlers/auth.ts
 import {Hono} from 'hono';
 import {HTTPException} from 'hono/http-exception';
-import {Context, Next} from 'hono';
 import {AuthService} from '../../core/services/auth-service';
 import {AppConfig} from '../../shared/config/app-config';
 import {
@@ -30,7 +29,7 @@ const router = new Hono<{
 }>();
 
 /**
- * Creates an AuthService instance.
+ * Creates an auth service instance.
  */
 function createAuthService(
   c: {
@@ -46,8 +45,6 @@ function createAuthService(
   const appConfig = new AppConfig(envConfig);
   return new AuthService(appConfig);
 }
-
-
 
 /**
  * User registration.

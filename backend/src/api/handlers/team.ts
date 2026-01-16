@@ -1,7 +1,6 @@
 // api/handlers/team.ts
 import {Hono} from 'hono';
 import {HTTPException} from 'hono/http-exception';
-import {Context, Next} from 'hono';
 import {HonoAppType} from '../../shared/types/hono-types';
 import {ShareService} from '../../core/services/share-service';
 import {
@@ -33,7 +32,6 @@ const router = new Hono<HonoAppType & {
 function createShareService(c: any) {
   return new ShareService(c.env);
 }
-
 
 
 /**
@@ -189,6 +187,11 @@ router.delete('/shares/:id', jwtMiddleware, async (c) => {
     return exception.getResponse();
   }
 });
+
+
+/**
+ * Get team members list.
+ */
 
 export default router;
 

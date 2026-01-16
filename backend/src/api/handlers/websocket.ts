@@ -39,8 +39,6 @@ function createWebSocketService(_c: {env: Record<string, unknown>}): WebSocketSe
   return new WebSocketService();
 }
 
-
-
 /**
  * Creates an AppConfig instance.
  */

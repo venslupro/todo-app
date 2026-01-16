@@ -35,9 +35,9 @@ export const jwtMiddleware = async (c: Context<{
     // Validate token using Supabase
     const appConfig = new AppConfig(c.env);
     const supabase = SupabaseClient.getClient(appConfig);
-    
+
     const {data, error} = await supabase.auth.getUser(token);
-    
+
     if (error || !data.user) {
       throw new UnauthorizedException('Invalid or expired token');
     }
@@ -53,7 +53,7 @@ export const jwtMiddleware = async (c: Context<{
     if (error instanceof UnauthorizedException) {
       return error.getResponse();
     }
-    
+
     // Log unexpected errors
     console.error('JWT middleware error:', error);
     const exception = new UnauthorizedException('Authentication failed');
@@ -70,16 +70,16 @@ export const optionalJwtMiddleware = async (c: Context<{
 }>, next: Next) => {
   try {
     const authHeader = c.req.header('Authorization');
-    
+
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
-      
+
       if (token) {
         const appConfig = new AppConfig(c.env);
         const supabase = SupabaseClient.getClient(appConfig);
-        
+
         const {data} = await supabase.auth.getUser(token);
-        
+
         if (data.user) {
           c.set('jwtPayload', {
             sub: data.user.id,
