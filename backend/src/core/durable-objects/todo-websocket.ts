@@ -26,9 +26,7 @@ interface WebSocketMessage {
   sender?: string;
 }
 
-export interface Env extends SupabaseConfig {
-  JWT_SECRET: string;
-}
+export interface Env extends SupabaseConfig {}
 
 /**
  * Simplified WebSocket service for TODO rooms

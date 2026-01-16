@@ -6,9 +6,6 @@ export class AppConfig {
   public readonly supabaseServiceRoleKey: string;
   public readonly supabaseAnonKey: string;
   public readonly environment: 'development' | 'production' | 'staging';
-  public readonly jwtSecret: string;
-  public readonly cloudflareAccountId: string;
-  public readonly cloudflareApiToken: string;
 
   constructor(config: Record<string, unknown>) {
     this.supabaseUrl = this.getRequiredString(config, 'supabase_url');
@@ -21,15 +18,6 @@ export class AppConfig {
       'supabase_anon_key',
     );
     this.environment = this.getEnvironment(config);
-    this.jwtSecret = this.getRequiredString(config, 'jwt_secret');
-    this.cloudflareAccountId = this.getRequiredString(
-      config,
-      'cloudflare_account_id',
-    );
-    this.cloudflareApiToken = this.getRequiredString(
-      config,
-      'cloudflare_api_token',
-    );
   }
 
   private getRequiredString(config: Record<string, unknown>, key: string): string {

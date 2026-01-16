@@ -32,12 +32,6 @@ SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 # Application environment (development/production)
 NODE_ENV=development
 
-# JWT secret key (required for token signing)
-JWT_SECRET=your-jwt-secret-key-here
-
-# JWT token expiration time (seconds, default 24 hours)
-JWT_EXPIRES_IN=86400
-
 # Allowed CORS origins (comma-separated)
 ALLOWED_ORIGINS=https://your-frontend.example.com,http://localhost:3000
 ```
@@ -105,7 +99,7 @@ Add to GitHub repository settings:
     - `CLOUDFLARE_ACCOUNT_ID`
     - `SUPABASE_URL`
     - `SUPABASE_SERVICE_ROLE_KEY`
-    - `JWT_SECRET`
+
 
 ## 🔒 Security Best Practices
 
@@ -157,7 +151,7 @@ npm run build
 - Confirm Supabase project status is normal
 
 #### JWT Validation Failed
-- Ensure `JWT_SECRET` is consistent across all environments
+
 - Check token expiration time settings
 - Verify token signature algorithm
 
@@ -169,7 +163,7 @@ npm run build
 SUPABASE_URL=https://your-dev-project.supabase.co
 SUPABASE_ANON_KEY=your-dev-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-dev-service-key
-JWT_SECRET=dev-jwt-secret-key
+
 JWT_EXPIRES_IN=86400
 NODE_ENV=development
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
@@ -182,7 +176,7 @@ LOG_LEVEL=debug
 SUPABASE_URL=https://your-prod-project.supabase.co
 SUPABASE_ANON_KEY=your-prod-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-prod-service-key
-JWT_SECRET=prod-jwt-secret-key
+
 JWT_EXPIRES_IN=3600
 NODE_ENV=production
 ALLOWED_ORIGINS=https://your-app.com

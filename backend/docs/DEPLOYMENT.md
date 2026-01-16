@@ -58,7 +58,7 @@ compatibility_date = "2024-01-01"
 [vars]
 SUPABASE_URL = "https://your-project.supabase.co"
 SUPABASE_ANON_KEY = "your-anon-key"
-JWT_SECRET = "your-jwt-secret"
+
 NODE_ENV = "production"
 
 [[r2_buckets]]
@@ -158,7 +158,7 @@ Add the following secrets to your GitHub repository:
 2. **CLOUDFLARE_ACCOUNT_ID**: Your Cloudflare account ID
 3. **SUPABASE_URL**: Your Supabase project URL
 4. **SUPABASE_ANON_KEY**: Supabase anonymous key
-5. **JWT_SECRET**: JWT secret key
+
 
 ## 🏗️ Environment Configuration
 
@@ -170,7 +170,7 @@ NODE_ENV=production
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-production-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-JWT_SECRET=your-production-jwt-secret
+
 ALLOWED_ORIGINS=https://your-frontend.com
 ```
 
@@ -187,7 +187,7 @@ name = "todo-app-backend-prod"
 NODE_ENV = "production"
 SUPABASE_URL = "https://your-project.supabase.co"
 SUPABASE_ANON_KEY = "{{SUPABASE_ANON_KEY}}"
-JWT_SECRET = "{{JWT_SECRET}}"
+
 ```
 
 ### Development Environment
@@ -197,7 +197,7 @@ JWT_SECRET = "{{JWT_SECRET}}"
 NODE_ENV=development
 SUPABASE_URL=https://your-dev-project.supabase.co
 SUPABASE_ANON_KEY=your-dev-anon-key
-JWT_SECRET=your-dev-jwt-secret
+
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
 ```
 

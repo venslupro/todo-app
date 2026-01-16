@@ -55,16 +55,7 @@ export type HonoAppType = {
   Variables: {
     user: UserInfo;
   };
-};
-
-/**
- * Middleware context type for JWT authentication
- */
-export type JwtMiddlewareContext = {
-  env: SupabaseConfig & {
-    JWT_SECRET: string;
-  };
-};
+}
 
 /**
  * Middleware next function type
