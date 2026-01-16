@@ -174,7 +174,7 @@ export class NotFoundException extends HTTPException {
  */
 export class ConflictException extends HTTPException {
   private errorCause?: unknown;
-  
+
   constructor(cause?: unknown) {
     super(StatusCode.Conflict, {message: MessageType.Conflict});
     if (cause) {
@@ -200,7 +200,7 @@ export class ConflictException extends HTTPException {
  */
 export class ValidationException extends HTTPException {
   private errorCause?: unknown;
-  
+
   constructor(cause?: unknown) {
     super(StatusCode.UnprocessableEntity, {message: MessageType.ValidationFailed});
     if (cause) {
@@ -226,7 +226,7 @@ export class ValidationException extends HTTPException {
  */
 export class RateLimitException extends HTTPException {
   private errorCause?: unknown;
-  
+
   constructor(cause?: unknown) {
     super(StatusCode.TooManyRequests, {message: MessageType.TooManyRequests});
     if (cause) {
@@ -252,7 +252,7 @@ export class RateLimitException extends HTTPException {
  */
 export class InternalServerException extends HTTPException {
   private errorCause?: unknown;
-  
+
   constructor(cause?: unknown) {
     super(StatusCode.InternalServerError, {message: MessageType.InternalServerError});
     if (cause) {
