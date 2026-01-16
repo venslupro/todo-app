@@ -1,7 +1,6 @@
 import {ErrorCode, Result, okResult, errResult} from '../../shared/errors/error-codes';
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
-import {AppConfig} from '../../shared/config/config';
 import type {Database} from '../supabase/database.types';
 import {
   Todo,
@@ -12,6 +11,7 @@ import {
   TodoStatus,
   TodoPriority,
 } from '../models/todo';
+import {AppConfig} from '../../shared/config/app-config';
 
 /**
  * Service class for managing TODO operations.

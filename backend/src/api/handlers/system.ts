@@ -1,14 +1,10 @@
 // api/handlers/system.ts
 import {Hono} from 'hono';
-import {HttpExceptions} from '../../shared/errors/http-exception';
+import {SuccessResponse} from '../../shared/errors/http-exception';
+import {SupabaseConfig} from '../../shared/types/hono-types';
 
 const router = new Hono<{
-  Bindings: {
-    supabase_url: string;
-    supabase_service_role_key: string;
-    supabase_anon_key: string;
-    environment: 'development' | 'production' | 'staging';
-  };
+  Bindings: SupabaseConfig;
   Variables: {};
 }>();
 
@@ -17,13 +13,12 @@ const router = new Hono<{
  * GET /
  */
 router.get('/', (c) => {
-  return c.json(
-    new HttpExceptions.SuccessResponse({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      environment: c.env.environment || 'unknown',
-    }),
-  );
+  const response = new SuccessResponse({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    environment: c.env.environment || 'unknown',
+  });
+  return response.getResponse();
 });
 
 /**
@@ -31,13 +26,12 @@ router.get('/', (c) => {
  * GET /health
  */
 router.get('/health', (c) => {
-  return c.json(
-    new HttpExceptions.SuccessResponse({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      environment: c.env.environment || 'unknown',
-    }),
-  );
+  const response = new SuccessResponse({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    environment: c.env.environment || 'unknown',
+  });
+  return response.getResponse();
 });
 
 /**
@@ -45,14 +39,13 @@ router.get('/health', (c) => {
  * GET /version
  */
 router.get('/version', (c) => {
-  return c.json(
-    new HttpExceptions.SuccessResponse({
-      name: 'TODO API',
-      version: '1.0.0',
-      description: 'Real-time collaborative TODO list application',
-      documentation: 'https://api.todo.com/docs',
-    }),
-  );
+  const response = new SuccessResponse({
+    name: 'TODO API',
+    version: '1.0.0',
+    description: 'Real-time collaborative TODO list application',
+    documentation: 'https://api.todo.com/docs',
+  });
+  return response.getResponse();
 });
 
 export default router;

@@ -1,4 +1,3 @@
-// api/middleware/cors.ts
 import {Context, Next} from 'hono';
 
 /**

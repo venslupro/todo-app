@@ -1,8 +1,8 @@
 import {ErrorCode, Result, okResult, errResult} from '../../shared/errors/error-codes';
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
-import {AppConfig} from '../../shared/config/config';
 import {User, AuthResult, Register, Login} from '../models/user';
+import {AppConfig} from '../../shared/config/app-config';
 
 /**
  * Authentication service class.

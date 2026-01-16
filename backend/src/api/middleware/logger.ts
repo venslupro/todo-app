@@ -1,4 +1,3 @@
-// api/middleware/logger.ts
 import {Context, Next} from 'hono';
 
 /**

@@ -2,6 +2,8 @@
 // Simplified WebSocket service for TODO rooms
 // Note: This is a temporary implementation until Durable Objects type issues are resolved
 
+import {SupabaseConfig} from '../../shared/types/hono-types';
+
 interface WebSocketConnection {
   userId: string;
   username?: string | undefined;
@@ -24,11 +26,7 @@ interface WebSocketMessage {
   sender?: string;
 }
 
-export interface Env {
-  supabase_url: string;
-  supabase_service_role_key: string;
-  supabase_anon_key: string;
-  environment: 'development' | 'production' | 'staging';
+export interface Env extends SupabaseConfig {
   JWT_SECRET: string;
 }
 

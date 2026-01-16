@@ -1,6 +1,16 @@
 // shared/types/hono-types.ts
 
 /**
+ * Supabase configuration type
+ */
+export type SupabaseConfig = {
+  supabase_url: string;
+  supabase_service_role_key: string;
+  supabase_anon_key: string;
+  environment: 'development' | 'production' | 'staging';
+};
+
+/**
  * User information type alias
  */
 export type UserInfo = {
@@ -37,16 +47,26 @@ type DurableObjectStub = {
  * Hono application type alias - Complies with Google Code Style line length limit
  */
 export type HonoAppType = {
-  Bindings: {
+  Bindings: SupabaseConfig & {
     name: string;
-    supabase_url: string;
-    supabase_service_role_key: string;
-    supabase_anon_key: string;
-    environment: 'development' | 'production' | 'staging';
-    log_level?: string;
+    log_level?: 'error' | 'warn' | 'info' | 'debug';
     TODO_WEBSOCKET?: DurableObjectNamespace;
   };
   Variables: {
     user: UserInfo;
   };
 };
+
+/**
+ * Middleware context type for JWT authentication
+ */
+export type JwtMiddlewareContext = {
+  env: SupabaseConfig & {
+    JWT_SECRET: string;
+  };
+};
+
+/**
+ * Middleware next function type
+ */
+export type MiddlewareNext = () => Promise<void>;

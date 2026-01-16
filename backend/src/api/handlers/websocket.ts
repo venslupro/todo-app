@@ -3,7 +3,7 @@ import {Hono} from 'hono';
 import {jwt} from 'hono/jwt';
 import {HonoAppType} from '../../shared/types/hono-types';
 import {WebSocketService} from '../../core/services/websocket-service';
-import {AppConfig} from '../../shared/config/config';
+import {AppConfig} from '../../shared/config/app-config';
 // import {TodoWebSocketService} from '../../core/durable-objects/todo-websocket';
 import {
   WebSocketResponseUtil,

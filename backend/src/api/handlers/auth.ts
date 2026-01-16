@@ -2,9 +2,11 @@
 import {Hono} from 'hono';
 import {jwt} from 'hono/jwt';
 import {HTTPException} from 'hono/http-exception';
-import {HttpExceptions} from '../../shared/errors/http-exception';
+import {Context, Next} from 'hono';
 import {AuthService} from '../../core/services/auth-service';
-import {AppConfig} from '../../shared/config/config';
+import {AppConfig} from '../../shared/config/app-config';
+import {BadRequestException, InternalServerException, SuccessResponse, UnauthorizedException} from '../../shared/errors/http-exception';
+import {SupabaseConfig} from '../../shared/types/hono-types';
 
 // Define JWT variables type for type safety
 type JwtVariables = {
@@ -17,11 +19,7 @@ type JwtVariables = {
 };
 
 const router = new Hono<{
-  Bindings: {
-    supabase_url: string;
-    supabase_service_role_key: string;
-    supabase_anon_key: string;
-    environment: 'development' | 'production' | 'staging';
+  Bindings: SupabaseConfig & {
     JWT_SECRET: string;
   };
   Variables: JwtVariables;
@@ -32,12 +30,7 @@ const router = new Hono<{
  */
 function createAuthService(
   c: {
-    env: {
-      supabase_url: string;
-      supabase_service_role_key: string;
-      supabase_anon_key: string;
-      environment: 'development' | 'production' | 'staging';
-    };
+    env: SupabaseConfig;
   },
 ): AuthService {
   const envConfig = {
@@ -53,7 +46,7 @@ function createAuthService(
 /**
  * JWT middleware for protected routes.
  */
-const jwtMiddleware = (c: any, next: any) => {
+const jwtMiddleware = (c: Context, next: Next) => {
   const jwtMiddleware = jwt({
     secret: c.env.JWT_SECRET,
     alg: 'HS256',
@@ -73,15 +66,18 @@ router.post('/register', async (c) => {
     const result = await authService.register(body);
 
     if (result.isErr()) {
-      return new HttpExceptions.BadRequestException('Bad Request', result.error).getResponse();
+      const exception = new BadRequestException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value), 201);
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
-    return new HttpExceptions.InternalServerException('Registration failed', error).getResponse();
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -97,15 +93,18 @@ router.post('/login', async (c) => {
     const result = await authService.login(body);
 
     if (result.isErr()) {
-      throw new HttpExceptions.UnauthorizedException('Login failed', result.error);
+      const exception = new UnauthorizedException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value));
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
-    return new HttpExceptions.InternalServerException('Login failed', error).getResponse();
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -118,22 +117,26 @@ router.post('/refresh', async (c) => {
     const body = await c.req.json();
 
     if (!body.refresh_token) {
-      throw new HttpExceptions.ValidationException('Refresh token is required');
+      const exception = new BadRequestException('Refresh token is required');
+      return exception.getResponse();
     }
 
     const authService = createAuthService(c);
     const result = await authService.refreshToken(body.refresh_token);
 
     if (result.isErr()) {
-      throw new HttpExceptions.UnauthorizedException('Token refresh failed', result.error);
+      const exception = new UnauthorizedException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value));
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
-    return new HttpExceptions.InternalServerException('Token refresh failed', error).getResponse();
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -146,12 +149,14 @@ router.post('/logout', jwtMiddleware, async (c) => {
     const authService = createAuthService(c);
     await authService.logout();
 
-    return c.json(new HttpExceptions.SuccessResponse({success: true}));
+    const response = new SuccessResponse({success: true});
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
-    return new HttpExceptions.InternalServerException('Logout failed', error).getResponse();
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -168,15 +173,18 @@ router.get('/me', jwtMiddleware, async (c) => {
     const result = await authService.getCurrentUser(userId);
 
     if (result.isErr()) {
-      throw new HttpExceptions.UnauthorizedException('User not found', result.error);
+      const exception = new UnauthorizedException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value));
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
-    return new HttpExceptions.InternalServerException('Get user failed', error).getResponse();
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 

@@ -1,8 +1,8 @@
 // core/services/media-service.ts
 import {ErrorCode, Result, okResult, errResult} from '../../shared/errors/error-codes';
-import {HttpExceptions} from '../../shared/errors/http-exception';
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
+import {InternalServerException, NotFoundException, ForbiddenException} from '../../shared/errors/http-exception';
 import {
   Media,
   MediaType,
@@ -116,7 +116,7 @@ export class MediaService {
 
     if (uploadError || !uploadData) {
       console.error('Storage error:', uploadError);
-      throw new HttpExceptions.InternalServerException('Failed to generate upload URL');
+      throw new InternalServerException('Failed to generate upload URL');
     }
 
     // Create media record (pre-creation, update status after upload)
@@ -167,12 +167,12 @@ export class MediaService {
       .single();
 
     if (error || !media) {
-      throw new HttpExceptions.NotFoundException('Media not found');
+      throw new NotFoundException('Media not found');
     }
 
     // Check permissions
     if ((media as any).todos.created_by !== userId && (media as any).created_by !== userId) {
-      throw new HttpExceptions.ForbiddenException('No permission to update this media');
+      throw new ForbiddenException('No permission to update this media');
     }
 
     // Additional validation can be added here, such as checking if file actually exists in storage
@@ -194,7 +194,7 @@ export class MediaService {
       .single();
 
     if (!media) {
-      throw new HttpExceptions.NotFoundException('Media not found');
+      throw new NotFoundException('Media not found');
     }
 
     // Check permissions (only TODO creator or media uploader can delete)
@@ -202,7 +202,7 @@ export class MediaService {
       (media as any).created_by === userId;
 
     if (!canDelete) {
-      throw new HttpExceptions.ForbiddenException('No permission to delete this media');
+      throw new ForbiddenException('No permission to delete this media');
     }
 
     // Delete file from storage
@@ -223,7 +223,7 @@ export class MediaService {
 
     if (dbError) {
       console.error('Database error:', dbError);
-      throw new HttpExceptions.InternalServerException('Failed to delete media record');
+      throw new InternalServerException('Failed to delete media record');
     }
   }
 
@@ -240,13 +240,13 @@ export class MediaService {
       .single();
 
     if (!media) {
-      throw new HttpExceptions.NotFoundException('Media not found');
+      throw new NotFoundException('Media not found');
     }
 
     // Check TODO access permissions
     const hasAccess = await this.checkTodoAccess((media as any).todo_id, userId);
     if (!hasAccess) {
-      throw new HttpExceptions.ForbiddenException('No access to this media');
+      throw new ForbiddenException('No access to this media');
     }
 
     // Get file URL

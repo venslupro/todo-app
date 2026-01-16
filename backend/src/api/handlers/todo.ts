@@ -2,14 +2,18 @@
 import {Hono} from 'hono';
 import {jwt} from 'hono/jwt';
 import {HTTPException} from 'hono/http-exception';
+import {Context, Next} from 'hono';
 import {HonoAppType} from '../../shared/types/hono-types';
-import {HttpExceptions} from '../../shared/errors/http-exception';
 import {TodoService} from '../../core/services/todo-service';
-import {AppConfig} from '../../shared/config/config';
 import {
+  CreateTodo,
+  UpdateTodo,
+  TodoQueryParams,
   TodoStatus,
   TodoPriority,
 } from '../../core/models/todo';
+import {AppConfig} from '../../shared/config/app-config';
+import {BadRequestException, InternalServerException, SuccessResponse, NotFoundException} from '../../shared/errors/http-exception';
 
 // Define JWT variables type for type safety
 type JwtVariables = {
@@ -36,7 +40,7 @@ function createTodoService(c: {env: Record<string, unknown>}): TodoService {
 /**
  * JWT middleware for protected routes.
  */
-const jwtMiddleware = (c: any, next: any) => {
+const jwtMiddleware = (c: Context, next: Next) => {
   const jwtMiddleware = jwt({
     secret: c.env.JWT_SECRET,
     alg: 'HS256',
@@ -76,15 +80,18 @@ router.get('/', jwtMiddleware, async (c) => {
     const result = await todoService.getTodos(userId, params);
 
     if (result.isErr()) {
-      throw new HttpExceptions.BadRequestException('Get todos failed', result.error);
+      const exception = new BadRequestException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value));
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
-    return new HttpExceptions.InternalServerException('Get todos failed', error).getResponse();
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -102,15 +109,18 @@ router.post('/', jwtMiddleware, async (c) => {
     const result = await todoService.create(userId, body);
 
     if (result.isErr()) {
-      throw new HttpExceptions.BadRequestException('Create todo failed', result.error);
+      const exception = new BadRequestException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value), 201);
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
-    return new HttpExceptions.InternalServerException('Create todo failed', error).getResponse();
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -128,15 +138,18 @@ router.get('/:id', jwtMiddleware, async (c) => {
     const result = await todoService.getTodo(todoId, userId);
 
     if (result.isErr()) {
-      throw new HttpExceptions.NotFoundException('Todo not found', result.error);
+      const exception = new NotFoundException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value));
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
-    return new HttpExceptions.InternalServerException('Get todo failed', error).getResponse();
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -155,15 +168,18 @@ router.put('/:id', jwtMiddleware, async (c) => {
     const result = await todoService.updateTodo(todoId, userId, body);
 
     if (result.isErr()) {
-      throw new HttpExceptions.BadRequestException('Update todo failed', result.error);
+      const exception = new BadRequestException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value));
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
-    return new HttpExceptions.InternalServerException('Update todo failed', error).getResponse();
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -181,15 +197,18 @@ router.delete('/:id', jwtMiddleware, async (c) => {
     const result = await todoService.deleteTodo(todoId, userId);
 
     if (result.isErr()) {
-      throw new HttpExceptions.BadRequestException('Delete todo failed', result.error);
+      const exception = new BadRequestException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse({success: true}));
+    const response = new SuccessResponse({success: true});
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
-    return new HttpExceptions.InternalServerException('Delete todo failed', error).getResponse();
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 

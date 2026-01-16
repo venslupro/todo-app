@@ -2,12 +2,13 @@
 import {Hono} from 'hono';
 import {jwt} from 'hono/jwt';
 import {HTTPException} from 'hono/http-exception';
+import {Context, Next} from 'hono';
 import {HonoAppType} from '../../shared/types/hono-types';
-import {HttpExceptions} from '../../shared/errors/http-exception';
 import {MediaService} from '../../core/services/media-service';
 import {
   MediaType,
 } from '../../core/models/media';
+import {BadRequestException, InternalServerException, SuccessResponse, ValidationException} from '../../shared/errors/http-exception';
 
 // Define JWT variables type for type safety
 type JwtVariables = {
@@ -33,7 +34,7 @@ function createMediaService(c: any) {
 /**
  * JWT middleware for protected routes.
  */
-const jwtMiddleware = (c: any, next: any) => {
+const jwtMiddleware = (c: Context, next: Next) => {
   const jwtMiddleware = jwt({
     secret: c.env.JWT_SECRET,
     alg: 'HS256',
@@ -62,15 +63,18 @@ router.get('/', jwtMiddleware, async (c) => {
     const result = await mediaService.getMediaList(userId, params);
 
     if (result.isErr()) {
-      throw new HttpExceptions.BadRequestException('Get media list failed', result.error);
+      const exception = new BadRequestException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse({media: result.value}));
+    const response = new SuccessResponse({media: result.value});
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
-    return new HttpExceptions.InternalServerException('Get media list failed', error).getResponse();
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -87,22 +91,26 @@ router.post('/upload-url', jwtMiddleware, async (c) => {
     const {todoId, ...uploadData} = body;
 
     if (!todoId) {
-      throw new HttpExceptions.ValidationException('todoId is required');
+      const exception = new ValidationException('todoId is required');
+      return exception.getResponse();
     }
 
     const mediaService = createMediaService(c);
     const result = await mediaService.getUploadUrl(todoId, userId, uploadData);
 
     if (result.isErr()) {
-      throw new HttpExceptions.BadRequestException('Get upload URL failed', result.error);
+      const exception = new BadRequestException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value));
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
-    return new HttpExceptions.InternalServerException('Get upload URL failed', error).getResponse();
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -119,12 +127,14 @@ router.post('/:id/confirm', jwtMiddleware, async (c) => {
     const mediaService = createMediaService(c);
     const media = await mediaService.confirmUpload(mediaId, userId);
 
-    return c.json(new HttpExceptions.SuccessResponse({media}));
+    const response = new SuccessResponse({media});
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
-    return new HttpExceptions.InternalServerException('Confirm upload failed', error).getResponse();
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -141,12 +151,14 @@ router.get('/:id/url', jwtMiddleware, async (c) => {
     const mediaService = createMediaService(c);
     const url = await mediaService.getMediaUrl(mediaId, userId);
 
-    return c.json(new HttpExceptions.SuccessResponse({url}));
+    const response = new SuccessResponse({url});
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
-    return new HttpExceptions.InternalServerException('Get media URL failed', error).getResponse();
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -163,12 +175,14 @@ router.delete('/:id', jwtMiddleware, async (c) => {
     const mediaService = createMediaService(c);
     await mediaService.deleteMedia(mediaId, userId);
 
-    return c.json(new HttpExceptions.SuccessResponse({success: true}));
+    const response = new SuccessResponse({success: true});
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
-    return new HttpExceptions.InternalServerException('Delete media failed', error).getResponse();
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
