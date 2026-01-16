@@ -37,7 +37,7 @@ export class SupabaseClient {
         {
           auth: {
             persistSession: false,
-            autoRefreshToken: false,
+            autoRefreshToken: true,
           },
         },
       );
