@@ -1,7 +1,6 @@
-// core/supabase/client.ts
 import {createClient} from '@supabase/supabase-js';
-import {Database} from './database.types';
-import type {AppConfig} from '../../shared/config/app-config';
+import type {Database} from './database.types';
+import {AppConfig} from '../../shared/config/app-config';
 
 /**
  * Supabase client manager.
