@@ -128,42 +128,80 @@ export class AuthService {
       return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
 
-    const {data, error} = await this.supabase.auth.refreshSession({
-      refresh_token: refreshToken,
-    });
-
-    if (error || !data.session) {
-      // Log detailed error information for debugging
-      console.error('Token refresh failed:', error);
+    // Validate refresh token format
+    if (refreshToken.length < 10) {
+      console.error('Invalid refresh token format:', refreshToken);
       return errResult(ErrorCode.AUTH_TOKEN_INVALID);
     }
 
-    // Verify the new session is valid by getting the user
-    const {data: {user}, error: userError} = await this.supabase.auth
-      .getUser(data.session.access_token);
+    try {
+      const {data, error} = await this.supabase.auth.refreshSession({
+        refresh_token: refreshToken,
+      });
 
-    if (userError || !user) {
-      console.error('User validation after token refresh failed:', userError);
+      if (error) {
+        // Log detailed error information for debugging
+        console.error('Supabase token refresh failed:', {
+          message: error.message,
+          status: error.status,
+          name: error.name,
+          refreshTokenLength: refreshToken.length
+        });
+        
+        // Handle specific Supabase auth errors
+        if (error.message?.includes('Refresh token is not valid')) {
+          return errResult(ErrorCode.AUTH_TOKEN_INVALID);
+        }
+        if (error.message?.includes('Invalid refresh token')) {
+          return errResult(ErrorCode.AUTH_TOKEN_INVALID);
+        }
+        if (error.message?.includes('expired')) {
+          return errResult(ErrorCode.AUTH_TOKEN_EXPIRED);
+        }
+        
+        return errResult(ErrorCode.AUTH_TOKEN_INVALID);
+      }
+
+      if (!data.session) {
+        console.error('Token refresh returned empty session');
+        return errResult(ErrorCode.AUTH_TOKEN_INVALID);
+      }
+
+      // Verify the new session is valid by getting the user
+      const {data: {user}, error: userError} = await this.supabase.auth
+        .getUser(data.session.access_token);
+
+      if (userError) {
+        console.error('User validation after token refresh failed:', userError);
+        return errResult(ErrorCode.AUTH_TOKEN_INVALID);
+      }
+
+      if (!user) {
+        console.error('User not found after token refresh');
+        return errResult(ErrorCode.AUTH_USER_NOT_FOUND);
+      }
+
+      return okResult({
+        user: {
+          id: user.id,
+          email: user.email!,
+          username: user.user_metadata?.['username'],
+          full_name: user.user_metadata?.['full_name'],
+          avatar_url: user.user_metadata?.['avatar_url'],
+          role: 'user' as any,
+          created_at: user.created_at || new Date().toISOString(),
+          updated_at: user.updated_at || new Date().toISOString(),
+        },
+        session: {
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+          expires_in: data.session.expires_in,
+        },
+      });
+    } catch (error) {
+      console.error('Unexpected error during token refresh:', error);
       return errResult(ErrorCode.AUTH_TOKEN_INVALID);
     }
-
-    return okResult({
-      user: {
-        id: user.id,
-        email: user.email!,
-        username: user.user_metadata?.['username'],
-        full_name: user.user_metadata?.['full_name'],
-        avatar_url: user.user_metadata?.['avatar_url'],
-        role: 'user' as any,
-        created_at: user.created_at || new Date().toISOString(),
-        updated_at: user.updated_at || new Date().toISOString(),
-      },
-      session: {
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-        expires_in: data.session.expires_in,
-      },
-    });
   }
 
   /**

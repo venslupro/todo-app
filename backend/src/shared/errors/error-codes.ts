@@ -8,6 +8,7 @@ export enum ErrorCode {
   // Authentication errors
   AUTH_INVALID_CREDENTIALS = 'auth invalid credentials',
   AUTH_TOKEN_INVALID = 'auth token invalid',
+  AUTH_TOKEN_EXPIRED = 'auth token expired',
   AUTH_USER_NOT_FOUND = 'auth user not found',
   AUTH_EMAIL_EXISTS = 'auth email exists',
 
