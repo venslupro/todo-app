@@ -7,11 +7,13 @@ import {AuthService} from '../../core/services/auth-service';
 import {AppConfig} from '../../shared/config/app-config';
 import {
   BadRequestException,
+  ConflictException,
   InternalServerException,
   SuccessResponse,
   UnauthorizedException,
 } from '../../shared/errors/http-exception';
 import {SupabaseConfig} from '../../shared/types/hono-types';
+import {ErrorCode} from '../../shared/errors/error-codes';
 
 // Define JWT variables type for type safety
 type JwtVariables = {
@@ -71,6 +73,11 @@ router.post('/register', async (c) => {
     const result = await authService.register(body);
 
     if (result.isErr()) {
+      // Handle email already exists case specifically
+      if (result.error === ErrorCode.AUTH_EMAIL_EXISTS) {
+        const exception = new ConflictException('Email address is already registered');
+        return exception.getResponse();
+      }
       const exception = new BadRequestException(result.error);
       return exception.getResponse();
     }
