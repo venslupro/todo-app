@@ -85,3 +85,4 @@ export class SupabaseClient {
     this.serviceClientCache.clear();
   }
 }
+
