@@ -38,13 +38,6 @@ export class SupabaseClient {
           auth: {
             persistSession: false,
             autoRefreshToken: true,
-            detectSessionInUrl: false,
-            flowType: 'pkce',
-          },
-          global: {
-            headers: {
-              'apikey': supabaseConfig.getAnonKey(),
-            },
           },
         },
       );
