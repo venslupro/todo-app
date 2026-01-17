@@ -294,9 +294,9 @@ router.post('/logout', jwtMiddleware, async (c) => {
 
 /**
  * Get current user information.
- * GET /api/v1/auth/me
+ * GET /api/v1/auth/profile
  */
-router.get('/me', jwtMiddleware, async (c) => {
+router.get('/profile', jwtMiddleware, async (c) => {
   try {
     const payload = c.get('jwtPayload');
     const userId = payload.sub;

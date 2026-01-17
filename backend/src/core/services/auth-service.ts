@@ -9,9 +9,11 @@ import {AppConfig} from '../../shared/config/app-config';
  */
 export class AuthService {
   private supabase: ReturnType<typeof SupabaseClient.getClient>;
+  private supabaseService: ReturnType<typeof SupabaseClient.getServiceClient>;
 
   constructor(config: AppConfig) {
     this.supabase = SupabaseClient.getClient(config);
+    this.supabaseService = SupabaseClient.getServiceClient(config);
   }
 
   /**
@@ -128,7 +130,7 @@ export class AuthService {
       return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
 
-    const {data, error} = await this.supabase.auth.refreshSession({
+    const {data, error} = await this.supabaseService.auth.refreshSession({
       refresh_token: refreshToken,
     });
 
@@ -136,7 +138,7 @@ export class AuthService {
       return errResult(ErrorCode.AUTH_TOKEN_INVALID);
     }
 
-    const {data: {user}} = await this.supabase.auth.getUser(data.session.access_token);
+    const {data: {user}} = await this.supabaseService.auth.getUser(data.session.access_token);
 
     if (!user) {
       return errResult(ErrorCode.AUTH_USER_NOT_FOUND);
@@ -177,7 +179,7 @@ export class AuthService {
    * Get current user information
    */
   async getCurrentUser(accessToken: string): Promise<Result<User, ErrorCode>> {
-    const {data: {user}, error} = await this.supabase.auth.getUser(accessToken);
+    const {data: {user}, error} = await this.supabaseService.auth.getUser(accessToken);
 
     if (error || !user) {
       return errResult(ErrorCode.AUTH_TOKEN_INVALID);
