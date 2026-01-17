@@ -301,13 +301,20 @@ router.get('/profile', jwtMiddleware, async (c) => {
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
 
+    // Extract access token from Authorization header
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Missing or invalid Authorization header');
+    }
+    const accessToken = authHeader.substring(7); // Remove 'Bearer ' prefix
+
     BusinessLogger.debug('Fetching current user information', {
       userId: userId,
       environment: c.env.environment || 'unknown',
     });
 
     const authService = createAuthService(c);
-    const result = await authService.getCurrentUser(userId);
+    const result = await authService.getCurrentUser(accessToken);
 
     if (result.isErr()) {
       BusinessLogger.warn('Failed to fetch current user information', {
