@@ -97,7 +97,7 @@ npm run lint         # Code linting
 Required environment variables:
 - `SUPABASE_URL` - Supabase project URL
 - `SUPABASE_ANON_KEY` - Supabase anonymous key
-- `JWT_SECRET` - JWT signing secret
+
 
 ## Documentation
 

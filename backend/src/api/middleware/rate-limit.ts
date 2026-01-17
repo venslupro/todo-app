@@ -1,4 +1,3 @@
-// api/middleware/rate-limit.ts
 import {Context, Next} from 'hono';
 import {HTTPException} from 'hono/http-exception';
 import {RateLimitService} from '../../core/services/rate-limit-service';

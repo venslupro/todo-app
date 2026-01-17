@@ -1,8 +1,11 @@
 import {Hono} from 'hono';
+import {HTTPException} from 'hono/http-exception';
 import {HonoAppType} from './shared/types/hono-types';
+import {InternalServerException, NotFoundException} from './shared/errors/http-exception';
 
 import {corsMiddleware} from './api/middleware/cors';
 import {globalRateLimit} from './api/middleware/rate-limit';
+import {loggerMiddleware} from './api/middleware/logger';
 
 import systemRoutes from './api/handlers/system';
 import authRoutes from './api/handlers/auth';
@@ -31,6 +34,7 @@ class ApplicationRouter {
    * Sets up global middleware for the application.
    */
   private setupGlobalMiddleware(): void {
+    this.app.use('*', loggerMiddleware);
     this.app.use('*', corsMiddleware);
   }
 
@@ -71,16 +75,23 @@ class ApplicationRouter {
    * Sets up error handling for the application.
    */
   private setupErrorHandling(): void {
-    this.app.notFound((c) => {
-      return c.json(
-        {
-          error: {
-            code: 'NOT_FOUND',
-            message: 'The requested resource was not found',
-          },
-        },
-        404,
-      );
+    this.app.notFound(() => {
+      const exception = new NotFoundException('The requested resource was not found');
+      return exception.getResponse();
+    });
+
+    this.app.onError((error: unknown) => {
+      if (error instanceof HTTPException) {
+        // Log HTTP exceptions for debugging
+        // console.error('HTTPException:', error.message);
+        return error.getResponse();
+      }
+
+      // Log unhandled errors for debugging
+      // console.error('Unhandled error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const exception = new InternalServerException(errorMessage);
+      return exception.getResponse();
     });
   }
 

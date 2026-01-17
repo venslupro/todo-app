@@ -1,8 +1,8 @@
 import {ErrorCode, Result, okResult, errResult} from '../../shared/errors/error-codes';
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
-import {AppConfig} from '../../shared/config/config';
 import {User, AuthResult, Register, Login} from '../models/user';
+import {AppConfig} from '../../shared/config/app-config';
 
 /**
  * Authentication service class.
@@ -80,11 +80,13 @@ export class AuthService {
     }
     const email = emailResult.value;
 
-    const passwordResult = Validator.sanitizeString(dto.password, 100);
-    if (passwordResult.isErr()) {
-      return errResult(passwordResult.error);
+    // For login, we should be more lenient with password validation
+    // and return authentication errors instead of validation errors
+    if (!dto.password || typeof dto.password !== 'string' || dto.password.trim().length === 0) {
+      return errResult(ErrorCode.AUTH_INVALID_CREDENTIALS);
     }
-    const password = passwordResult.value;
+
+    const password = dto.password.trim();
 
     const {data, error} = await this.supabase.auth.signInWithPassword({
       email,

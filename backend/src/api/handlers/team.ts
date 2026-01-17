@@ -1,21 +1,24 @@
 // api/handlers/team.ts
 import {Hono} from 'hono';
-import {jwt} from 'hono/jwt';
 import {HTTPException} from 'hono/http-exception';
 import {HonoAppType} from '../../shared/types/hono-types';
-import {HttpExceptions} from '../../shared/errors/http-exception';
 import {ShareService} from '../../core/services/share-service';
 import {
   SharePermission,
 } from '../../core/models/share';
+import {
+  BadRequestException,
+  InternalServerException,
+  SuccessResponse,
+  NotFoundException,
+} from '../../shared/errors/http-exception';
+import {jwtMiddleware} from '../middleware/auth-middleware';
 
 // Define JWT variables type for type safety
 type JwtVariables = {
   jwtPayload: {
     sub: string;
     email?: string;
-    iat: number;
-    exp: number;
   };
 };
 
@@ -30,16 +33,6 @@ function createShareService(c: any) {
   return new ShareService(c.env);
 }
 
-/**
- * JWT middleware for protected routes.
- */
-const jwtMiddleware = (c: any, next: any) => {
-  const jwtMiddleware = jwt({
-    secret: c.env.JWT_SECRET,
-    alg: 'HS256',
-  });
-  return jwtMiddleware(c, next);
-};
 
 /**
  * Share TODO with other users.
@@ -55,15 +48,18 @@ router.post('/shares', jwtMiddleware, async (c) => {
     const result = await shareService.createShare(userId, body);
 
     if (result.isErr()) {
-      throw new HttpExceptions.BadRequestException('Create share failed', result.error);
+      const exception = new BadRequestException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value), 201);
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Create share failed', error);
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -89,15 +85,18 @@ router.get('/shares', jwtMiddleware, async (c) => {
     const result = await shareService.getShares(userId, params);
 
     if (result.isErr()) {
-      throw new HttpExceptions.BadRequestException('Get shares failed', result.error);
+      const exception = new BadRequestException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse({shares: result.value}));
+    const response = new SuccessResponse({shares: result.value});
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Get shares failed', error);
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -115,15 +114,18 @@ router.get('/shares/:id', jwtMiddleware, async (c) => {
     const result = await shareService.getShare(shareId, userId);
 
     if (result.isErr()) {
-      throw new HttpExceptions.NotFoundException('Share not found', result.error);
+      const exception = new NotFoundException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value));
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Get share failed', error);
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -142,15 +144,18 @@ router.put('/shares/:id', jwtMiddleware, async (c) => {
     const result = await shareService.updateShare(shareId, userId, body);
 
     if (result.isErr()) {
-      throw new HttpExceptions.BadRequestException('Update share failed', result.error);
+      const exception = new BadRequestException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value));
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Update share failed', error);
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -168,17 +173,25 @@ router.delete('/shares/:id', jwtMiddleware, async (c) => {
     const result = await shareService.deleteShare(shareId, userId);
 
     if (result.isErr()) {
-      throw new HttpExceptions.BadRequestException('Delete share failed', result.error);
+      const exception = new BadRequestException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse({success: true}));
+    const response = new SuccessResponse({success: true});
+    return response.getResponse();
   } catch (error) {
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Delete share failed', error);
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
+
+
+/**
+ * Get team members list.
+ */
 
 export default router;
 

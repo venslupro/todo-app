@@ -1,25 +1,67 @@
 import {HTTPException} from 'hono/http-exception';
 
 /**
+ * Filters out null, undefined, and empty string values from an object.
+ * @param obj - The object to filter
+ * @returns A new object with empty values removed
+ */
+function filterEmptyValues<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const filtered: Partial<T> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== null && value !== undefined && value !== '') {
+      filtered[key as keyof T] = value as T[keyof T];
+    }
+  }
+  return filtered;
+}
+
+const enum StatusCode {
+  OK = 200,
+  BadRequest = 400,
+  Unauthorized = 401,
+  Forbidden = 403,
+  NotFound = 404,
+  Conflict = 409,
+  UnprocessableEntity = 422,
+  TooManyRequests = 429,
+  InternalServerError = 500,
+}
+
+const enum MessageType {
+  Success = 'Success',
+  BadRequest = 'Bad Request',
+  Unauthorized = 'Unauthorized',
+  Forbidden = 'Forbidden',
+  NotFound = 'Not Found',
+  Conflict = 'Conflict',
+  ValidationFailed = 'Validation Failed',
+  TooManyRequests = 'Too Many Requests',
+  InternalServerError = 'Internal Server Error',
+}
+
+/**
  * HTTP 200 OK - Success response wrapper.
  */
-export class SuccessResponse<T = unknown> {
-  public readonly statusCode: number = 200;
-  public readonly code: string = 'OK';
-  public readonly data: T | undefined;
-  public readonly message: string;
+export class SuccessResponse extends HTTPException {
+  private responseData?: unknown;
 
-  constructor(data?: T, message = 'Success') {
-    this.data = data;
-    this.message = message;
+  constructor(data?: unknown) {
+    super(StatusCode.OK, {message: MessageType.Success});
+    if (data) {
+      this.responseData = data;
+    }
   }
 
-  public toJSON(): Record<string, unknown> {
-    return {
-      code: this.code,
+  getResponse(): Response {
+    const responseBody = filterEmptyValues({
+      code: StatusCode.OK,
       message: this.message,
-      data: this.data,
-    };
+      data: this.responseData,
+    });
+    return new Response(JSON.stringify(responseBody), {
+      status: StatusCode.OK,
+      headers: {'Content-Type': 'application/json'},
+    });
   }
 }
 
@@ -27,11 +69,25 @@ export class SuccessResponse<T = unknown> {
  * HTTP 400 Bad Request error based on Hono HTTPException.
  */
 export class BadRequestException extends HTTPException {
-  constructor(message = 'Bad Request', cause?: unknown) {
-    super(400, {message});
+  private errorCause?: unknown;
+
+  constructor(cause?: unknown) {
+    super(StatusCode.BadRequest, {message: MessageType.BadRequest});
     if (cause) {
-      (this as any).cause = cause;
+      this.errorCause = cause;
     }
+  }
+
+  getResponse(): Response {
+    const responseBody = filterEmptyValues({
+      code: StatusCode.BadRequest,
+      message: this.message,
+      details: this.errorCause,
+    });
+    return new Response(JSON.stringify(responseBody), {
+      status: StatusCode.BadRequest,
+      headers: {'Content-Type': 'application/json'},
+    });
   }
 }
 
@@ -39,11 +95,25 @@ export class BadRequestException extends HTTPException {
  * HTTP 401 Unauthorized error based on Hono HTTPException.
  */
 export class UnauthorizedException extends HTTPException {
-  constructor(message = 'Unauthorized', cause?: unknown) {
-    super(401, {message});
+  private errorCause?: unknown;
+
+  constructor(cause?: unknown) {
+    super(StatusCode.Unauthorized, {message: MessageType.Unauthorized});
     if (cause) {
-      (this as any).cause = cause;
+      this.errorCause = cause;
     }
+  }
+
+  getResponse(): Response {
+    const responseBody = filterEmptyValues({
+      code: StatusCode.Unauthorized,
+      message: this.message,
+      details: this.errorCause,
+    });
+    return new Response(JSON.stringify(responseBody), {
+      status: StatusCode.Unauthorized,
+      headers: {'Content-Type': 'application/json'},
+    });
   }
 }
 
@@ -51,11 +121,25 @@ export class UnauthorizedException extends HTTPException {
  * HTTP 403 Forbidden error based on Hono HTTPException.
  */
 export class ForbiddenException extends HTTPException {
-  constructor(message = 'Forbidden', cause?: unknown) {
-    super(403, {message});
+  private errorCause?: unknown;
+
+  constructor(cause?: unknown) {
+    super(StatusCode.Forbidden, {message: MessageType.Forbidden});
     if (cause) {
-      (this as any).cause = cause;
+      this.errorCause = cause;
     }
+  }
+
+  getResponse(): Response {
+    const responseBody = filterEmptyValues({
+      code: StatusCode.Forbidden,
+      message: this.message,
+      details: this.errorCause,
+    });
+    return new Response(JSON.stringify(responseBody), {
+      status: StatusCode.Forbidden,
+      headers: {'Content-Type': 'application/json'},
+    });
   }
 }
 
@@ -63,11 +147,25 @@ export class ForbiddenException extends HTTPException {
  * HTTP 404 Not Found error based on Hono HTTPException.
  */
 export class NotFoundException extends HTTPException {
-  constructor(message = 'Not Found', cause?: unknown) {
-    super(404, {message});
+  private errorCause?: unknown;
+
+  constructor(cause?: unknown) {
+    super(StatusCode.NotFound, {message: MessageType.NotFound});
     if (cause) {
-      (this as any).cause = cause;
+      this.errorCause = cause;
     }
+  }
+
+  getResponse(): Response {
+    const responseBody = filterEmptyValues({
+      code: StatusCode.NotFound,
+      message: this.message,
+      details: this.errorCause,
+    });
+    return new Response(JSON.stringify(responseBody), {
+      status: StatusCode.NotFound,
+      headers: {'Content-Type': 'application/json'},
+    });
   }
 }
 
@@ -75,11 +173,25 @@ export class NotFoundException extends HTTPException {
  * HTTP 409 Conflict error based on Hono HTTPException.
  */
 export class ConflictException extends HTTPException {
-  constructor(message = 'Conflict', cause?: unknown) {
-    super(409, {message});
+  private errorCause?: unknown;
+
+  constructor(cause?: unknown) {
+    super(StatusCode.Conflict, {message: MessageType.Conflict});
     if (cause) {
-      (this as any).cause = cause;
+      this.errorCause = cause;
     }
+  }
+
+  getResponse(): Response {
+    const responseBody = filterEmptyValues({
+      code: StatusCode.Conflict,
+      message: this.message,
+      details: this.errorCause,
+    });
+    return new Response(JSON.stringify(responseBody), {
+      status: StatusCode.Conflict,
+      headers: {'Content-Type': 'application/json'},
+    });
   }
 }
 
@@ -87,11 +199,25 @@ export class ConflictException extends HTTPException {
  * HTTP 422 Unprocessable Entity error based on Hono HTTPException.
  */
 export class ValidationException extends HTTPException {
-  constructor(message = 'Validation Failed', cause?: unknown) {
-    super(422, {message});
+  private errorCause?: unknown;
+
+  constructor(cause?: unknown) {
+    super(StatusCode.UnprocessableEntity, {message: MessageType.ValidationFailed});
     if (cause) {
-      (this as any).cause = cause;
+      this.errorCause = cause;
     }
+  }
+
+  getResponse(): Response {
+    const responseBody = filterEmptyValues({
+      code: StatusCode.UnprocessableEntity,
+      message: this.message,
+      details: this.errorCause,
+    });
+    return new Response(JSON.stringify(responseBody), {
+      status: StatusCode.UnprocessableEntity,
+      headers: {'Content-Type': 'application/json'},
+    });
   }
 }
 
@@ -99,11 +225,25 @@ export class ValidationException extends HTTPException {
  * HTTP 429 Too Many Requests error based on Hono HTTPException.
  */
 export class RateLimitException extends HTTPException {
-  constructor(message = 'Too Many Requests', cause?: unknown) {
-    super(429, {message});
+  private errorCause?: unknown;
+
+  constructor(cause?: unknown) {
+    super(StatusCode.TooManyRequests, {message: MessageType.TooManyRequests});
     if (cause) {
-      (this as any).cause = cause;
+      this.errorCause = cause;
     }
+  }
+
+  getResponse(): Response {
+    const responseBody = filterEmptyValues({
+      code: StatusCode.TooManyRequests,
+      message: this.message,
+      details: this.errorCause,
+    });
+    return new Response(JSON.stringify(responseBody), {
+      status: StatusCode.TooManyRequests,
+      headers: {'Content-Type': 'application/json'},
+    });
   }
 }
 
@@ -111,25 +251,24 @@ export class RateLimitException extends HTTPException {
  * HTTP 500 Internal Server Error based on Hono HTTPException.
  */
 export class InternalServerException extends HTTPException {
-  constructor(message = 'Internal Server Error', cause?: unknown) {
-    super(500, {message});
+  private errorCause?: unknown;
+
+  constructor(cause?: unknown) {
+    super(StatusCode.InternalServerError, {message: MessageType.InternalServerError});
     if (cause) {
-      (this as any).cause = cause;
+      this.errorCause = cause;
     }
   }
-}
 
-/**
- * Collection of HTTP exception classes for easy access.
- */
-export const HttpExceptions = {
-  SuccessResponse,
-  BadRequestException,
-  UnauthorizedException,
-  ForbiddenException,
-  NotFoundException,
-  ConflictException,
-  ValidationException,
-  RateLimitException,
-  InternalServerException,
-};
+  getResponse(): Response {
+    const responseBody = filterEmptyValues({
+      code: StatusCode.InternalServerError,
+      message: this.message,
+      details: this.errorCause,
+    });
+    return new Response(JSON.stringify(responseBody), {
+      status: StatusCode.InternalServerError,
+      headers: {'Content-Type': 'application/json'},
+    });
+  }
+}

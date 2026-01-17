@@ -1,8 +1,8 @@
 // core/services/websocket-service.ts
 import {ErrorCode, Result, okResult, errResult} from '../../shared/errors/error-codes';
 import {SupabaseClient} from '../supabase/client';
-import {AppConfig} from '../../shared/config/config';
 import {Todo} from '../models/todo';
+import {AppConfig} from '../../shared/config/app-config';
 
 /**
  * WebSocket service class.

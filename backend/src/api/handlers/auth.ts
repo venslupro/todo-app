@@ -1,43 +1,39 @@
 // api/handlers/auth.ts
 import {Hono} from 'hono';
-import {jwt} from 'hono/jwt';
 import {HTTPException} from 'hono/http-exception';
-import {HttpExceptions} from '../../shared/errors/http-exception';
 import {AuthService} from '../../core/services/auth-service';
-import {AppConfig} from '../../shared/config/config';
+import {AppConfig} from '../../shared/config/app-config';
+import {
+  BadRequestException,
+  ConflictException,
+  InternalServerException,
+  SuccessResponse,
+  UnauthorizedException,
+} from '../../shared/errors/http-exception';
+import {EnvironmentConfig} from '../../shared/types/hono-types';
+import {ErrorCode} from '../../shared/errors/error-codes';
+import {BusinessLogger} from '../middleware/logger';
+import {jwtMiddleware} from '../middleware/auth-middleware';
 
 // Define JWT variables type for type safety
 type JwtVariables = {
   jwtPayload: {
     sub: string;
     email?: string;
-    iat: number;
-    exp: number;
   };
 };
 
 const router = new Hono<{
-  Bindings: {
-    supabase_url: string;
-    supabase_service_role_key: string;
-    supabase_anon_key: string;
-    environment: 'development' | 'production' | 'staging';
-    JWT_SECRET: string;
-  };
+  Bindings: EnvironmentConfig;
   Variables: JwtVariables;
 }>();
 
 /**
- * Creates an AuthService instance.
+ * Creates an auth service instance.
  */
 function createAuthService(
   c: {
-    env: {
-      supabase_url: string;
-      supabase_service_role_key: string;
-      supabase_anon_key: string;
-      environment: 'development' | 'production' | 'staging';
-    };
+    env: EnvironmentConfig;
   },
 ): AuthService {
   const envConfig = {
@@ -51,17 +47,6 @@ function createAuthService(
 }
 
 /**
- * JWT middleware for protected routes.
- */
-const jwtMiddleware = (c: any, next: any) => {
-  const jwtMiddleware = jwt({
-    secret: c.env.JWT_SECRET,
-    alg: 'HS256',
-  });
-  return jwtMiddleware(c, next);
-};
-
-/**
  * User registration.
  * POST /api/v1/auth/register
  */
@@ -69,19 +54,109 @@ router.post('/register', async (c) => {
   try {
     const body = await c.req.json();
 
+    // Validate request body fields
+    const allowedFields = ['email', 'password', 'username', 'full_name'];
+    const receivedFields = Object.keys(body);
+    const invalidFields = receivedFields.filter((field) => !allowedFields.includes(field));
+
+    if (invalidFields.length > 0) {
+      BusinessLogger.warn('Invalid fields in registration request', {
+        invalidFields: invalidFields,
+        allowedFields: allowedFields,
+        environment: c.env.environment || 'unknown',
+      });
+
+      const exception = new BadRequestException(
+        `Invalid field(s): ${invalidFields.join(', ')}. ` +
+        `Supported fields: ${allowedFields.join(', ')}`,
+      );
+      return exception.getResponse();
+    }
+
+    // Check for required fields
+    if (!body.email) {
+      BusinessLogger.warn('Missing required field in registration request', {
+        missingField: 'email',
+        environment: c.env.environment || 'unknown',
+      });
+
+      const exception = new BadRequestException('Email is required for registration');
+      return exception.getResponse();
+    }
+
+    if (!body.password) {
+      BusinessLogger.warn('Missing required field in registration request', {
+        missingField: 'password',
+        environment: c.env.environment || 'unknown',
+      });
+
+      const exception = new BadRequestException('Password is required for registration');
+      return exception.getResponse();
+    }
+
+    BusinessLogger.debug('User registration attempt', {
+      email: body.email,
+      environment: c.env.environment || 'unknown',
+    });
+
     const authService = createAuthService(c);
     const result = await authService.register(body);
 
     if (result.isErr()) {
-      throw new HttpExceptions.BadRequestException(`${result.error}`, result.error);
+      // Map error codes to user-friendly messages
+      let errorMessage: string;
+      switch (result.error) {
+      case ErrorCode.AUTH_EMAIL_EXISTS:
+        errorMessage = 'Email address is already registered';
+        break;
+      case ErrorCode.VALIDATION_INVALID_EMAIL:
+        errorMessage = 'Invalid email format. Please provide a valid email address';
+        break;
+      case ErrorCode.VALIDATION_INVALID_PASSWORD:
+        errorMessage = 'Password must be at least 8 characters long and contain ' +
+          'uppercase, lowercase letters and numbers';
+        break;
+      case ErrorCode.VALIDATION_REQUIRED_FIELD:
+        errorMessage = 'Required field is missing or invalid';
+        break;
+      default:
+        errorMessage = 'Registration failed. Please try again';
+      }
+
+      BusinessLogger.warn('User registration failed', {
+        email: body.email,
+        error: result.error,
+        errorMessage: errorMessage,
+        errorType: result.error === ErrorCode.AUTH_EMAIL_EXISTS ?
+          'EMAIL_EXISTS' : 'VALIDATION_ERROR',
+      });
+
+      // Handle email already exists case specifically
+      if (result.error === ErrorCode.AUTH_EMAIL_EXISTS) {
+        const exception = new ConflictException(errorMessage);
+        return exception.getResponse();
+      }
+      const exception = new BadRequestException(errorMessage);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value), 201);
+    BusinessLogger.info('User registration successful', {
+      userId: result.value.user.id,
+      email: result.value.user.email,
+      environment: c.env.environment || 'unknown',
+    });
+
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
+    BusinessLogger.error('Unexpected error during user registration', error as Error, {
+      email: (await c.req.json()).email,
+    });
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Registration failed', error);
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -93,19 +168,41 @@ router.post('/login', async (c) => {
   try {
     const body = await c.req.json();
 
+    BusinessLogger.debug('User login attempt', {
+      email: body.email,
+      environment: c.env.environment || 'unknown',
+    });
+
     const authService = createAuthService(c);
     const result = await authService.login(body);
 
     if (result.isErr()) {
-      throw new HttpExceptions.UnauthorizedException('Login failed', result.error);
+      BusinessLogger.warn('User login failed', {
+        email: body.email,
+        error: result.error,
+        environment: c.env.environment || 'unknown',
+      });
+      const exception = new UnauthorizedException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value));
+    BusinessLogger.info('User login successful', {
+      userId: result.value.user.id,
+      email: result.value.user.email,
+      environment: c.env.environment || 'unknown',
+    });
+
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
+    BusinessLogger.error('Unexpected error during user login', error as Error, {
+      email: (await c.req.json()).email,
+    });
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Login failed', error);
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -117,23 +214,45 @@ router.post('/refresh', async (c) => {
   try {
     const body = await c.req.json();
 
+    BusinessLogger.debug('Token refresh attempt', {
+      hasRefreshToken: !!body.refresh_token,
+      environment: c.env.environment || 'unknown',
+    });
+
     if (!body.refresh_token) {
-      throw new HttpExceptions.ValidationException('Refresh token is required');
+      BusinessLogger.warn('Token refresh failed - missing refresh token');
+      const exception = new BadRequestException('Refresh token is required');
+      return exception.getResponse();
     }
 
     const authService = createAuthService(c);
     const result = await authService.refreshToken(body.refresh_token);
 
     if (result.isErr()) {
-      throw new HttpExceptions.UnauthorizedException('Token refresh failed', result.error);
+      BusinessLogger.warn('Token refresh failed', {
+        error: result.error,
+        environment: c.env.environment || 'unknown',
+      });
+      const exception = new UnauthorizedException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value));
+    BusinessLogger.info('Token refresh successful', {
+      userId: result.value.user.id,
+      environment: c.env.environment || 'unknown',
+    });
+
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
+    BusinessLogger.error('Unexpected error during token refresh', error as Error, {
+      hasRefreshToken: !!(await c.req.json()).refresh_token,
+    });
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Token refresh failed', error);
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -143,15 +262,33 @@ router.post('/refresh', async (c) => {
  */
 router.post('/logout', jwtMiddleware, async (c) => {
   try {
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+
+    BusinessLogger.debug('User logout attempt', {
+      userId: userId,
+      environment: c.env.environment || 'unknown',
+    });
+
     const authService = createAuthService(c);
     await authService.logout();
 
-    return c.json(new HttpExceptions.SuccessResponse({success: true}));
+    BusinessLogger.info('User logout successful', {
+      userId: userId,
+      environment: c.env.environment || 'unknown',
+    });
+
+    const response = new SuccessResponse({success: true});
+    return response.getResponse();
   } catch (error) {
+    BusinessLogger.error('Unexpected error during user logout', error as Error, {
+      userId: c.get('jwtPayload')?.sub,
+    });
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Logout failed', error);
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 
@@ -164,19 +301,41 @@ router.get('/me', jwtMiddleware, async (c) => {
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
 
+    BusinessLogger.debug('Fetching current user information', {
+      userId: userId,
+      environment: c.env.environment || 'unknown',
+    });
+
     const authService = createAuthService(c);
     const result = await authService.getCurrentUser(userId);
 
     if (result.isErr()) {
-      throw new HttpExceptions.UnauthorizedException('User not found', result.error);
+      BusinessLogger.warn('Failed to fetch current user information', {
+        userId: userId,
+        error: result.error,
+        environment: c.env.environment || 'unknown',
+      });
+      const exception = new UnauthorizedException(result.error);
+      return exception.getResponse();
     }
 
-    return c.json(new HttpExceptions.SuccessResponse(result.value));
+    BusinessLogger.debug('Current user information fetched successfully', {
+      userId: userId,
+      email: result.value.email,
+      environment: c.env.environment || 'unknown',
+    });
+
+    const response = new SuccessResponse(result.value);
+    return response.getResponse();
   } catch (error) {
+    BusinessLogger.error('Unexpected error fetching current user info', error as Error, {
+      userId: c.get('jwtPayload')?.sub,
+    });
     if (error instanceof HTTPException) {
-      throw error;
+      return error.getResponse();
     }
-    throw new HttpExceptions.InternalServerException('Get user failed', error);
+    const exception = new InternalServerException(error);
+    return exception.getResponse();
   }
 });
 

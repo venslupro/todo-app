@@ -1,6 +1,6 @@
 import {createClient} from '@supabase/supabase-js';
 import type {Database} from './database.types';
-import {AppConfig} from '../../shared/config/config';
+import {AppConfig} from '../../shared/config/app-config';
 
 /**
  * Supabase client manager.
@@ -57,13 +57,13 @@ export class SupabaseClient {
     const supabaseConfig = config.getSupabase();
     const cacheKey = this.generateCacheKey(
       supabaseConfig.getUrl(),
-      supabaseConfig.getServiceRoleKey(),
+      supabaseConfig.getServiceKey(),
     );
 
     if (!this.serviceClientCache.has(cacheKey)) {
       const client = createClient<Database>(
         supabaseConfig.getUrl(),
-        supabaseConfig.getServiceRoleKey(),
+        supabaseConfig.getServiceKey(),
         {
           auth: {
             persistSession: false,
@@ -85,3 +85,4 @@ export class SupabaseClient {
     this.serviceClientCache.clear();
   }
 }
+

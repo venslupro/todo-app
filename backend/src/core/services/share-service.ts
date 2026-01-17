@@ -1,8 +1,8 @@
 // core/services/share-service.ts
 import {ErrorCode, Result, okResult, errResult} from '../../shared/errors/error-codes';
-import {HttpExceptions} from '../../shared/errors/http-exception';
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
+import {ConflictException, InternalServerException} from '../../shared/errors/http-exception';
 import {
   TodoShare,
   // SharePermission,
@@ -81,7 +81,7 @@ export class ShareService {
       .single();
 
     if (existingShare) {
-      throw new HttpExceptions.ConflictException('Todo already shared with this user');
+      throw new ConflictException('Todo already shared with this user');
     }
 
     // Create share
@@ -99,7 +99,7 @@ export class ShareService {
       .single();
 
     if (error) {
-      throw new HttpExceptions.InternalServerException(`Failed to create share: ${error.message}`);
+      throw new InternalServerException(`Failed to create share: ${error.message}`);
     }
 
     return okResult(data as TodoShare);
@@ -227,7 +227,7 @@ export class ShareService {
       .single();
 
     if (error) {
-      throw new HttpExceptions.InternalServerException(`Failed to update share: ${error.message}`);
+      throw new InternalServerException(`Failed to update share: ${error.message}`);
     }
 
     return okResult(data as TodoShare);
