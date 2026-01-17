@@ -294,12 +294,19 @@ router.post('/logout', jwtMiddleware, async (c) => {
 
 /**
  * Get current user information.
- * GET /api/v1/auth/me
+ * GET /api/v1/auth/profile
  */
-router.get('/me', jwtMiddleware, async (c) => {
+router.get('/profile', jwtMiddleware, async (c) => {
   try {
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
+
+    // Extract access token from Authorization header
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Missing or invalid Authorization header');
+    }
+    const accessToken = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     BusinessLogger.debug('Fetching current user information', {
       userId: userId,
@@ -307,7 +314,7 @@ router.get('/me', jwtMiddleware, async (c) => {
     });
 
     const authService = createAuthService(c);
-    const result = await authService.getCurrentUser(userId);
+    const result = await authService.getCurrentUser(accessToken);
 
     if (result.isErr()) {
       BusinessLogger.warn('Failed to fetch current user information', {
