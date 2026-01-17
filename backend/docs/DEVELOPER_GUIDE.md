@@ -224,6 +224,11 @@ Content-Type: application/json
 }
 ```
 
+**Technical Details:**
+- This endpoint uses standard Supabase client for user session continuity
+- User authentication flows require session context, not suitable for service role client
+- Maintains user session state for seamless authentication experience
+
 ### Logout User
 ```http
 POST /api/v1/auth/logout
@@ -243,7 +248,7 @@ Authorization: Bearer <jwt-token>
 
 ### Get Current User
 ```http
-GET /api/v1/auth/me
+GET /api/v1/auth/profile
 Authorization: Bearer <jwt-token>
 ```
 
@@ -253,19 +258,22 @@ Authorization: Bearer <jwt-token>
   "code": 200,
   "message": "Success",
   "data": {
-    "user": {
-      "id": "user-uuid",
-      "email": "user@example.com",
-      "username": "johndoe",
-      "full_name": "John Doe",
-      "avatar_url": null,
-      "role": "user",
-      "created_at": "2024-01-13T10:00:00Z",
-      "updated_at": "2024-01-13T10:00:00Z"
-    }
+    "id": "user-uuid",
+    "email": "user@example.com",
+    "username": "johndoe",
+    "full_name": "John Doe",
+    "avatar_url": null,
+    "role": "user",
+    "created_at": "2024-01-13T10:00:00Z",
+    "updated_at": "2024-01-13T10:00:00Z"
   }
 }
 ```
+
+**Technical Details:**
+- This endpoint uses Supabase Service Role Key for enhanced permission handling
+- Service Role Key provides higher permissions for backend operations
+- Suitable for reading user information with better security
 
 ## TODO API
 
