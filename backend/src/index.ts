@@ -108,7 +108,7 @@ class ApplicationRouter {
         userAgent: c.req.header('User-Agent') || 'unknown',
         stackTrace: error instanceof Error ? error.stack : 'No stack trace',
       });
-      
+
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       const exception = new InternalServerException(errorMessage);
       return exception.getResponse();

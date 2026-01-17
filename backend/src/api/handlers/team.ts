@@ -13,7 +13,7 @@ import {
   NotFoundException,
 } from '../../shared/errors/http-exception';
 import {jwtMiddleware} from '../middleware/auth-middleware';
-import { AppConfig } from '@/src/shared/config/app-config';
+import {AppConfig} from '../../shared/config/app-config';
 
 // Define JWT variables type for type safety
 type JwtVariables = {
@@ -30,11 +30,7 @@ const router = new Hono<HonoAppType & {
 /**
  * Creates a ShareService instance.
  */
-function createShareService(
-  c: {
-    env: EnvironmentConfig;
-  },
-): ShareService {
+function createShareService(c: {env: EnvironmentConfig}): ShareService {
   const envConfig = {
     supabase_url: c.env.supabase_url,
     supabase_anon_key: c.env.supabase_anon_key,

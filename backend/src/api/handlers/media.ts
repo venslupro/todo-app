@@ -13,8 +13,7 @@ import {
   ValidationException,
 } from '../../shared/errors/http-exception';
 import {jwtMiddleware} from '../middleware/auth-middleware';
-import { AuthService } from '@/src/core/services/auth-service';
-import { AppConfig } from '@/src/shared/config/app-config';
+import {AppConfig} from '../../shared/config/app-config';
 
 // Define JWT variables type for type safety
 type JwtVariables = {
@@ -31,12 +30,8 @@ const router = new Hono<HonoAppType & {
 /**
  * Creates a MediaService instance.
  */
-function createMediaService(
-  c: {
-    env: EnvironmentConfig;
-  },
-) {
-    const envConfig = {
+function createMediaService(c: {env: EnvironmentConfig}) {
+  const envConfig = {
     supabase_url: c.env.supabase_url,
     supabase_anon_key: c.env.supabase_anon_key,
     supabase_service_role_key: c.env.supabase_service_role_key,
