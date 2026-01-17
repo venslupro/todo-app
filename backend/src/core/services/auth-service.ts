@@ -130,7 +130,7 @@ export class AuthService {
       return errResult(ErrorCode.VALIDATION_REQUIRED_FIELD);
     }
 
-    const {data, error} = await this.supabaseService.auth.refreshSession({
+    const {data, error} = await this.supabase.auth.refreshSession({
       refresh_token: refreshToken,
     });
 
@@ -138,7 +138,7 @@ export class AuthService {
       return errResult(ErrorCode.AUTH_TOKEN_INVALID);
     }
 
-    const {data: {user}} = await this.supabaseService.auth.getUser(data.session.access_token);
+    const {data: {user}} = await this.supabase.auth.getUser(data.session.access_token);
 
     if (!user) {
       return errResult(ErrorCode.AUTH_USER_NOT_FOUND);
