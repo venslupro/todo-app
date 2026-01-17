@@ -115,9 +115,6 @@ export class TodoService {
       priority: dto.priority || TodoPriority.MEDIUM,
       tags: dto.tags || null,
       created_by: userId,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      is_deleted: false,
     };
 
     if (dto.due_date) {
