@@ -1,6 +1,6 @@
 // api/handlers/websocket.ts
 import {Hono} from 'hono';
-import {HonoAppType} from '../../shared/types/hono-types';
+import {EnvironmentConfig, HonoAppType} from '../../shared/types/hono-types';
 import {WebSocketService} from '../../core/services/websocket-service';
 import {AppConfig} from '../../shared/config/app-config';
 // import {TodoWebSocketService} from '../../core/durable-objects/todo-websocket';
@@ -35,7 +35,18 @@ const router = new Hono<HonoAppType & {
  * Creates a WebSocketService instance.
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function createWebSocketService(_c: {env: Record<string, unknown>}): WebSocketService {
+function createWebSocketService(
+  c: {
+    env: EnvironmentConfig;
+  },
+): WebSocketService {
+  const envConfig = {
+    supabase_url: c.env.supabase_url,
+    supabase_anon_key: c.env.supabase_anon_key,
+    supabase_service_role_key: c.env.supabase_service_role_key,
+    environment: c.env.environment,
+  };
+  const appConfig = new AppConfig(envConfig);
   return new WebSocketService();
 }
 

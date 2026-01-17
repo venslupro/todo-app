@@ -1,7 +1,7 @@
 // api/handlers/team.ts
 import {Hono} from 'hono';
 import {HTTPException} from 'hono/http-exception';
-import {HonoAppType} from '../../shared/types/hono-types';
+import {EnvironmentConfig, HonoAppType} from '../../shared/types/hono-types';
 import {ShareService} from '../../core/services/share-service';
 import {
   SharePermission,
@@ -13,6 +13,7 @@ import {
   NotFoundException,
 } from '../../shared/errors/http-exception';
 import {jwtMiddleware} from '../middleware/auth-middleware';
+import { AppConfig } from '@/src/shared/config/app-config';
 
 // Define JWT variables type for type safety
 type JwtVariables = {
@@ -29,8 +30,19 @@ const router = new Hono<HonoAppType & {
 /**
  * Creates a ShareService instance.
  */
-function createShareService(c: any) {
-  return new ShareService(c.env);
+function createShareService(
+  c: {
+    env: EnvironmentConfig;
+  },
+): ShareService {
+  const envConfig = {
+    supabase_url: c.env.supabase_url,
+    supabase_anon_key: c.env.supabase_anon_key,
+    supabase_service_role_key: c.env.supabase_service_role_key,
+    environment: c.env.environment,
+  };
+  const appConfig = new AppConfig(envConfig);
+  return new ShareService(appConfig);
 }
 
 

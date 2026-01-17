@@ -1,5 +1,6 @@
 // core/services/rate-limit-service.ts
 import {SupabaseClient} from '../supabase/client';
+import {AppConfig} from '../../shared/config/app-config';
 
 /**
  * Rate limiting service
@@ -8,8 +9,8 @@ import {SupabaseClient} from '../supabase/client';
 export class RateLimitService {
   private supabase: ReturnType<typeof SupabaseClient.getClient>;
 
-  constructor(env: Record<string, unknown>) {
-    this.supabase = SupabaseClient.getClient(env as any);
+  constructor(config: AppConfig) {
+    this.supabase = SupabaseClient.getClient(config);
   }
 
   /**

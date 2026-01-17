@@ -2,6 +2,7 @@ import {Hono} from 'hono';
 import {HTTPException} from 'hono/http-exception';
 import {HonoAppType} from './shared/types/hono-types';
 import {InternalServerException, NotFoundException} from './shared/errors/http-exception';
+import {BusinessLogger} from './api/middleware/logger';
 
 import {corsMiddleware} from './api/middleware/cors';
 import {globalRateLimit} from './api/middleware/rate-limit';
@@ -75,20 +76,39 @@ class ApplicationRouter {
    * Sets up error handling for the application.
    */
   private setupErrorHandling(): void {
-    this.app.notFound(() => {
+    this.app.notFound((c) => {
+      BusinessLogger.warn('Requested resource not found', {
+        path: c.req.path,
+        method: c.req.method,
+        environment: c.env.environment || 'unknown',
+        userAgent: c.req.header('User-Agent') || 'unknown',
+      });
       const exception = new NotFoundException('The requested resource was not found');
       return exception.getResponse();
     });
 
-    this.app.onError((error: unknown) => {
+    this.app.onError((error: unknown, c) => {
       if (error instanceof HTTPException) {
-        // Log HTTP exceptions for debugging
-        // console.error('HTTPException:', error.message);
+        BusinessLogger.warn('HTTP exception occurred', {
+          path: c.req.path,
+          method: c.req.method,
+          statusCode: error.status,
+          errorMessage: error.message,
+          environment: c.env.environment || 'unknown',
+          clientIp: c.req.header('CF-Connecting-IP') || c.req.header('X-Real-IP') || 'unknown',
+        });
         return error.getResponse();
       }
 
-      // Log unhandled errors for debugging
-      // console.error('Unhandled error:', error);
+      BusinessLogger.error('Unhandled error occurred', error as Error, {
+        path: c.req.path,
+        method: c.req.method,
+        environment: c.env.environment || 'unknown',
+        clientIp: c.req.header('CF-Connecting-IP') || c.req.header('X-Real-IP') || 'unknown',
+        userAgent: c.req.header('User-Agent') || 'unknown',
+        stackTrace: error instanceof Error ? error.stack : 'No stack trace',
+      });
+      
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       const exception = new InternalServerException(errorMessage);
       return exception.getResponse();
