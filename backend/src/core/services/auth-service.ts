@@ -133,17 +133,13 @@ export class AuthService {
     });
 
     if (error || !data.session) {
-      // Log detailed error information for debugging
-      console.error('Token refresh failed:', error);
       return errResult(ErrorCode.AUTH_TOKEN_INVALID);
     }
 
-    // Verify the new session is valid by getting the user
-    const {data: {user}, error: userError} = await this.supabase.auth.getUser(data.session.access_token);
+    const {data: {user}} = await this.supabase.auth.getUser(data.session.access_token);
 
-    if (userError || !user) {
-      console.error('User validation after token refresh failed:', userError);
-      return errResult(ErrorCode.AUTH_TOKEN_INVALID);
+    if (!user) {
+      return errResult(ErrorCode.AUTH_USER_NOT_FOUND);
     }
 
     return okResult({
