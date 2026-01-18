@@ -10,7 +10,7 @@ describe('SystemHandler', () => {
 
   const createMockContext = (env: Record<string, string> = {}) => {
     const mockJson = jest.fn().mockReturnValue(new Response());
-    
+
     return {
       json: mockJson,
       env,
@@ -36,7 +36,7 @@ describe('SystemHandler', () => {
 
     it('should return unhealthy status when SUPABASE_URL is missing', async () => {
       const mockContext = createMockContext({ ENVIRONMENT: 'test' });
-      
+
       const result = await systemHandler.healthCheck(mockContext);
 
       expect(mockContext.json).toHaveBeenCalledWith({

@@ -33,7 +33,7 @@ describe('BaseHandler', () => {
 
   const createMockContext = () => {
     const mockJson = jest.fn().mockReturnValue(new Response());
-    
+
     return {
       json: mockJson,
     } as unknown as Context;
@@ -43,7 +43,7 @@ describe('BaseHandler', () => {
     it('should return success response with data', () => {
       const mockContext = createMockContext();
       const testData = { message: 'test' };
-      
+
       const result = testHandler.testSuccess(mockContext, testData);
 
       expect(mockContext.json).toHaveBeenCalledWith(testData, 200);
@@ -55,7 +55,7 @@ describe('BaseHandler', () => {
     it('should return created response with data', () => {
       const mockContext = createMockContext();
       const testData = { id: '123', name: 'test' };
-      
+
       const result = testHandler.testCreated(mockContext, testData);
 
       expect(mockContext.json).toHaveBeenCalledWith(testData, 201);
@@ -67,7 +67,7 @@ describe('BaseHandler', () => {
     it('should return not found response', () => {
       const mockContext = createMockContext();
       const message = 'Resource not found';
-      
+
       const result = testHandler.testNotFound(mockContext, message);
 
       expect(mockContext.json).toHaveBeenCalledWith({ error: message }, 404);
@@ -79,7 +79,7 @@ describe('BaseHandler', () => {
     it('should return bad request response', () => {
       const mockContext = createMockContext();
       const message = 'Invalid request';
-      
+
       const result = testHandler.testBadRequest(mockContext, message);
 
       expect(mockContext.json).toHaveBeenCalledWith({ error: message }, 400);
@@ -91,7 +91,7 @@ describe('BaseHandler', () => {
     it('should return unauthorized response', () => {
       const mockContext = createMockContext();
       const message = 'Unauthorized';
-      
+
       const result = testHandler.testUnauthorized(mockContext, message);
 
       expect(mockContext.json).toHaveBeenCalledWith({ error: message }, 401);
