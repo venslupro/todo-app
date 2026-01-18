@@ -49,7 +49,8 @@ router.get(
       const search = c.req.query('search');
       const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 50;
       const offset = c.req.query('offset') ? parseInt(c.req.query('offset')!) : 0;
-      const sortBy = c.req.query('sort_by') as 'name' | 'priority' | 'due_date' | 'created_at' | 'updated_at' | undefined;
+      const sortBy = c.req.query('sort_by') as
+        'name' | 'priority' | 'due_date' | 'created_at' | 'updated_at' | undefined;
       const sortOrder = c.req.query('sort_order') as 'asc' | 'desc' | undefined;
 
       // Convert string values to enum types

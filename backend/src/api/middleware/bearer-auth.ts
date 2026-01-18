@@ -38,7 +38,9 @@ export class BearerAuthMiddleware {
         }
 
         if (!authHeader.startsWith('Bearer ')) {
-          throw new UnauthorizedException('Invalid Authorization header format. Expected: "Bearer <token>"');
+          throw new UnauthorizedException(
+            'Invalid Authorization header format. Expected: "Bearer <token>"',
+          );
         }
 
         const token = authHeader.substring(7); // Remove 'Bearer ' prefix

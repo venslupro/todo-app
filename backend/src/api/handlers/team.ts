@@ -8,7 +8,6 @@ import {
   BadRequestException,
   InternalServerException,
   SuccessResponse,
-  NotFoundException,
 } from '../../shared/errors/http-exception';
 import {EnvironmentConfig, UserInfo} from '../../shared/types/hono-types';
 import {BusinessLogger} from '../middleware/logger';

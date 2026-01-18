@@ -14,7 +14,7 @@ import {EnvironmentConfig, UserInfo} from '../../shared/types/hono-types';
 import {ErrorCode} from '../../shared/errors/error-codes';
 import {BusinessLogger} from '../middleware/logger';
 import {BearerAuthMiddleware} from '../middleware/bearer-auth';
-import {UserSchemas, AuthSchemas} from '../../shared/validation/schemas';
+import {UserSchemas} from '../../shared/validation/schemas';
 
 const router = new Hono<{
   Bindings: EnvironmentConfig;
@@ -302,7 +302,7 @@ function mapErrorCodeToMessage(errorCode: string): string {
   case ErrorCode.VALIDATION_INVALID_EMAIL:
     return 'Invalid email format. Please provide a valid email address';
   case ErrorCode.VALIDATION_INVALID_PASSWORD:
-    return 'Password must be at least 8 characters long and contain uppercase, lowercase letters and numbers';
+    return 'Password must be at least 8 characters long and contain uppercase, lowercase letters, and numbers';
   case ErrorCode.VALIDATION_REQUIRED_FIELD:
     return 'Required field is missing or invalid';
   default:
