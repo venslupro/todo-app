@@ -2,11 +2,15 @@ name: Backend CI/CD Pipeline
 
 on:
   push:
-    branches: ['main', 'dev']
+    branches: ['main', 'dev', 'feature/*']
+    paths:
+      - 'backend/src/**'
+      - 'backend/package.json'
+      - 'backend/package-lock.json'
     paths-ignore:
       - 'infra/**'
       - 'README.md'
-      - '*.md'
+      - 'docs/**/*.md'
   
   workflow_dispatch:
     inputs:
