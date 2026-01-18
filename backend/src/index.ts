@@ -7,6 +7,7 @@ import {BusinessLogger} from './api/middleware/logger';
 import {corsMiddleware} from './api/middleware/cors';
 import {globalRateLimit} from './api/middleware/rate-limit';
 import {loggerMiddleware} from './api/middleware/logger';
+import {BearerAuthMiddleware} from './api/middleware/bearer-auth';
 
 import systemRoutes from './api/handlers/system';
 import authRoutes from './api/handlers/auth';
@@ -68,6 +69,7 @@ class ApplicationRouter {
 
     protectedRoutes.forEach((route) => {
       this.app.use(`${route.path}/*`, globalRateLimit);
+      this.app.use(`${route.path}/*`, BearerAuthMiddleware.create());
       this.app.route(route.path, route.handler);
     });
   }

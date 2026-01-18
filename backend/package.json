@@ -15,10 +15,12 @@
     "db:seed": "node ./scripts/seed.js"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
     "@supabase/supabase-js": "^2.39.0",
     "hono": "^3.11.0",
     "jose": "^6.1.3",
-    "neverthrow": "^8.2.0"
+    "neverthrow": "^8.2.0",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20231025.0",

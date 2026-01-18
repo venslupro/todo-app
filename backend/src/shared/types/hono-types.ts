@@ -1,7 +1,7 @@
 // shared/types/hono-types.ts
 
 /**
- * Supabase configuration type
+ * Environment configuration type - only includes required environment variables
  */
 export type EnvironmentConfig = {
   supabase_url: string;
@@ -11,51 +11,27 @@ export type EnvironmentConfig = {
 };
 
 /**
- * User information type alias
+ * User information type extracted from JWT token
  */
 export type UserInfo = {
   id: string;
-  email: string;
+  email?: string;
   username?: string;
   full_name?: string;
   avatar_url?: string;
+  role?: string;
 };
 
 /**
- * Durable Object namespace type definition
- */
-type DurableObjectNamespace = {
-  idFromName(name: string): DurableObjectId;
-  get(id: DurableObjectId): DurableObjectStub;
-};
-
-/**
- * Durable Object ID type definition
- */
-type DurableObjectId = {
-  toString(): string;
-};
-
-/**
- * Durable Object Stub type definition
- */
-type DurableObjectStub = {
-  fetch(request: Request): Promise<Response>;
-};
-
-/**
- * Hono application type alias - Complies with Google Code Style line length limit
+ * Hono application type with optimized bindings and variables
+ * Only includes required bindings and variables to reduce redundancy
  */
 export type HonoAppType = {
-  Bindings: EnvironmentConfig & {
-    name: string;
-    log_level?: 'error' | 'warn' | 'info' | 'debug';
-    TODO_WEBSOCKET?: DurableObjectNamespace;
-  };
+  Bindings: EnvironmentConfig;
   Variables: {
     user: UserInfo;
   };
-}
+};
 
 /**
  * Middleware next function type
