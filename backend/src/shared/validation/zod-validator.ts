@@ -36,7 +36,7 @@ export class ZodValidator {
   public static safeValidate<T>(
     schema: z.ZodSchema<T>,
     data: unknown,
-  ): {success: true; data: T} | {success: false; error: ZodError} {
+  ): { success: true; data: T } | { success: false; error: ZodError } {
     const result = schema.safeParse(data);
 
     if (result.success) {
@@ -63,7 +63,10 @@ export class ZodValidator {
           processedQuery[key] = Number(value);
         }
         // Try to parse booleans
-        else if (value.toLowerCase() === 'true' || value.toLowerCase() === 'false') {
+        else if (
+          value.toLowerCase() === 'true' ||
+          value.toLowerCase() === 'false'
+        ) {
           processedQuery[key] = value.toLowerCase() === 'true';
         }
         // Handle comma-separated arrays (e.g., tags)
@@ -86,14 +89,20 @@ export class ZodValidator {
   /**
    * Validates path parameters against a Zod schema.
    */
-  public static validateParams<T>(schema: z.ZodSchema<T>, params: Record<string, string>): T {
+  public static validateParams<T>(
+    schema: z.ZodSchema<T>,
+    params: Record<string, string>,
+  ): T {
     return this.validate(schema, params);
   }
 
   /**
    * Validates headers against a Zod schema.
    */
-  public static validateHeaders<T>(schema: z.ZodSchema<T>, headers: Record<string, string>): T {
+  public static validateHeaders<T>(
+    schema: z.ZodSchema<T>,
+    headers: Record<string, string>,
+  ): T {
     // Convert headers to lowercase for consistent validation
     const lowerCaseHeaders: Record<string, string> = {};
 
