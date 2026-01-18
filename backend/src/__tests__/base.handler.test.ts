@@ -1,5 +1,6 @@
 import { Context } from 'hono';
 import { BaseHandler } from '../api/handlers/base.handler';
+import { ApiResponseBuilder } from '../shared/types/api.response';
 
 // Create a concrete implementation for testing
 class TestHandler extends BaseHandler {
@@ -7,8 +8,20 @@ class TestHandler extends BaseHandler {
     return this.success(c, data);
   }
 
+  public testSuccessWithMessage(c: Context, data: unknown, message: string) {
+    return this.success(c, data, message);
+  }
+
   public testCreated(c: Context, data: unknown) {
     return this.created(c, data);
+  }
+
+  public testCreatedWithMessage(c: Context, data: unknown, message: string) {
+    return this.created(c, data, message);
+  }
+
+  public testNoContent(c: Context) {
+    return this.noContent(c);
   }
 
   public testNotFound(c: Context, message: string) {
@@ -43,10 +56,23 @@ describe('BaseHandler', () => {
     it('should return success response with data', () => {
       const mockContext = createMockContext();
       const testData = { message: 'test' };
+      const expectedResponse = ApiResponseBuilder.success(testData);
 
       const result = testHandler.testSuccess(mockContext, testData);
 
-      expect(mockContext.json).toHaveBeenCalledWith(testData, 200);
+      expect(mockContext.json).toHaveBeenCalledWith(expectedResponse, 200);
+      expect(result).toBeInstanceOf(Response);
+    });
+
+    it('should return success response with custom message', () => {
+      const mockContext = createMockContext();
+      const testData = { message: 'test' };
+      const customMessage = 'Custom success message';
+      const expectedResponse = ApiResponseBuilder.success(testData, customMessage);
+
+      const result = testHandler.testSuccessWithMessage(mockContext, testData, customMessage);
+
+      expect(mockContext.json).toHaveBeenCalledWith(expectedResponse, 200);
       expect(result).toBeInstanceOf(Response);
     });
   });
@@ -55,47 +81,65 @@ describe('BaseHandler', () => {
     it('should return created response with data', () => {
       const mockContext = createMockContext();
       const testData = { id: '123', name: 'test' };
+      const expectedResponse = ApiResponseBuilder.created(testData);
 
       const result = testHandler.testCreated(mockContext, testData);
 
-      expect(mockContext.json).toHaveBeenCalledWith(testData, 201);
+      expect(mockContext.json).toHaveBeenCalledWith(expectedResponse, 201);
+      expect(result).toBeInstanceOf(Response);
+    });
+
+    it('should return created response with custom message', () => {
+      const mockContext = createMockContext();
+      const testData = { id: '123', name: 'test' };
+      const customMessage = 'Custom created message';
+      const expectedResponse = ApiResponseBuilder.created(testData, customMessage);
+
+      const result = testHandler.testCreatedWithMessage(mockContext, testData, customMessage);
+
+      expect(mockContext.json).toHaveBeenCalledWith(expectedResponse, 201);
       expect(result).toBeInstanceOf(Response);
     });
   });
 
-  describe('notFound', () => {
-    it('should return not found response', () => {
+  describe('noContent', () => {
+    it('should return no content response', () => {
+      const mockContext = createMockContext();
+      const expectedResponse = ApiResponseBuilder.noContent();
+
+      const result = testHandler.testNoContent(mockContext);
+
+      expect(mockContext.json).toHaveBeenCalledWith(expectedResponse, 204);
+      expect(result).toBeInstanceOf(Response);
+    });
+  });
+
+  describe('error methods', () => {
+    it('should throw AppException for not found', () => {
       const mockContext = createMockContext();
       const message = 'Resource not found';
 
-      const result = testHandler.testNotFound(mockContext, message);
-
-      expect(mockContext.json).toHaveBeenCalledWith({ error: message }, 404);
-      expect(result).toBeInstanceOf(Response);
+      expect(() => {
+        testHandler.testNotFound(mockContext, message);
+      }).toThrow('Resource not found');
     });
-  });
 
-  describe('badRequest', () => {
-    it('should return bad request response', () => {
+    it('should throw AppException for bad request', () => {
       const mockContext = createMockContext();
       const message = 'Invalid request';
 
-      const result = testHandler.testBadRequest(mockContext, message);
-
-      expect(mockContext.json).toHaveBeenCalledWith({ error: message }, 400);
-      expect(result).toBeInstanceOf(Response);
+      expect(() => {
+        testHandler.testBadRequest(mockContext, message);
+      }).toThrow('Invalid request');
     });
-  });
 
-  describe('unauthorized', () => {
-    it('should return unauthorized response', () => {
+    it('should throw AppException for unauthorized', () => {
       const mockContext = createMockContext();
       const message = 'Unauthorized';
 
-      const result = testHandler.testUnauthorized(mockContext, message);
-
-      expect(mockContext.json).toHaveBeenCalledWith({ error: message }, 401);
-      expect(result).toBeInstanceOf(Response);
+      expect(() => {
+        testHandler.testUnauthorized(mockContext, message);
+      }).toThrow('Unauthorized');
     });
   });
 });

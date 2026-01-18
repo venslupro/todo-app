@@ -1,5 +1,6 @@
 import { Context } from 'hono';
 import { SystemHandler } from '../api/handlers/system.handler';
+import { ApiResponseBuilder } from '../shared/types/api.response';
 
 describe('SystemHandler', () => {
   let systemHandler: SystemHandler;
@@ -26,11 +27,14 @@ describe('SystemHandler', () => {
 
       const result = await systemHandler.healthCheck(mockContext);
 
-      expect(mockContext.json).toHaveBeenCalledWith({
+      const expectedData = {
         status: 'healthy',
         timestamp: expect.any(String),
         environment: 'test',
-      }, 200);
+      };
+      const expectedResponse = ApiResponseBuilder.success(expectedData, 'Health check completed');
+
+      expect(mockContext.json).toHaveBeenCalledWith(expectedResponse, 200);
       expect(result).toBeInstanceOf(Response);
     });
 
@@ -39,11 +43,14 @@ describe('SystemHandler', () => {
 
       const result = await systemHandler.healthCheck(mockContext);
 
-      expect(mockContext.json).toHaveBeenCalledWith({
+      const expectedData = {
         status: 'unhealthy',
         timestamp: expect.any(String),
         environment: 'test',
-      }, 200);
+      };
+      const expectedResponse = ApiResponseBuilder.success(expectedData, 'Health check completed');
+
+      expect(mockContext.json).toHaveBeenCalledWith(expectedResponse, 200);
       expect(result).toBeInstanceOf(Response);
     });
   });
@@ -54,11 +61,14 @@ describe('SystemHandler', () => {
 
       const result = await systemHandler.versionInfo(mockContext);
 
-      expect(mockContext.json).toHaveBeenCalledWith({
+      const expectedData = {
         name: 'TODO API',
         version: '1.0.0',
         environment: 'test',
-      }, 200);
+      };
+      const expectedResponse = ApiResponseBuilder.success(expectedData, 'Version information retrieved');
+
+      expect(mockContext.json).toHaveBeenCalledWith(expectedResponse, 200);
       expect(result).toBeInstanceOf(Response);
     });
   });
@@ -69,12 +79,15 @@ describe('SystemHandler', () => {
 
       const result = await systemHandler.root(mockContext);
 
-      expect(mockContext.json).toHaveBeenCalledWith({
+      const expectedData = {
         name: 'TODO API',
         version: '1.0.0',
         environment: 'test',
         timestamp: expect.any(String),
-      }, 200);
+      };
+      const expectedResponse = ApiResponseBuilder.success(expectedData, 'API is running');
+
+      expect(mockContext.json).toHaveBeenCalledWith(expectedResponse, 200);
       expect(result).toBeInstanceOf(Response);
     });
   });
