@@ -1,6 +1,7 @@
 import {Context, Next} from 'hono';
 import {HTTPException} from 'hono/http-exception';
 import {RateLimitService} from '../../core/services/rate-limit-service';
+import {AppConfig} from '../../shared/config/app-config';
 
 /**
  * Rate limiting middleware factory function
@@ -11,7 +12,8 @@ export const rateLimitMiddleware = (options: {
   identifier?: string | ((c: Context) => string);
 }) => {
   return async (c: Context, next: Next) => {
-    const rateLimitService = new RateLimitService(c.env);
+    const appConfig = new AppConfig(c.env);
+    const rateLimitService = new RateLimitService(appConfig);
 
     // Determine identifier
     let identifier: string;

@@ -44,8 +44,8 @@ export interface CreateTodo {
   name: string;
   description?: string;
   due_date?: string;
-  priority: TodoPriority;
-  status: TodoStatus;
+  priority?: TodoPriority;
+  status?: TodoStatus;
   tags?: string[];
   parent_id?: string;
 }

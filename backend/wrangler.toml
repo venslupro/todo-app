@@ -28,6 +28,7 @@ enabled = true
 enabled = true
 # head_sampling_rate = 0.6
 
+# Environment variables configuration
 [env.production]
 name = "prod-todo-worker"
 environment = "production"
@@ -44,11 +45,11 @@ supabase_anon_key = ""
 supabase_service_role_key = ""
 log_level = "debug"   # "error" | "warn" | "info" | "debug"
 
-# start workers locally
+# Development environment configuration
 [env.development]
 name = "dev-todo-worker"
 environment = "development"
-supabase_url = ""
-supabase_anon_key = ""
-supabase_service_role_key = ""
+supabase_url = "https://your-project.supabase.co"
+supabase_anon_key = "your-supabase-anon-key"
+supabase_service_role_key = "your-supabase-service-role-key"
 log_level = "debug"   # "error" | "warn" | "info" | "debug"

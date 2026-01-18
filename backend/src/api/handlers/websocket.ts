@@ -12,7 +12,7 @@ import {
   WebSocketConnectionError,
   WebSocketResponse,
 } from '../../shared/errors/websocket-errors';
-import {jwtMiddleware} from '../middleware/auth-middleware';
+import {BearerAuthMiddleware} from '../middleware/bearer-auth';
 
 // Define JWT variables type for type safety
 type JwtVariables = {
@@ -34,8 +34,7 @@ const router = new Hono<HonoAppType & {
 /**
  * Creates a WebSocketService instance.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function createWebSocketService(_c: {env: Record<string, unknown>}): WebSocketService {
+function createWebSocketService(): WebSocketService {
   return new WebSocketService();
 }
 
@@ -60,13 +59,13 @@ function handleServiceError(error: unknown, todoId?: string, userId?: string): W
  * Get TODO room statistics.
  * GET /api/v1/websocket/todo/:id/stats
  */
-router.get('/todo/:id/stats', jwtMiddleware, async (c) => {
+router.get('/todo/:id/stats', BearerAuthMiddleware.create(), async (c) => {
   try {
     const todoId = c.req.param('id');
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
     // Verify TODO access permissions
-    const websocketService = createWebSocketService(c);
+    const websocketService = createWebSocketService();
     const appConfig = createAppConfig(c);
     const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
     if (accessResult.isErr()) {
@@ -91,13 +90,13 @@ router.get('/todo/:id/stats', jwtMiddleware, async (c) => {
  * Get TODO room users.
  * GET /api/v1/websocket/todo/:id/users
  */
-router.get('/todo/:id/users', jwtMiddleware, async (c) => {
+router.get('/todo/:id/users', BearerAuthMiddleware.create(), async (c) => {
   try {
     const todoId = c.req.param('id');
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
     // Verify TODO access permissions
-    const websocketService = createWebSocketService(c);
+    const websocketService = createWebSocketService();
     const appConfig = createAppConfig(c);
     const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
     if (accessResult.isErr()) {
@@ -119,13 +118,13 @@ router.get('/todo/:id/users', jwtMiddleware, async (c) => {
  * Cleanup inactive connections.
  * POST /api/v1/websocket/todo/:id/cleanup
  */
-router.post('/todo/:id/cleanup', jwtMiddleware, async (c) => {
+router.post('/todo/:id/cleanup', BearerAuthMiddleware.create(), async (c) => {
   try {
     const todoId = c.req.param('id');
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
     // Verify TODO access permissions (admin only)
-    const websocketService = createWebSocketService(c);
+    const websocketService = createWebSocketService();
     const appConfig = createAppConfig(c);
     const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
     if (accessResult.isErr()) {
@@ -146,13 +145,13 @@ router.post('/todo/:id/cleanup', jwtMiddleware, async (c) => {
  * This endpoint is called by the client to establish a WebSocket connection.
  * The actual WebSocket handling is done by the Durable Object.
  */
-router.get('/todo/:id/connect', jwtMiddleware, async (c) => {
+router.get('/todo/:id/connect', BearerAuthMiddleware.create(), async (c) => {
   try {
     const todoId = c.req.param('id');
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
     const appConfig = createAppConfig(c);
-    const websocketService = createWebSocketService(c);
+    const websocketService = createWebSocketService();
     // Verify TODO access permissions
     const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
     if (accessResult.isErr()) {
@@ -199,14 +198,14 @@ router.get('/todo/:id/connect', jwtMiddleware, async (c) => {
  * Handle TODO update via WebSocket-like API.
  * POST /api/v1/websocket/todo/:id/update
  */
-router.post('/todo/:id/update', jwtMiddleware, async (c) => {
+router.post('/todo/:id/update', BearerAuthMiddleware.create(), async (c) => {
   try {
     const todoId = c.req.param('id');
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
     const body = await c.req.json();
     const appConfig = createAppConfig(c);
-    const websocketService = createWebSocketService(c);
+    const websocketService = createWebSocketService();
     // Verify TODO access permissions
     const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
     if (accessResult.isErr()) {
@@ -245,13 +244,13 @@ router.post('/todo/:id/update', jwtMiddleware, async (c) => {
  * WebSocket message handler for real-time WebSocket connections.
  * This would be used in a real WebSocket implementation.
  */
-router.get('/todo/:id/ws', jwtMiddleware, async (c) => {
+router.get('/todo/:id/ws', BearerAuthMiddleware.create(), async (c) => {
   try {
     const todoId = c.req.param('id');
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
     const appConfig = createAppConfig(c);
-    const websocketService = createWebSocketService(c);
+    const websocketService = createWebSocketService();
     // Verify TODO access permissions
     const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
     if (accessResult.isErr()) {
