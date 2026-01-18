@@ -28,28 +28,27 @@ enabled = true
 enabled = true
 # head_sampling_rate = 0.6
 
-# Environment variables configuration
 [env.production]
 name = "prod-todo-worker"
-ENVIRONMENT = "production"
-SUPABASE_URL = ""
-SUPABASE_ANON_KEY = ""
-SUPABASE_SERVICE_ROLE_KEY = ""
-LOG_LEVEL = "info"   # "error" | "warn" | "info" | "debug"
+environment = "production"
+supabase_url = ""
+supabase_anon_key = ""
+supabase_service_role_key = ""
+log_level = "info"   # "error" | "warn" | "info" | "debug"
 
 [env.staging]
 name = "stg-todo-worker"
-ENVIRONMENT = "staging"
-SUPABASE_URL = ""
-SUPABASE_ANON_KEY = ""
-SUPABASE_SERVICE_ROLE_KEY = ""
-LOG_LEVEL = "debug"   # "error" | "warn" | "info" | "debug"
+environment = "staging"
+supabase_url = ""
+supabase_anon_key = ""
+supabase_service_role_key = ""
+log_level = "debug"   # "error" | "warn" | "info" | "debug"
 
-# Development environment configuration
+# start workers locally
 [env.development]
 name = "dev-todo-worker"
-ENVIRONMENT = "development"
-SUPABASE_URL = "https://your-project.supabase.co"
-SUPABASE_ANON_KEY = "your-supabase-anon-key"
-SUPABASE_SERVICE_ROLE_KEY = "your-supabase-service-role-key"
-LOG_LEVEL = "debug"   # "error" | "warn" | "info" | "debug"
+environment = "development"
+supabase_url = ""
+supabase_anon_key = ""
+supabase_service_role_key = ""
+log_level = "debug"   # "error" | "warn" | "info" | "debug"

@@ -11,7 +11,7 @@ export const authMiddleware = async (c: Context, next: Next) => {
   const token = authHeader.substring(7);
 
   try {
-    const supabaseUrl = (c.env as any).SUPABASE_URL;
+    const supabaseUrl = (c.env as any).supabase_url;
     if (!supabaseUrl) {
       throw new Error('Supabase URL not configured');
     }

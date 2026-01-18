@@ -18,10 +18,10 @@ describe('SystemHandler', () => {
   };
 
   describe('healthCheck', () => {
-    it('should return healthy status when SUPABASE_URL is present', async () => {
+    it('should return healthy status when supabase_url is present', async () => {
       const mockContext = createMockContext({
-        ENVIRONMENT: 'test',
-        SUPABASE_URL: 'https://test.supabase.co',
+        environment: 'test',
+        supabase_url: 'https://test.supabase.co',
       });
 
       const result = await systemHandler.healthCheck(mockContext);
@@ -34,8 +34,8 @@ describe('SystemHandler', () => {
       expect(result).toBeInstanceOf(Response);
     });
 
-    it('should return unhealthy status when SUPABASE_URL is missing', async () => {
-      const mockContext = createMockContext({ ENVIRONMENT: 'test' });
+    it('should return unhealthy status when supabase_url is missing', async () => {
+      const mockContext = createMockContext({ environment: 'test' });
 
       const result = await systemHandler.healthCheck(mockContext);
 
@@ -50,7 +50,7 @@ describe('SystemHandler', () => {
 
   describe('versionInfo', () => {
     it('should return version information', async () => {
-      const mockContext = createMockContext({ ENVIRONMENT: 'test' });
+      const mockContext = createMockContext({ environment: 'test' });
 
       const result = await systemHandler.versionInfo(mockContext);
 
@@ -65,7 +65,7 @@ describe('SystemHandler', () => {
 
   describe('root', () => {
     it('should return root endpoint information', async () => {
-      const mockContext = createMockContext({ ENVIRONMENT: 'test' });
+      const mockContext = createMockContext({ environment: 'test' });
 
       const result = await systemHandler.root(mockContext);
 
@@ -81,7 +81,7 @@ describe('SystemHandler', () => {
 
   describe('getEnvironment', () => {
     it('should return environment from context', () => {
-      const mockContext = createMockContext({ ENVIRONMENT: 'test' });
+      const mockContext = createMockContext({ environment: 'test' });
       const result = (systemHandler as any).getEnvironment(mockContext);
       expect(result).toBe('test');
     });

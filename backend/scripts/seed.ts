@@ -11,9 +11,9 @@ async function runSeed() {
 
   // Get configuration from environment variables
   const env = {
-    SUPABASE_URL: process.env['SUPABASE_URL'],
-    SUPABASE_SERVICE_ROLE_KEY: process.env['SUPABASE_SERVICE_ROLE_KEY'],
-    SUPABASE_ANON_KEY: process.env['SUPABASE_ANON_KEY'],
+    SUPABASE_URL: process.env['supabase_url'],
+    SUPABASE_SERVICE_ROLE_KEY: process.env['supabase_service_role_key'],
+    SUPABASE_ANON_KEY: process.env['supabase_anon_key'],
   };
 
   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {

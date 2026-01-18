@@ -4,11 +4,11 @@ import { BaseHandler } from './base.handler';
 export class SystemHandler extends BaseHandler {
   private getEnvironment(c: Context): string {
     const env = c.env as any;
-    return env.ENVIRONMENT || 'development';
+    return env.environment || 'development';
   }
 
   healthCheck = async (c: Context) => {
-    const supabaseUrl = (c.env as any).SUPABASE_URL;
+    const supabaseUrl = (c.env as any).supabase_url;
     const isHealthy = !!supabaseUrl;
 
     return this.success(c, {
