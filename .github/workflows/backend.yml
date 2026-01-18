@@ -7,10 +7,7 @@ on:
       - 'backend/src/**'
       - 'backend/package.json'
       - 'backend/package-lock.json'
-    paths-ignore:
-      - 'infra/**'
-      - 'README.md'
-      - 'docs/**/*.md'
+      - '.github/workflows/backend.yml'
   
   workflow_dispatch:
     inputs:
