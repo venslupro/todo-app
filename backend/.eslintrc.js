@@ -2,11 +2,11 @@ module.exports = {
   env: {
     es2021: true,
     node: true,
-    jest: true,
   },
   extends: [
     'eslint:recommended',
     'google',
+    'plugin:@typescript-eslint/recommended',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -18,33 +18,40 @@ module.exports = {
     '@typescript-eslint',
   ],
   rules: {
-    // Google 风格规则
-    'max-len': ['error', {code: 100, ignoreUrls: true}],
+    // Google Style Guide rules
+    'max-len': ['error', { code: 120, ignoreUrls: true, ignoreStrings: true, ignoreTemplateLiterals: true }],
     'indent': ['error', 2],
     'quotes': ['error', 'single'],
     'semi': ['error', 'always'],
     'comma-dangle': ['error', 'always-multiline'],
-    'object-curly-spacing': ['error', 'never'],
+    'object-curly-spacing': ['error', 'always'],
     'array-bracket-spacing': ['error', 'never'],
-    
-    // TypeScript 特定规则
-    '@typescript-eslint/explicit-function-return-type': 'off',
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unused-vars': 'error',
-    
-    // Google 风格覆盖
+    'arrow-parens': ['error', 'always'],
     'require-jsdoc': 'off',
     'valid-jsdoc': 'off',
     
-    // 其他规则
-    'no-console': 'warn',
-    'no-trailing-spaces': 'error',
+    // TypeScript specific rules - relaxed for Hono/Cloudflare Workers
+    '@typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-explicit-any': 'off', // Allow any for Hono context types
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/type-annotation-spacing': 'error',
+    
+    // Custom rules for better code quality
+    'no-console': 'off', // Allow console for Cloudflare Workers
+    'no-debugger': 'error',
+    'prefer-const': 'error',
+    'no-var': 'error',
+    'prefer-arrow-callback': 'error',
+    'prefer-template': 'error',
     'eol-last': 'error',
+    'no-trailing-spaces': 'error',
+    'no-throw-literal': 'off', // Allow throwing string literals
   },
   ignorePatterns: [
     'dist/',
     'node_modules/',
     '*.js',
+    '*.d.ts',
   ],
 };

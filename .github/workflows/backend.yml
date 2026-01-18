@@ -2,11 +2,12 @@ name: Backend CI/CD Pipeline
 
 on:
   push:
-    branches: ['main', 'dev']
-    paths-ignore:
-      - 'infra/**'
-      - 'README.md'
-      - '*.md'
+    branches: ['main', 'dev', 'feature/*']
+    paths:
+      - 'backend/src/**'
+      - 'backend/package.json'
+      - 'backend/package-lock.json'
+      - '.github/workflows/backend.yml'
   
   workflow_dispatch:
     inputs:
@@ -119,7 +120,7 @@ jobs:
     environment: staging
     needs: build
     if: |
-      (github.ref == 'refs/heads/dev' && github.event_name == 'push' && needs.build.result == 'success') ||
+      (github.ref != 'refs/heads/main' && github.event_name == 'push' && needs.build.result == 'success') ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
     
     steps:
@@ -154,7 +155,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     needs: build
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    if: |
+      (github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.build.result == 'success') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
     
     steps:
     - name: 🔄 Checkout source code

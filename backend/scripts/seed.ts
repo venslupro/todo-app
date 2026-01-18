@@ -1,5 +1,5 @@
 // scripts/seed.ts
-import {SupabaseClient} from '../src/core/supabase/client';
+import { SupabaseDriver } from '../src/drivers/supabase';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -11,9 +11,9 @@ async function runSeed() {
 
   // Get configuration from environment variables
   const env = {
-    SUPABASE_URL: process.env['SUPABASE_URL'],
-    SUPABASE_SERVICE_ROLE_KEY: process.env['SUPABASE_SERVICE_ROLE_KEY'],
-    SUPABASE_ANON_KEY: process.env['SUPABASE_ANON_KEY'],
+    SUPABASE_URL: process.env['supabase_url'],
+    SUPABASE_SERVICE_ROLE_KEY: process.env['supabase_service_role_key'],
+    SUPABASE_ANON_KEY: process.env['supabase_anon_key'],
   };
 
   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -21,42 +21,49 @@ async function runSeed() {
     process.exit(1);
   }
 
-  const supabase = SupabaseClient.getServiceClient(env as any);
+  const config = {
+    environment: 'development' as any,
+    supabaseUrl: env.SUPABASE_URL,
+    supabaseAnonKey: env.SUPABASE_ANON_KEY || '',
+    supabaseServiceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
+    logLevel: 'info' as any,
+  };
+
+  const supabaseDriver = new SupabaseDriver(config);
+  const supabase = supabaseDriver.getServiceRoleClient();
 
   try {
     // Read seed data file
-    const seedDir = path.join(__dirname, '../database/seed');
+    const seedDir = path.join(__dirname, '../src/database/seed');
     const seedFile = path.join(seedDir, 'initial_data.sql');
 
     if (!fs.existsSync(seedFile)) {
-      console.log('No seed file found, skipping seeding');
-      process.exit(0);
+      console.error('Seed file not found:', seedFile);
+      process.exit(1);
     }
 
-    console.log('Running seed script...');
+    const sql = fs.readFileSync(seedFile, 'utf8');
 
-    // Read SQL file
-    const sql = fs.readFileSync(seedFile, 'utf-8');
+    console.log('Executing seed data...');
 
-    // Execute SQL - use rpc method to execute raw SQL
-    const {error} = await (supabase as any).rpc('exec_sql', {sql});
+    // Execute seed SQL
+    const { error } = await supabase.rpc('exec_sql', { sql });
 
     if (error) {
-      console.error('Seeding failed:', error);
-      throw error;
+      console.error('Seed execution failed:', error);
+      process.exit(1);
     }
 
-    console.log('Seeding completed successfully');
-    process.exit(0);
+    console.log('✓ Database seeded successfully!');
   } catch (error) {
-    console.error('Seeding failed:', error);
+    console.error('Seed error:', error);
     process.exit(1);
   }
 }
 
-// Run seed script
+// Run seed if this script is executed directly
 if (require.main === module) {
-  runSeed();
+  runSeed().catch(console.error);
 }
 
-export {runSeed};
+export { runSeed };
