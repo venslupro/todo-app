@@ -11,83 +11,42 @@ export class TodoHandler extends BaseHandler {
   }
 
   getAllTodos = zValidator('query', todoFilterSchema.merge(paginationSchema), async (result, c) => {
-    const errorResponse = this.handleZodError(result, c);
-    if (errorResponse) return errorResponse;
+    this.handleZodError(result, c);
 
-    try {
-      const userId = this.getUserId(c);
-      const { limit, offset, sortBy, sortOrder, ...filters } = result.data;
-      const response = await this.todoService.getAllTodos(userId, filters, { limit, offset, sortBy, sortOrder });
-      return this.success(c, response);
-    } catch (error: any) {
-      return this.internalError(c, error.message);
-    }
+    const userId = this.getUserId(c);
+    const { limit, offset, sortBy, sortOrder, ...filters } = result.data;
+    const response = await this.todoService.getAllTodos(userId, filters, { limit, offset, sortBy, sortOrder });
+    return this.success(c, response, 'Todos retrieved successfully');
   });
 
   getTodoById = async (c: Context) => {
-    try {
-      const userId = this.getUserId(c);
-      const id = (c.req.param as any)('id') as string;
-      const todo = await this.todoService.getTodoById(id, userId);
-      return this.success(c, todo);
-    } catch (error: any) {
-      if (error.message.includes('not found')) {
-        return this.notFound(c, 'TODO not found');
-      }
-      return this.internalError(c, error.message);
-    }
+    const userId = this.getUserId(c);
+    const id = (c.req.param as any)('id') as string;
+    const todo = await this.todoService.getTodoById(id, userId);
+    return this.success(c, todo, 'Todo retrieved successfully');
   };
 
   createTodo = zValidator('json', createTodoSchema, async (result, c) => {
-    const errorResponse = this.handleZodError(result, c);
-    if (errorResponse) return errorResponse;
+    this.handleZodError(result, c);
 
-    try {
-      const userId = this.getUserId(c);
-      const todo = await this.todoService.createTodo(result.data, userId);
-      return this.created(c, todo);
-    } catch (error: any) {
-      if (error.message.includes('already exists')) {
-        return this.conflict(c, error.message);
-      }
-      if (error.message.includes('Invalid')) {
-        return this.badRequest(c, error.message);
-      }
-      return this.internalError(c, error.message);
-    }
+    const userId = this.getUserId(c);
+    const todo = await this.todoService.createTodo(result.data, userId);
+    return this.created(c, todo, 'Todo created successfully');
   });
 
   updateTodo = zValidator('json', updateTodoSchema, async (result, c) => {
-    const errorResponse = this.handleZodError(result, c);
-    if (errorResponse) return errorResponse;
+    this.handleZodError(result, c);
 
-    try {
-      const userId = this.getUserId(c);
-      const id = (c.req.param as any)('id') as string;
-      const todo = await this.todoService.updateTodo(id, result.data, userId);
-      return this.success(c, todo);
-    } catch (error: any) {
-      if (error.message.includes('not found')) {
-        return this.notFound(c, 'TODO not found');
-      }
-      if (error.message.includes('Invalid')) {
-        return this.badRequest(c, error.message);
-      }
-      return this.internalError(c, error.message);
-    }
+    const userId = this.getUserId(c);
+    const id = (c.req.param as any)('id') as string;
+    const todo = await this.todoService.updateTodo(id, result.data, userId);
+    return this.success(c, todo, 'Todo updated successfully');
   });
 
   deleteTodo = async (c: Context) => {
-    try {
-      const userId = this.getUserId(c);
-      const id = (c.req.param as any)('id') as string;
-      await this.todoService.deleteTodo(id, userId);
-      return this.noContent(c);
-    } catch (error: any) {
-      if (error.message.includes('not found')) {
-        return this.notFound(c, 'TODO not found');
-      }
-      return this.internalError(c, error.message);
-    }
+    const userId = this.getUserId(c);
+    const id = (c.req.param as any)('id') as string;
+    await this.todoService.deleteTodo(id, userId);
+    return this.noContent(c, 'Todo deleted successfully');
   };
 }

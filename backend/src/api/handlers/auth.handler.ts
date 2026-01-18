@@ -10,70 +10,35 @@ export class AuthHandler extends BaseHandler {
   }
 
   register = zValidator('json', registerSchema, async (result, c) => {
-    const errorResponse = this.handleZodError(result, c);
-    if (errorResponse) return errorResponse;
+    this.handleZodError(result, c);
 
-    try {
-      const response = await this.authService.register(result.data);
-      return this.created(c, response);
-    } catch (error: any) {
-      if (error.message.includes('invalid credentials') || error.message.includes('auth')) {
-        return this.unauthorized(c, error.message);
-      }
-      return this.internalError(c, error.message);
-    }
+    const response = await this.authService.register(result.data);
+    return this.created(c, response, 'User registered successfully');
   });
 
   login = zValidator('json', loginSchema, async (result, c) => {
-    const errorResponse = this.handleZodError(result, c);
-    if (errorResponse) return errorResponse;
+    this.handleZodError(result, c);
 
-    try {
-      const response = await this.authService.login(result.data);
-      return this.success(c, response);
-    } catch (error: any) {
-      if (error.message.includes('invalid credentials') || error.message.includes('auth')) {
-        return this.unauthorized(c, error.message);
-      }
-      return this.internalError(c, error.message);
-    }
+    const response = await this.authService.login(result.data);
+    return this.success(c, response, 'Login successful');
   });
 
   refreshToken = zValidator('json', refreshTokenSchema, async (result, c) => {
-    const errorResponse = this.handleZodError(result, c);
-    if (errorResponse) return errorResponse;
+    this.handleZodError(result, c);
 
-    try {
-      const response = await this.authService.refreshToken(result.data);
-      return this.success(c, response);
-    } catch (error: any) {
-      if (error.message.includes('token') || error.message.includes('auth')) {
-        return this.unauthorized(c, error.message);
-      }
-      return this.internalError(c, error.message);
-    }
+    const response = await this.authService.refreshToken(result.data);
+    return this.success(c, response, 'Token refreshed successfully');
   });
 
   logout = async (c: Context) => {
-    try {
-      const accessToken = this.getAccessToken(c);
-      await this.authService.logout(accessToken);
-      return this.noContent(c);
-    } catch (error: any) {
-      return this.internalError(c, error.message);
-    }
+    const accessToken = this.getAccessToken(c);
+    await this.authService.logout(accessToken);
+    return this.noContent(c, 'Logout successful');
   };
 
   getProfile = async (c: Context) => {
-    try {
-      const accessToken = this.getAccessToken(c);
-      const user = await this.authService.getCurrentUser(accessToken);
-      return this.success(c, user);
-    } catch (error: any) {
-      if (error.message.includes('token') || error.message.includes('auth')) {
-        return this.unauthorized(c, error.message);
-      }
-      return this.internalError(c, error.message);
-    }
+    const accessToken = this.getAccessToken(c);
+    const user = await this.authService.getCurrentUser(accessToken);
+    return this.success(c, user, 'Profile retrieved successfully');
   };
 }

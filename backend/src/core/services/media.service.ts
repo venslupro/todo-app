@@ -1,86 +1,71 @@
 import { MediaDriver, SupabaseDriver } from '../../drivers/supabase';
 import { Media, MediaListResponse } from '../model/media';
 import { GenerateUploadUrlRequest, ConfirmUploadRequest, MediaFilter } from '../../shared/types/media';
-import { ApiError } from '../../shared/types/common';
+import { AppException } from '../../shared/exceptions/app.exception';
 
 export class MediaService {
-  private mediaDriver: MediaDriver;
+  private readonly mediaDriver: MediaDriver;
 
   constructor(supabaseDriver: SupabaseDriver) {
     this.mediaDriver = new MediaDriver(supabaseDriver);
   }
 
   async getAllMedia(userId: string, filters?: MediaFilter): Promise<MediaListResponse> {
-    try {
-      const result = await this.mediaDriver.getAllMedia(userId, filters);
+    const result = await this.mediaDriver.getAllMedia(userId, filters);
 
-      return {
-        media: result.media.map((media: any) => this.mapMedia(media)),
-      };
-    } catch (error: any) {
-      throw this.mapError(error);
-    }
+    return {
+      media: result.media.map((media: any) => this.mapMedia(media)),
+    };
   }
 
   async generateUploadUrl(
     request: GenerateUploadUrlRequest,
     userId: string,
   ): Promise<{ uploadUrl: string; mediaId: string }> {
-    try {
-      const mediaId = crypto.randomUUID();
-      const filePath = `media/${request.todoId}/${mediaId}-${request.fileName}`;
+    const mediaId = crypto.randomUUID();
+    const filePath = `media/${request.todoId}/${mediaId}-${request.fileName}`;
 
-      const mediaData = {
-        id: mediaId,
-        todo_id: request.todoId,
-        file_name: request.fileName,
-        file_path: filePath,
-        file_size: request.fileSize || 0,
-        mime_type: request.mimeType,
-        media_type: this.determineMediaType(request.mimeType),
-      };
+    const mediaData = {
+      id: mediaId,
+      todo_id: request.todoId,
+      file_name: request.fileName,
+      file_path: filePath,
+      file_size: request.fileSize || 0,
+      mime_type: request.mimeType,
+      media_type: this.determineMediaType(request.mimeType),
+    };
 
-      await this.mediaDriver.createMedia(mediaData, userId);
+    await this.mediaDriver.createMedia(mediaData, userId);
 
-      return {
-        uploadUrl: `https://storage.example.com/upload/${filePath}`,
-        mediaId,
-      };
-    } catch (error: any) {
-      throw this.mapError(error);
-    }
+    return {
+      uploadUrl: `https://storage.example.com/upload/${filePath}`,
+      mediaId,
+    };
   }
 
   async confirmUpload(mediaId: string, request: ConfirmUploadRequest, userId: string): Promise<Media> {
-    try {
-      if (!request.uploadSuccess) {
-        await this.mediaDriver.deleteMedia(mediaId, userId);
-        throw new Error('Upload failed');
-      }
-
-      const media = await this.mediaDriver.updateMedia(mediaId, {
-        upload_success: true,
-      }, userId);
-
-      return this.mapMedia(media);
-    } catch (error: any) {
-      throw this.mapError(error);
+    if (!request.uploadSuccess) {
+      await this.mediaDriver.deleteMedia(mediaId, userId);
+      throw AppException.badRequest('Upload failed');
     }
+
+    const media = await this.mediaDriver.updateMedia(mediaId, {
+      upload_success: true,
+    }, userId);
+
+    if (!media) {
+      throw AppException.notFound('Media not found', { mediaId, userId });
+    }
+
+    return this.mapMedia(media);
   }
 
   async deleteMedia(id: string, userId: string): Promise<void> {
-    try {
-      await this.mediaDriver.deleteMedia(id, userId);
-    } catch (error: any) {
-      if (error.code === 'PGRST116') {
-        throw {
-          code: 404,
-          message: 'Not Found',
-          details: 'Media not found',
-        } as ApiError;
-      }
-      throw this.mapError(error);
+    const media = await this.mediaDriver.updateMedia(id, {}, userId);
+    if (!media) {
+      throw AppException.notFound('Media not found', { id, userId });
     }
+    await this.mediaDriver.deleteMedia(id, userId);
   }
 
   private determineMediaType(mimeType: string): 'image' | 'video' {
@@ -108,30 +93,6 @@ export class MediaService {
       createdBy: supabaseMedia.created_by,
       createdAt: supabaseMedia.created_at,
       updatedAt: supabaseMedia.updated_at,
-    };
-  }
-
-  private mapError(error: any): ApiError {
-    if (error.code === '23505') {
-      return {
-        code: 409,
-        message: 'Conflict',
-        details: 'Media already exists',
-      };
-    }
-
-    if (error.code === '23503') {
-      return {
-        code: 400,
-        message: 'Bad Request',
-        details: 'Invalid TODO reference',
-      };
-    }
-
-    return {
-      code: 500,
-      message: 'Internal Server Error',
-      details: error.message,
     };
   }
 }

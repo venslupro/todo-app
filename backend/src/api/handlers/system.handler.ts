@@ -15,7 +15,7 @@ export class SystemHandler extends BaseHandler {
       status: isHealthy ? 'healthy' : 'unhealthy',
       timestamp: new Date().toISOString(),
       environment: this.getEnvironment(c),
-    });
+    }, 'Health check completed');
   };
 
   versionInfo = async (c: Context) => {
@@ -23,7 +23,7 @@ export class SystemHandler extends BaseHandler {
       name: 'TODO API',
       version: '1.0.0',
       environment: this.getEnvironment(c),
-    });
+    }, 'Version information retrieved');
   };
 
   root = async (c: Context) => {
@@ -32,6 +32,6 @@ export class SystemHandler extends BaseHandler {
       version: '1.0.0',
       environment: this.getEnvironment(c),
       timestamp: new Date().toISOString(),
-    });
+    }, 'API is running');
   };
 }
