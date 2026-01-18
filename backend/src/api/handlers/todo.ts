@@ -1,7 +1,7 @@
 // api/handlers/todo.ts
 import {Hono} from 'hono';
 import {HTTPException} from 'hono/http-exception';
-import {HonoAppType} from '../../shared/types/hono-types';
+import {EnvironmentConfig, HonoAppType} from '../../shared/types/hono-types';
 import {TodoService} from '../../core/services/todo-service';
 import {
   TodoStatus,
@@ -32,9 +32,19 @@ const router = new Hono<HonoAppType & {
 /**
  * Creates a TODO service instance.
  */
-function createTodoService(c: {env: Record<string, unknown>}): TodoService {
-  const config = new AppConfig(c.env);
-  return new TodoService(config);
+function createTodoService(
+  c: {
+    env: EnvironmentConfig;
+  },
+): TodoService {
+  const envConfig = {
+    supabase_url: c.env.supabase_url,
+    supabase_anon_key: c.env.supabase_anon_key,
+    supabase_service_role_key: c.env.supabase_service_role_key,
+    environment: c.env.environment,
+  };
+  const appConfig = new AppConfig(envConfig);
+  return new TodoService(appConfig);
 }
 
 

@@ -2,6 +2,7 @@
 import {ErrorCode, Result, okResult, errResult} from '../../shared/errors/error-codes';
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
+import {AppConfig} from '../../shared/config/app-config';
 import {
   InternalServerException,
   NotFoundException,
@@ -22,8 +23,8 @@ import {
 export class MediaService {
   private supabase: ReturnType<typeof SupabaseClient.getClient>;
 
-  constructor(env: any) {
-    this.supabase = SupabaseClient.getClient(env);
+  constructor(config: AppConfig) {
+    this.supabase = SupabaseClient.getClient(config);
   }
 
   /**

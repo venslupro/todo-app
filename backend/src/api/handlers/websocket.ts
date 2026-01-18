@@ -34,8 +34,7 @@ const router = new Hono<HonoAppType & {
 /**
  * Creates a WebSocketService instance.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function createWebSocketService(_c: {env: Record<string, unknown>}): WebSocketService {
+function createWebSocketService(): WebSocketService {
   return new WebSocketService();
 }
 
@@ -66,7 +65,7 @@ router.get('/todo/:id/stats', jwtMiddleware, async (c) => {
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
     // Verify TODO access permissions
-    const websocketService = createWebSocketService(c);
+    const websocketService = createWebSocketService();
     const appConfig = createAppConfig(c);
     const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
     if (accessResult.isErr()) {
@@ -97,7 +96,7 @@ router.get('/todo/:id/users', jwtMiddleware, async (c) => {
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
     // Verify TODO access permissions
-    const websocketService = createWebSocketService(c);
+    const websocketService = createWebSocketService();
     const appConfig = createAppConfig(c);
     const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
     if (accessResult.isErr()) {
@@ -125,7 +124,7 @@ router.post('/todo/:id/cleanup', jwtMiddleware, async (c) => {
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
     // Verify TODO access permissions (admin only)
-    const websocketService = createWebSocketService(c);
+    const websocketService = createWebSocketService();
     const appConfig = createAppConfig(c);
     const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
     if (accessResult.isErr()) {
@@ -152,7 +151,7 @@ router.get('/todo/:id/connect', jwtMiddleware, async (c) => {
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
     const appConfig = createAppConfig(c);
-    const websocketService = createWebSocketService(c);
+    const websocketService = createWebSocketService();
     // Verify TODO access permissions
     const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
     if (accessResult.isErr()) {
@@ -206,7 +205,7 @@ router.post('/todo/:id/update', jwtMiddleware, async (c) => {
     const userId = payload.sub;
     const body = await c.req.json();
     const appConfig = createAppConfig(c);
-    const websocketService = createWebSocketService(c);
+    const websocketService = createWebSocketService();
     // Verify TODO access permissions
     const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
     if (accessResult.isErr()) {
@@ -251,7 +250,7 @@ router.get('/todo/:id/ws', jwtMiddleware, async (c) => {
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
     const appConfig = createAppConfig(c);
-    const websocketService = createWebSocketService(c);
+    const websocketService = createWebSocketService();
     // Verify TODO access permissions
     const accessResult = await websocketService.verifyTodoAccess(todoId, userId, appConfig);
     if (accessResult.isErr()) {

@@ -3,6 +3,7 @@ import {ErrorCode, Result, okResult, errResult} from '../../shared/errors/error-
 import {Validator} from '../../shared/validation/validator';
 import {SupabaseClient} from '../supabase/client';
 import {ConflictException, InternalServerException} from '../../shared/errors/http-exception';
+import {AppConfig} from '../../shared/config/app-config';
 import {
   TodoShare,
   // SharePermission,
@@ -17,8 +18,8 @@ import {
 export class ShareService {
   private supabase: ReturnType<typeof SupabaseClient.getClient>;
 
-  constructor(env: Record<string, unknown>) {
-    this.supabase = SupabaseClient.getClient(env as any);
+  constructor(config: AppConfig) {
+    this.supabase = SupabaseClient.getClient(config);
   }
 
   /**
