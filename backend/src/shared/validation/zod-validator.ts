@@ -61,16 +61,11 @@ export class ZodValidator {
         // Try to parse numbers
         if (!isNaN(Number(value)) && value.trim() !== '') {
           processedQuery[key] = Number(value);
-        }
-        // Try to parse booleans
-        else if (
-          value.toLowerCase() === 'true' ||
-          value.toLowerCase() === 'false'
-        ) {
+        } else if (value.toLowerCase() === 'true' || value.toLowerCase() === 'false') {
+          // Try to parse booleans
           processedQuery[key] = value.toLowerCase() === 'true';
-        }
-        // Handle comma-separated arrays (e.g., tags)
-        else if (key === 'tags' && value.includes(',')) {
+        } else if (key === 'tags' && value.includes(',')) {
+          // Handle comma-separated arrays (e.g., tags)
           processedQuery[key] = value
             .split(',')
             .map((tag) => tag.trim())
