@@ -1,7 +1,7 @@
 import { TodoDriver, SupabaseDriver } from '../../drivers/supabase';
 import { Todo, TodoListResponse } from '../model/todo';
 import { CreateTodoRequest, UpdateTodoRequest, TodoFilter } from '../../shared/types/todo';
-import { PaginationParams, PaginationResult, ApiError } from '../../shared/types/common';
+import { PaginationParams, ApiError } from '../../shared/types/common';
 
 export class TodoService {
   private todoDriver: TodoDriver;
@@ -13,7 +13,7 @@ export class TodoService {
   async getAllTodos(userId: string, filters?: TodoFilter, pagination?: PaginationParams): Promise<TodoListResponse> {
     try {
       const result = await this.todoDriver.getAllTodos(userId, filters, pagination);
-      
+
       return {
         todos: result.todos.map((todo: any) => this.mapTodo(todo)),
         total: result.total,

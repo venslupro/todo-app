@@ -3,13 +3,13 @@ import { createRemoteJWKSet, jwtVerify } from 'jose';
 
 export const authMiddleware = async (c: Context, next: Next) => {
   const authHeader = c.req.header('Authorization');
-  
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return c.json({ error: 'Unauthorized' }, 401);
   }
 
   const token = authHeader.substring(7);
-  
+
   try {
     const supabaseUrl = (c.env as any).SUPABASE_URL;
     if (!supabaseUrl) {
@@ -21,7 +21,7 @@ export const authMiddleware = async (c: Context, next: Next) => {
 
     (c as any).set('userId', payload.sub);
     (c as any).set('userEmail', payload.email);
-    
+
     await next();
   } catch (error) {
     return c.json({ error: 'Invalid token' }, 401);

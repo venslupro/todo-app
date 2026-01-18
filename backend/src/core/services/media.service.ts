@@ -13,7 +13,7 @@ export class MediaService {
   async getAllMedia(userId: string, filters?: MediaFilter): Promise<MediaListResponse> {
     try {
       const result = await this.mediaDriver.getAllMedia(userId, filters);
-      
+
       return {
         media: result.media.map((media: any) => this.mapMedia(media)),
       };
@@ -22,11 +22,14 @@ export class MediaService {
     }
   }
 
-  async generateUploadUrl(request: GenerateUploadUrlRequest, userId: string): Promise<{ uploadUrl: string; mediaId: string }> {
+  async generateUploadUrl(
+    request: GenerateUploadUrlRequest,
+    userId: string,
+  ): Promise<{ uploadUrl: string; mediaId: string }> {
     try {
       const mediaId = crypto.randomUUID();
       const filePath = `media/${request.todoId}/${mediaId}-${request.fileName}`;
-      
+
       const mediaData = {
         id: mediaId,
         todo_id: request.todoId,

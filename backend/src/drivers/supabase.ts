@@ -63,7 +63,7 @@ export class AuthDriver {
     return data;
   }
 
-  async logout(accessToken: string) {
+  async logout(_accessToken: string) {
     const { error } = await this.supabase.getClient().auth.signOut();
     if (error) throw error;
   }

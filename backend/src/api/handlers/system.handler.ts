@@ -10,7 +10,7 @@ export class SystemHandler extends BaseHandler {
   healthCheck = async (c: Context) => {
     const supabaseUrl = (c.env as any).SUPABASE_URL;
     const isHealthy = !!supabaseUrl;
-    
+
     return this.success(c, {
       status: isHealthy ? 'healthy' : 'unhealthy',
       timestamp: new Date().toISOString(),

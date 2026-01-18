@@ -45,7 +45,7 @@ async function runSeed() {
     const sql = fs.readFileSync(seedFile, 'utf8');
 
     console.log('Executing seed data...');
-    
+
     // Execute seed SQL
     const { error } = await supabase.rpc('exec_sql', { sql });
 

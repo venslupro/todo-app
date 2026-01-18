@@ -30,7 +30,7 @@ export class TodoApp {
 
   private setupRoutes() {
     const supabaseDriver = new SupabaseDriver(this.config);
-    
+
     const authService = new AuthService(supabaseDriver);
     const todoService = new TodoService(supabaseDriver);
     const mediaService = new MediaService(supabaseDriver);

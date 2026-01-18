@@ -18,7 +18,7 @@ export class AuthService {
         {
           username: request.username,
           fullName: request.fullName,
-        }
+        },
       );
 
       if (!result.user || !result.session) {

@@ -47,12 +47,12 @@ async function runMigrations() {
       process.exit(1);
     }
 
-    const executedMigrationNames = new Set(executedMigrations?.map(m => m.name) || []);
+    const executedMigrationNames = new Set(executedMigrations?.map((m) => m.name) || []);
 
     // Get migration files
     const migrationsDir = path.join(__dirname, '../src/database/migrations');
     const migrationFiles = fs.readdirSync(migrationsDir)
-      .filter(file => file.endsWith('.sql'))
+      .filter((file) => file.endsWith('.sql'))
       .sort();
 
     console.log(`Found ${migrationFiles.length} migration files`);
@@ -65,7 +65,7 @@ async function runMigrations() {
       }
 
       console.log(`Executing migration: ${migrationFile}`);
-      
+
       const migrationPath = path.join(migrationsDir, migrationFile);
       const sql = fs.readFileSync(migrationPath, 'utf8');
 
@@ -110,7 +110,7 @@ async function createMigrationsTable(supabase: any) {
   `;
 
   const { error } = await supabase.rpc('exec_sql', { sql: createTableSQL });
-  
+
   if (error && !error.message.includes('already exists')) {
     console.error('Error creating migrations table:', error);
     throw error;
