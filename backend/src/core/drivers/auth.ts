@@ -47,7 +47,7 @@ export class AuthDriver {
 
       if (error) {
         this.logger.error('AuthDriver: Registration failed', {email, error: error.message});
-        return err(new Error(`Auth registration failed: ${error.message}`));
+        return err(new Error((error as Error).message));
       }
 
       if (!data.user || !data.session) {
@@ -75,7 +75,7 @@ export class AuthDriver {
       });
     } catch (error) {
       this.logger.error('AuthDriver: Registration error', {email, error: (error as Error).message});
-      return err(new Error(`Auth registration error: ${(error as Error).message}`));
+      return err(new Error((error as Error).message));
     }
   }
 
@@ -124,7 +124,7 @@ export class AuthDriver {
       });
     } catch (error) {
       this.logger.error('AuthDriver: Login error', {email, error: (error as Error).message});
-      return err(new Error(`Auth login error: ${(error as Error).message}`));
+      return err(new Error((error as Error).message));
     }
   }
 
@@ -142,7 +142,7 @@ export class AuthDriver {
 
       if (error) {
         this.logger.error('AuthDriver: Token refresh failed', {error: error.message});
-        return err(new Error(`Auth refresh failed: ${error.message}`));
+        return err(new Error(error.message));
       }
 
       if (!data.user || !data.session) {
@@ -170,7 +170,7 @@ export class AuthDriver {
       });
     } catch (error) {
       this.logger.error('AuthDriver: Token refresh error', {error: (error as Error).message});
-      return err(new Error(`Auth refresh error: ${(error as Error).message}`));
+      return err(new Error((error as Error).message));
     }
   }
 
@@ -190,14 +190,14 @@ export class AuthDriver {
 
       if (error) {
         this.logger.error('AuthDriver: Logout failed', {error: error.message});
-        return err(new Error(`Auth logout failed: ${error.message}`));
+        return err(new Error(error.message));
       }
 
       this.logger.debug('AuthDriver: User logged out successfully');
       return ok(true);
     } catch (error) {
       this.logger.error('AuthDriver: Logout error', {error: (error as Error).message});
-      return err(new Error(`Auth logout error: ${(error as Error).message}`));
+      return err(new Error((error as Error).message));
     }
   }
 
@@ -212,7 +212,7 @@ export class AuthDriver {
 
       if (error) {
         this.logger.error('AuthDriver: Get profile failed', {userId, error: error.message});
-        return err(new Error(`Get profile failed: ${error.message}`));
+        return err(new Error(error.message));
       }
 
       if (!data.user) {
@@ -233,7 +233,7 @@ export class AuthDriver {
       });
     } catch (error) {
       this.logger.error('AuthDriver: Get profile error', {userId, error: (error as Error).message});
-      return err(new Error(`Get profile error: ${(error as Error).message}`));
+      return err(new Error((error as Error).message));
     }
   }
 }
