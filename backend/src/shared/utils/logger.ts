@@ -99,10 +99,4 @@ export const createLogger = (options: LoggerOptions): Logger => {
   return new Logger(options);
 };
 
-/**
- * Global logger instance initialized with environment variables
- */
-export const appLogger = new Logger({
-  logLevel: process.env.LOG_LEVEL as LogLevel || 'info',
-  environment: process.env.ENVIRONMENT || 'development',
-});
+

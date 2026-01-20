@@ -6,7 +6,7 @@ import {cors} from 'hono/cors';
 import {logger as httpLogger} from 'hono/logger';
 import {HTTPException} from 'hono/http-exception';
 import type {ExecutionContext} from '@cloudflare/workers-types';
-import {appLogger} from './shared/utils/logger';
+import {createLogger} from './shared/utils/logger';
 
 // Drivers
 import {createSupabaseDriver} from './core/drivers/supabase/supabase';
@@ -47,6 +47,12 @@ type Bindings = {
 // Export the app as a Module Worker for Cloudflare Workers
 export default {
   fetch: async (req: Request, env: Bindings, ctx: ExecutionContext) => {
+    // Create a logger instance with the actual environment
+    const logger = createLogger({
+      logLevel: env.log_level as any,
+      environment: env.environment,
+    });
+
     // Initialize drivers with environment variables from env
     const supabaseDriver = createSupabaseDriver({
       url: env.supabase_url,
@@ -72,7 +78,7 @@ export default {
     const authService = createAuthService({
       authDriver,
       environment: env.environment,
-      logLevel: env.log_level as any,
+      logLevel: env.log_level,
     });
     const todoService = createTodoService({todoDriver, teamDriver});
     const mediaService = createMediaService({mediaDriver, teamDriver});
@@ -156,8 +162,8 @@ export default {
     });
 
     // Log environment info
-    appLogger.info('🚀 Todo API is running...');
-    appLogger.info('Environment:', {
+    logger.info('🚀 Todo API is running...');
+    logger.info('Environment:', {
       environment: env.environment,
       logLevel: env.log_level,
     });
