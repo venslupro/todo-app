@@ -46,9 +46,9 @@ app.use(httpLogger());
 
 // Initialize drivers
 const supabaseDriver = createSupabaseDriver({
-  url: process.env.SUPABASE_URL || '',
-  anonKey: process.env.SUPABASE_ANON_KEY || '',
-  serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  url: process.env.supabase_url || '',
+  anonKey: process.env.supabase_anon_key || '',
+  serviceRoleKey: process.env.supabase_service_role_key || '',
 });
 
 const authDriver = createAuthDriver({supabase: supabaseDriver});
