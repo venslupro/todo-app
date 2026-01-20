@@ -40,14 +40,14 @@ export class TodoDriver {
 
       if (error) {
         this.logger.error('TodoDriver: Create failed', {name: data.name, error: error.message});
-        return err(new Error(`Create todo failed: ${error.message}`));
+        return err(new Error(`${error.message}`));
       }
 
       this.logger.debug('TodoDriver: Todo created', {todoId: todo.id, name: todo.name});
       return ok(todo as Todo);
     } catch (error) {
       this.logger.error('TodoDriver: Create error', {error: (error as Error).message});
-      return err(new Error(`Create todo error: ${(error as Error).message}`));
+      return err(new Error(`${(error as Error).message}`));
     }
   }
 
@@ -67,14 +67,14 @@ export class TodoDriver {
 
       if (error) {
         this.logger.error('TodoDriver: Get todo by ID failed', {todoId, error: error.message});
-        return err(new Error(`Get todo by ID failed: ${error.message}`));
+        return err(new Error(`${error.message}`));
       }
 
       this.logger.debug('TodoDriver: Got todo by ID', {todoId, name: todo.name});
       return ok(todo as Todo);
     } catch (error) {
       this.logger.error('TodoDriver: Get by ID error', {todoId, error: (error as Error).message});
-      return err(new Error(`Get todo by ID error: ${(error as Error).message}`));
+      return err(new Error(`${(error as Error).message}`));
     }
   }
 
@@ -142,7 +142,7 @@ export class TodoDriver {
 
       if (error) {
         this.logger.error('TodoDriver: Get todos failed', {userId, filters, error: error.message});
-        return err(new Error(`Get todos failed: ${error.message}`));
+        return err(new Error(`${error.message}`));
       }
 
       this.logger.debug('TodoDriver: Got todos', {userId, count: todos.length, total: count || 0});
@@ -152,7 +152,7 @@ export class TodoDriver {
       });
     } catch (error) {
       this.logger.error('TodoDriver: Get todos error', {userId, error: (error as Error).message});
-      return err(new Error(`Get todos error: ${(error as Error).message}`));
+      return err(new Error(`${(error as Error).message}`));
     }
   }
 
@@ -184,14 +184,14 @@ export class TodoDriver {
 
       if (error) {
         this.logger.error('TodoDriver: Update failed', {todoId, error: error.message});
-        return err(new Error(`Update todo failed: ${error.message}`));
+        return err(new Error(`${error.message}`));
       }
 
       this.logger.debug('TodoDriver: Todo updated', {todoId, name: todo.name});
       return ok(todo as Todo);
     } catch (error) {
-      this.logger.error('TodoDriver: Update error', {todoId, error: (error as Error).message});
-      return err(new Error(`Update todo error: ${(error as Error).message}`));
+      this.logger.error('TodoDriver: Update todo error', {todoId, error: (error as Error).message});
+      return err(new Error(`${(error as Error).message}`));
     }
   }
 
@@ -210,14 +210,14 @@ export class TodoDriver {
 
       if (error) {
         this.logger.error('TodoDriver: Delete todo failed', {todoId, error: error.message});
-        return err(new Error(`Delete todo failed: ${error.message}`));
+        return err(new Error(`${error.message}`));
       }
 
       this.logger.debug('TodoDriver: Todo deleted (soft)', {todoId});
       return ok(true);
     } catch (error) {
       this.logger.error('TodoDriver: Delete todo error', {todoId, error: (error as Error).message});
-      return err(new Error((error as Error).message));
+      return err(new Error(`${(error as Error).message}`));
     }
   }
 

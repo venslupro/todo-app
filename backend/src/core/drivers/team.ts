@@ -45,7 +45,7 @@ export class TeamDriver {
 
       if (error) {
         this.logger.error('TeamDriver: Get members failed', {userId, error: error.message});
-        return err(new Error(`Get team members failed: ${error.message}`));
+        return err(new Error(`${error.message}`));
       }
 
       if (!shares || shares.length === 0) {
@@ -65,7 +65,7 @@ export class TeamDriver {
 
       if (userError) {
         this.logger.error('TeamDriver: Get users failed', {userId, error: userError.message});
-        return err(new Error(`Get user details failed: ${userError.message}`));
+        return err(new Error(`${userError.message}`));
       }
 
       if (!users) {
@@ -109,7 +109,7 @@ export class TeamDriver {
       return ok(members);
     } catch (error) {
       this.logger.error('TeamDriver: Get members error', {userId, error: (error as Error).message});
-      return err(new Error(`Get team members error: ${(error as Error).message}`));
+      return err(new Error(`${(error as Error).message}`));
     }
   }
 
@@ -138,14 +138,14 @@ export class TeamDriver {
 
       if (error) {
         this.logger.error('TeamDriver: Share failed', {todoId, userId, error: error.message});
-        return err(new Error(`Share todo failed: ${error.message}`));
+        return err(new Error(`${error.message}`));
       }
 
       this.logger.debug('TeamDriver: Todo shared', {todoId, userId, shareId: share.id});
       return ok(share as TodoShare);
     } catch (error) {
       this.logger.error('TeamDriver: Share error', {error: (error as Error).message});
-      return err(new Error(`Share todo error: ${(error as Error).message}`));
+      return err(new Error(`${(error as Error).message}`));
     }
   }
 
@@ -168,14 +168,14 @@ export class TeamDriver {
 
       if (error) {
         this.logger.error('TeamDriver: Update permission failed', {shareId, error: error.message});
-        return err(new Error(`Update share permission failed: ${error.message}`));
+        return err(new Error(`${error.message}`));
       }
 
       this.logger.debug('TeamDriver: Permission updated', {shareId, permission});
       return ok(share as TodoShare);
     } catch (error) {
       this.logger.error('TeamDriver: Update error', {error: (error as Error).message});
-      return err(new Error(`Update share permission error: ${(error as Error).message}`));
+      return err(new Error(`${(error as Error).message}`));
     }
   }
 
@@ -195,14 +195,14 @@ export class TeamDriver {
 
       if (error) {
         this.logger.error('TeamDriver: Remove failed', {shareId, error: error.message});
-        return err(new Error(`Remove share failed: ${error.message}`));
+        return err(new Error(`${error.message}`));
       }
 
       this.logger.debug('TeamDriver: Share removed successfully', {shareId});
       return ok(true);
     } catch (error) {
       this.logger.error('TeamDriver: Remove error', {error: (error as Error).message});
-      return err(new Error(`Remove share error: ${(error as Error).message}`));
+      return err(new Error(`${(error as Error).message}`));
     }
   }
 
@@ -226,7 +226,7 @@ export class TeamDriver {
 
       if (todoError) {
         this.logger.error('TeamDriver: Check failed', {error: todoError.message});
-        return err(new Error(`Check todo permission failed: ${todoError.message}`));
+        return err(new Error(`${todoError.message}`));
       }
 
       if (todo.created_by === userId) {
@@ -259,7 +259,7 @@ export class TeamDriver {
       return ok(true);
     } catch (error) {
       this.logger.error('TeamDriver: Check error', {error: (error as Error).message});
-      return err(new Error((error as Error).message));
+      return err(new Error(`${(error as Error).message}`));
     }
   }
 }

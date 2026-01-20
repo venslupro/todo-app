@@ -47,7 +47,7 @@ export class AuthDriver {
 
       if (error) {
         this.logger.error('AuthDriver: Registration failed', {email, error: error.message});
-        return err(new Error((error as Error).message));
+        return err(new Error(`${error.message}`));
       }
 
       if (!data.user || !data.session) {
@@ -75,7 +75,7 @@ export class AuthDriver {
       });
     } catch (error) {
       this.logger.error('AuthDriver: Registration error', {email, error: (error as Error).message});
-      return err(new Error((error as Error).message));
+      return err(new Error(`${(error as Error).message}`));
     }
   }
 
@@ -96,7 +96,7 @@ export class AuthDriver {
       if (error) {
         this.logger.error('AuthDriver: Login failed', {email, error: error.message});
         // Return the original Supabase error message for better user experience
-        return err(new Error(error.message));
+        return err(new Error(`${error.message}`));
       }
 
       if (!data.user || !data.session) {
@@ -124,7 +124,7 @@ export class AuthDriver {
       });
     } catch (error) {
       this.logger.error('AuthDriver: Login error', {email, error: (error as Error).message});
-      return err(new Error((error as Error).message));
+      return err(new Error(`${(error as Error).message}`));
     }
   }
 
@@ -142,7 +142,7 @@ export class AuthDriver {
 
       if (error) {
         this.logger.error('AuthDriver: Token refresh failed', {error: error.message});
-        return err(new Error(error.message));
+        return err(new Error(`${error.message}`));
       }
 
       if (!data.user || !data.session) {
@@ -170,7 +170,7 @@ export class AuthDriver {
       });
     } catch (error) {
       this.logger.error('AuthDriver: Token refresh error', {error: (error as Error).message});
-      return err(new Error((error as Error).message));
+      return err(new Error(`${(error as Error).message}`));
     }
   }
 
@@ -190,14 +190,14 @@ export class AuthDriver {
 
       if (error) {
         this.logger.error('AuthDriver: Logout failed', {error: error.message});
-        return err(new Error(error.message));
+        return err(new Error(`${error.message}`));
       }
 
       this.logger.debug('AuthDriver: User logged out successfully');
       return ok(true);
     } catch (error) {
-      this.logger.error('AuthDriver: Logout error', {error: (error as Error).message});
-      return err(new Error((error as Error).message));
+      this.logger.error('AuthDriver: Logout error', {accessToken, error: (error as Error).message});
+      return err(new Error(`${(error as Error).message}`));
     }
   }
 
@@ -212,7 +212,7 @@ export class AuthDriver {
 
       if (error) {
         this.logger.error('AuthDriver: Get profile failed', {userId, error: error.message});
-        return err(new Error(error.message));
+        return err(new Error(`${error.message}`));
       }
 
       if (!data.user) {
@@ -232,8 +232,8 @@ export class AuthDriver {
         updated_at: data.user.updated_at || '',
       });
     } catch (error) {
-      this.logger.error('AuthDriver: Get profile error', {userId, error: (error as Error).message});
-      return err(new Error((error as Error).message));
+      this.logger.error('AuthDriver: Get user info error', {error: (error as Error).message});
+      return err(new Error(`${(error as Error).message}`));
     }
   }
 }
