@@ -49,7 +49,7 @@ export default {
   fetch: async (req: Request, env: Bindings, ctx: ExecutionContext) => {
     // Create a logger instance with the actual environment
     const logger = createLogger({
-      logLevel: env.log_level as any,
+      logLevel: env.log_level as 'error' | 'warn' | 'info' | 'debug',
       environment: env.environment,
     });
 
