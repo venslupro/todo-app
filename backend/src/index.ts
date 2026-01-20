@@ -41,7 +41,6 @@ type Bindings = {
   supabase_service_role_key: string;
   environment: string;
   log_level: string;
-  JWT_SECRET: string;
 };
 
 // Export the app as a Module Worker for Cloudflare Workers
@@ -83,7 +82,7 @@ export default {
 
     // Auth middleware (use this for protected routes)
     const authMiddleware = createAuthMiddleware({
-      jwtSecret: env.JWT_SECRET || 'your-secret-key',
+      supabaseDriver: supabaseDriver,
     });
 
     // Initialize Hono app with Bindings type
