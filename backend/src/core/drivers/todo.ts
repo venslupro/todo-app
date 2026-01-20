@@ -27,7 +27,7 @@ export class TodoDriver {
     data: Omit<Todo, 'id' | 'created_at' | 'updated_at' | 'is_deleted'>,
   ): Promise<Result<Todo, Error>> {
     try {
-      this.logger.debug('TodoDriver: Creating new todo', {name: data.name, createdBy: data.created_by});
+      this.logger.debug('TodoDriver: Creating todo', {name: data.name, createdBy: data.created_by});
       const {data: todo, error} = await this.supabase
         .getAnonClient()
         .from('todos')
@@ -39,14 +39,14 @@ export class TodoDriver {
         .single();
 
       if (error) {
-        this.logger.error('TodoDriver: Create todo failed', {name: data.name, createdBy: data.created_by, error: error.message});
+        this.logger.error('TodoDriver: Create failed', {name: data.name, error: error.message});
         return err(new Error(`Create todo failed: ${error.message}`));
       }
 
-      this.logger.debug('TodoDriver: Todo created successfully', {todoId: todo.id, name: todo.name});
+      this.logger.debug('TodoDriver: Todo created', {todoId: todo.id, name: todo.name});
       return ok(todo as Todo);
     } catch (error) {
-      this.logger.error('TodoDriver: Create todo error', {name: data.name, createdBy: data.created_by, error: (error as Error).message});
+      this.logger.error('TodoDriver: Create error', {error: (error as Error).message});
       return err(new Error(`Create todo error: ${(error as Error).message}`));
     }
   }
@@ -70,10 +70,10 @@ export class TodoDriver {
         return err(new Error(`Get todo by ID failed: ${error.message}`));
       }
 
-      this.logger.debug('TodoDriver: Got todo by ID successfully', {todoId, name: todo.name});
+      this.logger.debug('TodoDriver: Got todo by ID', {todoId, name: todo.name});
       return ok(todo as Todo);
     } catch (error) {
-      this.logger.error('TodoDriver: Get todo by ID error', {todoId, error: (error as Error).message});
+      this.logger.error('TodoDriver: Get by ID error', {todoId, error: (error as Error).message});
       return err(new Error(`Get todo by ID error: ${(error as Error).message}`));
     }
   }
@@ -145,13 +145,13 @@ export class TodoDriver {
         return err(new Error(`Get todos failed: ${error.message}`));
       }
 
-      this.logger.debug('TodoDriver: Got todos successfully', {userId, count: todos.length, total: count || 0});
+      this.logger.debug('TodoDriver: Got todos', {userId, count: todos.length, total: count || 0});
       return ok({
         todos: todos as Todo[],
         total: count || 0,
       });
     } catch (error) {
-      this.logger.error('TodoDriver: Get todos error', {userId, filters, error: (error as Error).message});
+      this.logger.error('TodoDriver: Get todos error', {userId, error: (error as Error).message});
       return err(new Error(`Get todos error: ${(error as Error).message}`));
     }
   }
@@ -183,14 +183,14 @@ export class TodoDriver {
         .single();
 
       if (error) {
-        this.logger.error('TodoDriver: Update todo failed', {todoId, updateData: data, error: error.message});
+        this.logger.error('TodoDriver: Update failed', {todoId, error: error.message});
         return err(new Error(`Update todo failed: ${error.message}`));
       }
 
-      this.logger.debug('TodoDriver: Todo updated successfully', {todoId, name: todo.name});
+      this.logger.debug('TodoDriver: Todo updated', {todoId, name: todo.name});
       return ok(todo as Todo);
     } catch (error) {
-      this.logger.error('TodoDriver: Update todo error', {todoId, updateData: data, error: (error as Error).message});
+      this.logger.error('TodoDriver: Update error', {todoId, error: (error as Error).message});
       return err(new Error(`Update todo error: ${(error as Error).message}`));
     }
   }
@@ -213,7 +213,7 @@ export class TodoDriver {
         return err(new Error(`Delete todo failed: ${error.message}`));
       }
 
-      this.logger.debug('TodoDriver: Todo deleted successfully (soft delete)', {todoId});
+      this.logger.debug('TodoDriver: Todo deleted (soft)', {todoId});
       return ok(true);
     } catch (error) {
       this.logger.error('TodoDriver: Delete todo error', {todoId, error: (error as Error).message});

@@ -105,7 +105,7 @@ export class MediaDriver {
         .single();
 
       if (insertError) {
-        this.logger.error('MediaDriver: Create media record failed', {userId, todoId, error: insertError.message});
+        this.logger.error('MediaDriver: Create media failed', {userId, error: insertError.message});
         return err(new Error(`Create media record failed: ${insertError.message}`));
       }
 
@@ -117,19 +117,19 @@ export class MediaDriver {
         .createSignedUrl(`${todoId}/${fileName}`, 3600); // 1 hour expiration
 
       if (urlError || !uploadUrl.signedUrl) {
-        this.logger.error('MediaDriver: Generate upload URL failed', {userId, todoId, error: urlError?.message});
+        this.logger.error('MediaDriver: Upload URL failed', {userId, error: urlError?.message});
         return err(
           new Error(`Generate upload URL failed: ${urlError?.message || 'Unknown error'}`),
         );
       }
 
-      this.logger.debug('MediaDriver: Generated upload URL successfully', {userId, mediaId: media.id});
+      this.logger.debug('MediaDriver: Upload URL generated', {userId, mediaId: media.id});
       return ok({
         uploadUrl: uploadUrl.signedUrl,
         mediaId: media.id,
       });
     } catch (error) {
-      this.logger.error('MediaDriver: Generate upload URL error', {userId, todoId, error: (error as Error).message});
+      this.logger.error('MediaDriver: Upload URL error', {userId, error: (error as Error).message});
       return err(new Error(`Generate upload URL error: ${(error as Error).message}`));
     }
   }
@@ -168,10 +168,10 @@ export class MediaDriver {
         return err(new Error(`Confirm upload failed: ${error.message}`));
       }
 
-      this.logger.debug('MediaDriver: Upload confirmed successfully', {mediaId, todoId: media.todo_id});
+      this.logger.debug('MediaDriver: Upload confirmed', {mediaId, todoId: media.todo_id});
       return ok(media as Media);
     } catch (error) {
-      this.logger.error('MediaDriver: Confirm upload error', {mediaId, error: (error as Error).message});
+      this.logger.error('MediaDriver: Confirm error', {mediaId, error: (error as Error).message});
       return err(new Error(`Confirm upload error: ${(error as Error).message}`));
     }
   }
