@@ -20,10 +20,6 @@ compatibility_flags = ["nodejs_compat"]
 enabled = true
 # head_sampling_rate = 0.1 # 10% of requests are logged
 
-[observability.traces]
-enabled = true
-# head_sampling_rate = 0.05
-
 [observability.logs]
 enabled = true
 # head_sampling_rate = 0.6
@@ -31,24 +27,12 @@ enabled = true
 [env.production]
 name = "prod-todo-worker"
 environment = "production"
-supabase_url = "${SUPABASE_URL}"
-supabase_anon_key = "${SUPABASE_ANON_KEY}"
-supabase_service_role_key = "${SUPABASE_SERVICE_ROLE_KEY}"
-log_level = "info"   # "error" | "warn" | "info" | "debug"
 
 [env.staging]
 name = "stg-todo-worker"
 environment = "staging"
-supabase_url = "${SUPABASE_URL}"
-supabase_anon_key = "${SUPABASE_ANON_KEY}"
-supabase_service_role_key = "${SUPABASE_SERVICE_ROLE_KEY}"
-log_level = "debug"   # "error" | "warn" | "info" | "debug"
 
 # start workers locally
 [env.development]
 name = "dev-todo-worker"
 environment = "development"
-supabase_url = "${SUPABASE_URL}"
-supabase_anon_key = "${SUPABASE_ANON_KEY}"
-supabase_service_role_key = "${SUPABASE_SERVICE_ROLE_KEY}"
-log_level = "debug"   # "error" | "warn" | "info" | "debug"
