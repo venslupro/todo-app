@@ -1,205 +1,193 @@
-// api/handlers/team.ts
-import {Hono} from 'hono';
-import {HTTPException} from 'hono/http-exception';
-import {EnvironmentConfig, HonoAppType} from '../../shared/types/hono-types';
-import {ShareService} from '../../core/services/share-service';
+// src/api/handlers/team.ts
+// Team API handlers for team sharing management
+
+import {Context} from 'hono';
+import {TeamService} from '../../core/services/team';
 import {
-  SharePermission,
-} from '../../core/models/share';
-import {
-  BadRequestException,
-  InternalServerException,
-  SuccessResponse,
+  ValidationException,
   NotFoundException,
+  InternalServerException,
 } from '../../shared/errors/http-exception';
-import {jwtMiddleware} from '../middleware/auth-middleware';
-import {AppConfig} from '../../shared/config/app-config';
+import {
+  shareTodoSchema,
+  updateShareSchema,
+  teamMemberFilterSchema,
+} from '../../shared/schemas';
+import {getUserIdFromContext} from '../../shared/utils';
 
-// Define JWT variables type for type safety
-type JwtVariables = {
-  jwtPayload: {
-    sub: string;
-    email?: string;
-  };
-};
-
-const router = new Hono<HonoAppType & {
-  Variables: JwtVariables;
-}>();
-
-/**
- * Creates a ShareService instance.
- */
-function createShareService(c: {env: EnvironmentConfig}): ShareService {
-  const envConfig = {
-    supabase_url: c.env.supabase_url,
-    supabase_anon_key: c.env.supabase_anon_key,
-    supabase_service_role_key: c.env.supabase_service_role_key,
-    environment: c.env.environment,
-  };
-  const appConfig = new AppConfig(envConfig);
-  return new ShareService(appConfig);
+interface TeamHandlerOptions {
+  teamService: TeamService;
 }
 
+export class TeamHandler {
+  private readonly teamService: TeamService;
 
-/**
- * Share TODO with other users.
- * POST /api/v1/team/shares
- */
-router.post('/shares', jwtMiddleware, async (c) => {
-  try {
-    const payload = c.get('jwtPayload');
-    const userId = payload.sub;
-    const body = await c.req.json();
-
-    const shareService = createShareService(c);
-    const result = await shareService.createShare(userId, body);
-
-    if (result.isErr()) {
-      const exception = new BadRequestException(result.error);
-      return exception.getResponse();
-    }
-
-    const response = new SuccessResponse(result.value);
-    return response.getResponse();
-  } catch (error) {
-    if (error instanceof HTTPException) {
-      return error.getResponse();
-    }
-    const exception = new InternalServerException(error);
-    return exception.getResponse();
+  constructor(options: TeamHandlerOptions) {
+    this.teamService = options.teamService;
   }
-});
 
-/**
- * Get share list.
- * GET /api/v1/team/shares
- */
-router.get('/shares', jwtMiddleware, async (c) => {
-  try {
-    const payload = c.get('jwtPayload');
-    const userId = payload.sub;
-    const query = c.req.query();
+  /**
+   * Get all team members for a user
+   */
+  async getTeamMembers(c: Context) {
+    try {
+      // Get user ID from context
+      const userId = getUserIdFromContext(c);
 
-    const params: any = {
-      todo_id: query['todo_id'],
-      user_id: query['user_id'],
-      permission: query['permission'] as SharePermission,
-      limit: query['limit'] ? parseInt(query['limit']) : undefined,
-      offset: query['offset'] ? parseInt(query['offset']) : undefined,
-    };
+      // Extract and validate query parameters
+      const validated = teamMemberFilterSchema.safeParse(c.req.query());
+      if (!validated.success) {
+        throw new ValidationException(validated.error.errors);
+      }
 
-    const shareService = createShareService(c);
-    const result = await shareService.getShares(userId, params);
+      // Call service to get team members
+      const result = await this.teamService.getTeamMembers(userId, validated.data.todo_id);
 
-    if (result.isErr()) {
-      const exception = new BadRequestException(result.error);
-      return exception.getResponse();
+      if (result.isErr()) {
+        throw new InternalServerException(result.error.message);
+      }
+
+      return c.json({
+        code: 200,
+        message: 'Success',
+        data: {members: result.value},
+      });
+    } catch (error) {
+      if (error instanceof ValidationException ||
+          error instanceof NotFoundException ||
+          error instanceof InternalServerException) {
+        throw error;
+      }
+      throw new InternalServerException(
+        (error as Error).message,
+      );
     }
-
-    const response = new SuccessResponse({shares: result.value});
-    return response.getResponse();
-  } catch (error) {
-    if (error instanceof HTTPException) {
-      return error.getResponse();
-    }
-    const exception = new InternalServerException(error);
-    return exception.getResponse();
   }
-});
 
-/**
- * Get single share.
- * GET /api/v1/team/shares/:id
- */
-router.get('/shares/:id', jwtMiddleware, async (c) => {
-  try {
-    const payload = c.get('jwtPayload');
-    const userId = payload.sub;
-    const shareId = c.req.param('id');
+  /**
+   * Share a todo with a team member
+   */
+  async shareTodo(c: Context) {
+    try {
+      // Get user ID from context
+      const userId = getUserIdFromContext(c);
 
-    const shareService = createShareService(c);
-    const result = await shareService.getShare(shareId, userId);
+      // Validate request body
+      const body = await c.req.json();
+      const validated = shareTodoSchema.safeParse(body);
+      if (!validated.success) {
+        throw new ValidationException(validated.error.errors);
+      }
 
-    if (result.isErr()) {
-      const exception = new NotFoundException(result.error);
-      return exception.getResponse();
+      // Call service to share todo
+      const result = await this.teamService.shareTodo(
+        validated.data.todo_id,
+        validated.data.user_id,
+        userId,
+        validated.data.permission,
+      );
+
+      if (result.isErr()) {
+        throw new InternalServerException(result.error.message);
+      }
+
+      return c.json({
+        code: 200,
+        message: 'Success',
+        data: {share: result.value},
+      });
+    } catch (error) {
+      if (error instanceof ValidationException ||
+          error instanceof InternalServerException) {
+        throw error;
+      }
+      throw new InternalServerException(
+        (error as Error).message,
+      );
     }
-
-    const response = new SuccessResponse(result.value);
-    return response.getResponse();
-  } catch (error) {
-    if (error instanceof HTTPException) {
-      return error.getResponse();
-    }
-    const exception = new InternalServerException(error);
-    return exception.getResponse();
   }
-});
 
-/**
- * Update share permission.
- * PUT /api/v1/team/shares/:id
- */
-router.put('/shares/:id', jwtMiddleware, async (c) => {
-  try {
-    const payload = c.get('jwtPayload');
-    const userId = payload.sub;
-    const shareId = c.req.param('id');
-    const body = await c.req.json();
+  /**
+   * Update share permission
+   */
+  async updateSharePermission(c: Context) {
+    try {
+      // Get share ID from path parameters
+      const shareId = c.req.param('id');
+      if (!shareId) {
+        throw new ValidationException('Share ID is required');
+      }
 
-    const shareService = createShareService(c);
-    const result = await shareService.updateShare(shareId, userId, body);
+      // Validate request body
+      const body = await c.req.json();
+      const validated = updateShareSchema.safeParse(body);
+      if (!validated.success) {
+        throw new ValidationException(validated.error.errors);
+      }
 
-    if (result.isErr()) {
-      const exception = new BadRequestException(result.error);
-      return exception.getResponse();
+      // Call service to update share permission
+      const result = await this.teamService.updateSharePermission(
+        shareId,
+        validated.data.permission,
+      );
+
+      if (result.isErr()) {
+        throw new NotFoundException(result.error.message);
+      }
+
+      return c.json({
+        code: 200,
+        message: 'Success',
+        data: {share: result.value},
+      });
+    } catch (error) {
+      if (error instanceof ValidationException ||
+          error instanceof NotFoundException ||
+          error instanceof InternalServerException) {
+        throw error;
+      }
+      throw new InternalServerException(
+        (error as Error).message,
+      );
     }
-
-    const response = new SuccessResponse(result.value);
-    return response.getResponse();
-  } catch (error) {
-    if (error instanceof HTTPException) {
-      return error.getResponse();
-    }
-    const exception = new InternalServerException(error);
-    return exception.getResponse();
   }
-});
 
-/**
- * Delete share.
- * DELETE /api/v1/team/shares/:id
- */
-router.delete('/shares/:id', jwtMiddleware, async (c) => {
-  try {
-    const payload = c.get('jwtPayload');
-    const userId = payload.sub;
-    const shareId = c.req.param('id');
+  /**
+   * Remove a share
+   */
+  async removeShare(c: Context) {
+    try {
+      // Get share ID from path parameters
+      const shareId = c.req.param('id');
+      if (!shareId) {
+        throw new ValidationException('Share ID is required');
+      }
 
-    const shareService = createShareService(c);
-    const result = await shareService.deleteShare(shareId, userId);
+      // Call service to remove share
+      const result = await this.teamService.removeShare(shareId);
 
-    if (result.isErr()) {
-      const exception = new BadRequestException(result.error);
-      return exception.getResponse();
+      if (result.isErr()) {
+        throw new NotFoundException(result.error.message);
+      }
+
+      return c.json({
+        code: 200,
+        message: 'Success',
+        data: {message: 'Share removed successfully'},
+      });
+    } catch (error) {
+      if (error instanceof ValidationException ||
+          error instanceof NotFoundException ||
+          error instanceof InternalServerException) {
+        throw error;
+      }
+      throw new InternalServerException(
+        (error as Error).message,
+      );
     }
-
-    const response = new SuccessResponse({success: true});
-    return response.getResponse();
-  } catch (error) {
-    if (error instanceof HTTPException) {
-      return error.getResponse();
-    }
-    const exception = new InternalServerException(error);
-    return exception.getResponse();
   }
-});
+}
 
-
-/**
- * Get team members list.
- */
-
-export default router;
-
+export const createTeamHandler = (options: TeamHandlerOptions): TeamHandler => {
+  return new TeamHandler(options);
+};

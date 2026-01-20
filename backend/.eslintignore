@@ -1,0 +1,22 @@
+# ESLint ignore configuration
+
+# Configuration files
+jest.config.ts
+wrangler.toml
+
+# Scripts not in tsconfig
+scripts/
+
+# Test files not in tsconfig
+src/__tests__/
+
+# Build output
+dist/
+
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local

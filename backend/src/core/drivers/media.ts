@@ -1,0 +1,171 @@
+// src/drivers/media.ts
+// Media driver for handling media-related database operations
+
+import {Result, err, ok} from 'neverthrow';
+import {SupabaseDriver} from './supabase/supabase';
+import {Media, MediaFilterOptions} from '../models/types';
+
+interface MediaDriverOptions {
+  supabase: SupabaseDriver;
+  storageBucket: string;
+}
+
+export class MediaDriver {
+  private readonly supabase: SupabaseDriver;
+  private readonly storageBucket: string;
+
+  constructor(options: MediaDriverOptions) {
+    this.supabase = options.supabase;
+    this.storageBucket = options.storageBucket;
+  }
+
+  /**
+   * Get all media items with filtering options
+   */
+  async getMedia(
+    userId: string,
+    filters: MediaFilterOptions = {},
+  ): Promise<Result<Media[], Error>> {
+    try {
+      let query = this.supabase
+        .getAnonClient()
+        .from('media')
+        .select()
+        .or(`created_by.eq.${userId},todo_id.in.(${this.getSharedTodosQuery(userId)})`);
+
+      // Apply filters
+      if (filters.todo_id) {
+        query = query.eq('todo_id', filters.todo_id);
+      }
+
+      if (filters.media_type) {
+        query = query.eq('media_type', filters.media_type);
+      }
+
+      // Apply pagination
+      if (filters.limit) {
+        query = query.limit(filters.limit);
+      }
+
+      // Sort by created_at descending
+      query = query.order('created_at', {ascending: false});
+
+      const {data: media, error} = await query;
+
+      if (error) {
+        return err(new Error(`Get media failed: ${error.message}`));
+      }
+
+      return ok(media as Media[]);
+    } catch (error) {
+      return err(new Error(`Get media error: ${(error as Error).message}`));
+    }
+  }
+
+  /**
+   * Create a media record and generate upload URL
+   */
+  async generateUploadUrl(
+    userId: string,
+    todoId: string,
+    fileName: string,
+    mimeType: string,
+    fileSize: number,
+  ): Promise<Result<{ uploadUrl: string; mediaId: string }, Error>> {
+    try {
+      // Determine media type from mime type
+      let mediaType: 'image' | 'video' = 'image';
+      if (mimeType.startsWith('video/')) {
+        mediaType = 'video';
+      }
+
+      // Create media record first
+      const {data: media, error: insertError} = await this.supabase
+        .getAnonClient()
+        .from('media')
+        .insert({
+          todo_id: todoId,
+          file_name: fileName,
+          file_path: `${todoId}/${fileName}`,
+          file_size: fileSize,
+          mime_type: mimeType,
+          media_type: mediaType,
+          created_by: userId,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        return err(new Error(`Create media record failed: ${insertError.message}`));
+      }
+
+      // Generate presigned upload URL
+      const {data: uploadUrl, error: urlError} = await this.supabase
+        .getAnonClient()
+        .storage
+        .from(this.storageBucket)
+        .createSignedUrl(`${todoId}/${fileName}`, 3600); // 1 hour expiration
+
+      if (urlError || !uploadUrl.signedUrl) {
+        return err(
+          new Error(`Generate upload URL failed: ${urlError?.message || 'Unknown error'}`),
+        );
+      }
+
+      return ok({
+        uploadUrl: uploadUrl.signedUrl,
+        mediaId: media.id,
+      });
+    } catch (error) {
+      return err(new Error(`Generate upload URL error: ${(error as Error).message}`));
+    }
+  }
+
+  /**
+   * Confirm upload completion
+   */
+  async confirmUpload(
+    mediaId: string,
+    uploadSuccess: boolean,
+  ): Promise<Result<Media, Error>> {
+    try {
+      if (!uploadSuccess) {
+        // If upload failed, delete the media record
+        await this.supabase
+          .getAnonClient()
+          .from('media')
+          .delete()
+          .eq('id', mediaId);
+
+        return err(new Error('Upload confirmation failed: Upload was not successful'));
+      }
+
+      // Get the media record
+      const {data: media, error} = await this.supabase
+        .getAnonClient()
+        .from('media')
+        .select()
+        .eq('id', mediaId)
+        .single();
+
+      if (error) {
+        return err(new Error(`Confirm upload failed: ${error.message}`));
+      }
+
+      return ok(media as Media);
+    } catch (error) {
+      return err(new Error(`Confirm upload error: ${(error as Error).message}`));
+    }
+  }
+
+  /**
+   * Get shared todos subquery for the user
+   */
+  private getSharedTodosQuery(userId: string): string {
+    return `(SELECT todo_id FROM todo_shares WHERE user_id = '${userId}')`;
+  }
+}
+
+export const createMediaDriver = (options: MediaDriverOptions): MediaDriver => {
+  return new MediaDriver(options);
+};

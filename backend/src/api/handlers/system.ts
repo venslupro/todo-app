@@ -1,57 +1,45 @@
-// api/handlers/system.ts
-import {Hono} from 'hono';
-import {SuccessResponse} from '../../shared/errors/http-exception';
-import {EnvironmentConfig} from '../../shared/types/hono-types';
-import {BusinessLogger} from '../middleware/logger';
+// src/api/handlers/system.ts
+// System API handlers for health check and version info
 
-const router = new Hono<{
-  Bindings: EnvironmentConfig;
-  Variables: {};
-}>();
+import {Context} from 'hono';
+import {SystemService} from '../../core/services/system';
 
-/**
- * Health check
- * GET /
- */
-router.get('/', (c) => {
-  BusinessLogger.info('Health check requested', {
-    environment: c.env.environment || 'unknown',
-    timestamp: new Date().toISOString(),
-  });
+interface SystemHandlerOptions {
+  systemService: SystemService;
+}
 
-  const response = new SuccessResponse({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    environment: c.env.environment || 'unknown',
-  });
-  return response.getResponse();
-});
+export class SystemHandler {
+  private readonly systemService: SystemService;
 
-/**
- * Health check
- * GET /health
- */
-router.get('/health', (c) => {
-  const response = new SuccessResponse({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    environment: c.env.environment || 'unknown',
-  });
-  return response.getResponse();
-});
+  constructor(options: SystemHandlerOptions) {
+    this.systemService = options.systemService;
+  }
 
-/**
- * Version information
- * GET /version
- */
-router.get('/version', () => {
-  const response = new SuccessResponse({
-    name: 'TODO API',
-    version: '1.0.0',
-    description: 'Real-time collaborative TODO list application',
-    documentation: 'https://api.todo.com/docs',
-  });
-  return response.getResponse();
-});
+  /**
+   * Health check endpoint
+   */
+  async healthCheck(c: Context) {
+    const result = await this.systemService.getHealthStatus();
+    return c.json({
+      code: 200,
+      message: 'Success',
+      data: result,
+    });
+  }
 
-export default router;
+  /**
+   * Version information endpoint
+   */
+  async version(c: Context) {
+    const result = await this.systemService.getVersionInfo();
+    return c.json({
+      code: 200,
+      message: 'Success',
+      data: result,
+    });
+  }
+}
+
+export const createSystemHandler = (options: SystemHandlerOptions): SystemHandler => {
+  return new SystemHandler(options);
+};

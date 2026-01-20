@@ -1,314 +1,232 @@
-// api/handlers/todo.ts
-import {Hono} from 'hono';
-import {HTTPException} from 'hono/http-exception';
-import {EnvironmentConfig, HonoAppType} from '../../shared/types/hono-types';
-import {TodoService} from '../../core/services/todo-service';
+// src/api/handlers/todo.ts
+// Todo API handlers for todo management
+
+import {Context} from 'hono';
+import {TodoService} from '../../core/services/todo';
 import {
-  TodoStatus,
-  TodoPriority,
-} from '../../core/models/todo';
-import {AppConfig} from '../../shared/config/app-config';
-import {
-  BadRequestException,
-  InternalServerException,
-  SuccessResponse,
+  ValidationException,
   NotFoundException,
+  InternalServerException,
 } from '../../shared/errors/http-exception';
-import {BusinessLogger} from '../middleware/logger';
-import {jwtMiddleware} from '../middleware/auth-middleware';
+import {
+  createTodoSchema,
+  updateTodoSchema,
+  todoFilterSchema,
+} from '../../shared/schemas';
+import {getUserIdFromContext} from '../../shared/utils';
 
-// Define JWT variables type for type safety
-type JwtVariables = {
-  jwtPayload: {
-    sub: string;
-    email?: string;
-  };
-};
-
-const router = new Hono<HonoAppType & {
-  Variables: JwtVariables;
-}>();
-
-/**
- * Creates a TODO service instance.
- */
-function createTodoService(
-  c: {
-    env: EnvironmentConfig;
-  },
-): TodoService {
-  const envConfig = {
-    supabase_url: c.env.supabase_url,
-    supabase_anon_key: c.env.supabase_anon_key,
-    supabase_service_role_key: c.env.supabase_service_role_key,
-    environment: c.env.environment,
-  };
-  const appConfig = new AppConfig(envConfig);
-  return new TodoService(appConfig);
+interface TodoHandlerOptions {
+  todoService: TodoService;
 }
 
+export class TodoHandler {
+  private readonly todoService: TodoService;
 
-/**
- * Gets TODO list.
- * GET /api/v1/todos
- */
-router.get('/', jwtMiddleware, async (c) => {
-  try {
-    const payload = c.get('jwtPayload');
-    const userId = payload.sub;
-    const query = c.req.query();
-
-    BusinessLogger.info('Fetching TODO list', {
-      userId: userId,
-      queryParams: query,
-    });
-
-    const sortBy = query['sort_by'];
-    const validSortBy = ['name', 'priority', 'due_date', 'created_at', 'updated_at'];
-
-    const params = {
-      status: query['status'] as TodoStatus,
-      priority: query['priority'] as TodoPriority,
-      due_date_before: query['due_date_before'],
-      due_date_after: query['due_date_after'],
-      tags: query['tags'] ? query['tags'].split(',') : undefined,
-      search: query['search'],
-      limit: query['limit'] ? parseInt(query['limit']) : undefined,
-      offset: query['offset'] ? parseInt(query['offset']) : undefined,
-      sort_by: validSortBy.includes(sortBy || '') ?
-        sortBy as 'name' | 'priority' | 'due_date' | 'created_at' | 'updated_at' :
-        undefined,
-      sort_order: query['sort_order'] as 'asc' | 'desc',
-    };
-
-    const todoService = createTodoService(c);
-    const result = await todoService.getTodos(userId, params);
-
-    if (result.isErr()) {
-      BusinessLogger.error('Failed to fetch TODO list', new Error(result.error), {
-        userId: userId,
-        error: result.error,
-      });
-      const exception = new BadRequestException(result.error);
-      return exception.getResponse();
-    }
-
-    BusinessLogger.info('Successfully fetched TODO list', {
-      userId: userId,
-      todoCount: result.value.todos.length,
-      totalCount: result.value.total,
-    });
-
-    const response = new SuccessResponse(result.value);
-    return response.getResponse();
-  } catch (error) {
-    BusinessLogger.error('Unexpected error while fetching TODO list', error as Error, {
-      userId: c.get('jwtPayload')?.sub,
-    });
-    if (error instanceof HTTPException) {
-      return error.getResponse();
-    }
-    const exception = new InternalServerException(error);
-    return exception.getResponse();
+  constructor(options: TodoHandlerOptions) {
+    this.todoService = options.todoService;
   }
-});
 
-/**
- * Create TODO.
- * POST /api/v1/todos
- */
-router.post('/', jwtMiddleware, async (c) => {
-  try {
-    const payload = c.get('jwtPayload');
-    const userId = payload.sub;
-    const body = await c.req.json();
+  /**
+   * Get all todos with filtering options
+   */
+  async getAllTodos(c: Context) {
+    try {
+      // Get user ID from context
+      const userId = getUserIdFromContext(c);
 
-    BusinessLogger.info('Creating new TODO', {
-      userId: userId,
-      todoData: {name: body.name, priority: body.priority, status: body.status},
-    });
+      // Extract and validate query parameters
+      const validated = todoFilterSchema.safeParse(c.req.query());
+      if (!validated.success) {
+        throw new ValidationException(validated.error.errors);
+      }
 
-    const todoService = createTodoService(c);
-    const result = await todoService.create(userId, body);
+      // Call service to get todos
+      const result = await this.todoService.getTodos(userId, validated.data);
 
-    if (result.isErr()) {
-      BusinessLogger.error('Failed to create TODO', new Error(result.error), {
-        userId: userId,
-        error: result.error,
-        todoData: body,
+      if (result.isErr()) {
+        throw new InternalServerException(result.error.message);
+      }
+
+      return c.json({
+        code: 200,
+        message: 'Success',
+        data: result.value,
       });
-      const exception = new BadRequestException(result.error);
-      return exception.getResponse();
+    } catch (error) {
+      if (error instanceof ValidationException ||
+          error instanceof NotFoundException ||
+          error instanceof InternalServerException) {
+        throw error;
+      }
+      throw new InternalServerException(
+        (error as Error).message,
+      );
     }
-
-    BusinessLogger.info('Successfully created TODO', {
-      userId: userId,
-      todoId: result.value.id,
-      todoName: result.value.name,
-    });
-
-    const response = new SuccessResponse(result.value);
-    return response.getResponse();
-  } catch (error) {
-    BusinessLogger.error('Unexpected error while creating TODO', error as Error, {
-      userId: c.get('jwtPayload')?.sub,
-    });
-    if (error instanceof HTTPException) {
-      return error.getResponse();
-    }
-    const exception = new InternalServerException(error);
-    return exception.getResponse();
   }
-});
 
-/**
- * Get single TODO.
- * GET /api/v1/todos/:id
- */
-router.get('/:id', jwtMiddleware, async (c) => {
-  try {
-    const payload = c.get('jwtPayload');
-    const userId = payload.sub;
-    const todoId = c.req.param('id');
+  /**
+   * Create a new todo
+   */
+  async createTodo(c: Context) {
+    try {
+      // Get user ID from context
+      const userId = getUserIdFromContext(c);
 
-    BusinessLogger.info('Fetching single TODO', {
-      userId: userId,
-      todoId: todoId,
-    });
+      // Validate request body
+      const body = await c.req.json();
+      const validated = createTodoSchema.safeParse(body);
+      if (!validated.success) {
+        throw new ValidationException(validated.error.errors);
+      }
 
-    const todoService = createTodoService(c);
-    const result = await todoService.getTodo(todoId, userId);
-
-    if (result.isErr()) {
-      BusinessLogger.warn('TODO not found', {
-        userId: userId,
-        todoId: todoId,
-        error: result.error,
+      // Call service to create todo
+      const result = await this.todoService.createTodo({
+        ...validated.data,
+        created_by: userId,
       });
-      const exception = new NotFoundException(result.error);
-      return exception.getResponse();
-    }
 
-    BusinessLogger.info('Successfully fetched TODO', {
-      userId: userId,
-      todoId: todoId,
-      todoName: result.value.name,
-    });
+      if (result.isErr()) {
+        throw new InternalServerException(result.error.message);
+      }
 
-    const response = new SuccessResponse(result.value);
-    return response.getResponse();
-  } catch (error) {
-    BusinessLogger.error('Unexpected error while fetching TODO', error as Error, {
-      userId: c.get('jwtPayload')?.sub,
-      todoId: c.req.param('id'),
-    });
-    if (error instanceof HTTPException) {
-      return error.getResponse();
-    }
-    const exception = new InternalServerException(error);
-    return exception.getResponse();
-  }
-});
-
-/**
- * Update TODO.
- * PUT /api/v1/todos/:id
- */
-router.put('/:id', jwtMiddleware, async (c) => {
-  try {
-    const payload = c.get('jwtPayload');
-    const userId = payload.sub;
-    const todoId = c.req.param('id');
-    const body = await c.req.json();
-
-    BusinessLogger.info('Updating TODO', {
-      userId: userId,
-      todoId: todoId,
-      updateData: Object.keys(body),
-    });
-
-    const todoService = createTodoService(c);
-    const result = await todoService.updateTodo(todoId, userId, body);
-
-    if (result.isErr()) {
-      BusinessLogger.error('Failed to update TODO', new Error(result.error), {
-        userId: userId,
-        todoId: todoId,
-        error: result.error,
-        updateData: body,
+      return c.json({
+        code: 200,
+        message: 'Success',
+        data: result.value,
       });
-      const exception = new BadRequestException(result.error);
-      return exception.getResponse();
+    } catch (error) {
+      if (error instanceof ValidationException ||
+          error instanceof InternalServerException) {
+        throw error;
+      }
+      throw new InternalServerException(
+        (error as Error).message,
+      );
     }
-
-    BusinessLogger.info('Successfully updated TODO', {
-      userId: userId,
-      todoId: todoId,
-      todoName: result.value.name,
-    });
-
-    const response = new SuccessResponse(result.value);
-    return response.getResponse();
-  } catch (error) {
-    BusinessLogger.error('Unexpected error while updating TODO', error as Error, {
-      userId: c.get('jwtPayload')?.sub,
-      todoId: c.req.param('id'),
-    });
-    if (error instanceof HTTPException) {
-      return error.getResponse();
-    }
-    const exception = new InternalServerException(error);
-    return exception.getResponse();
   }
-});
 
-/**
- * Delete TODO.
- * DELETE /api/v1/todos/:id
- */
-router.delete('/:id', jwtMiddleware, async (c) => {
-  try {
-    const payload = c.get('jwtPayload');
-    const userId = payload.sub;
-    const todoId = c.req.param('id');
+  /**
+   * Get a todo by ID
+   */
+  async getTodoById(c: Context) {
+    try {
+      // Get user ID from context
+      const userId = getUserIdFromContext(c);
 
-    BusinessLogger.info('Deleting TODO', {
-      userId: userId,
-      todoId: todoId,
-    });
+      // Get todo ID from path parameters
+      const todoId = c.req.param('id');
+      if (!todoId) {
+        throw new ValidationException('Todo ID is required');
+      }
 
-    const todoService = createTodoService(c);
-    const result = await todoService.deleteTodo(todoId, userId);
+      // Call service to get todo
+      const result = await this.todoService.getTodoById(todoId, userId);
 
-    if (result.isErr()) {
-      BusinessLogger.error('Failed to delete TODO', new Error(result.error), {
-        userId: userId,
-        todoId: todoId,
-        error: result.error,
+      if (result.isErr()) {
+        throw new NotFoundException(result.error.message);
+      }
+
+      return c.json({
+        code: 200,
+        message: 'Success',
+        data: result.value,
       });
-      const exception = new BadRequestException(result.error);
-      return exception.getResponse();
+    } catch (error) {
+      if (error instanceof ValidationException ||
+          error instanceof NotFoundException ||
+          error instanceof InternalServerException) {
+        throw error;
+      }
+      throw new InternalServerException(
+        (error as Error).message,
+      );
     }
-
-    BusinessLogger.info('Successfully deleted TODO', {
-      userId: userId,
-      todoId: todoId,
-    });
-
-    const response = new SuccessResponse({success: true});
-    return response.getResponse();
-  } catch (error) {
-    BusinessLogger.error('Unexpected error while deleting TODO', error as Error, {
-      userId: c.get('jwtPayload')?.sub,
-      todoId: c.req.param('id'),
-    });
-    if (error instanceof HTTPException) {
-      return error.getResponse();
-    }
-    const exception = new InternalServerException(error);
-    return exception.getResponse();
   }
-});
 
-export default router;
+  /**
+   * Update a todo
+   */
+  async updateTodo(c: Context) {
+    try {
+      // Get user ID from context
+      const userId = getUserIdFromContext(c);
 
+      // Get todo ID from path parameters
+      const todoId = c.req.param('id');
+      if (!todoId) {
+        throw new ValidationException('Todo ID is required');
+      }
+
+      // Validate request body
+      const body = await c.req.json();
+      const validated = updateTodoSchema.safeParse(body);
+      if (!validated.success) {
+        throw new ValidationException(validated.error.errors);
+      }
+
+      // Call service to update todo
+      const result = await this.todoService.updateTodo(todoId, userId, validated.data);
+
+      if (result.isErr()) {
+        throw new NotFoundException(result.error.message);
+      }
+
+      return c.json({
+        code: 200,
+        message: 'Success',
+        data: result.value,
+      });
+    } catch (error) {
+      if (error instanceof ValidationException ||
+          error instanceof NotFoundException ||
+          error instanceof InternalServerException) {
+        throw error;
+      }
+      throw new InternalServerException(
+        (error as Error).message,
+      );
+    }
+  }
+
+  /**
+   * Delete a todo
+   */
+  async deleteTodo(c: Context) {
+    try {
+      // Get user ID from context
+      const userId = getUserIdFromContext(c);
+
+      // Get todo ID from path parameters
+      const todoId = c.req.param('id');
+      if (!todoId) {
+        throw new ValidationException('Todo ID is required');
+      }
+
+      // Call service to delete todo
+      const result = await this.todoService.deleteTodo(todoId, userId);
+
+      if (result.isErr()) {
+        throw new NotFoundException(result.error.message);
+      }
+
+      return c.json({
+        code: 200,
+        message: 'Success',
+        data: {message: 'TODO deleted successfully'},
+      });
+    } catch (error) {
+      if (error instanceof ValidationException ||
+          error instanceof NotFoundException ||
+          error instanceof InternalServerException) {
+        throw error;
+      }
+      throw new InternalServerException(
+        (error as Error).message,
+      );
+    }
+  }
+}
+
+export const createTodoHandler = (options: TodoHandlerOptions): TodoHandler => {
+  return new TodoHandler(options);
+};
