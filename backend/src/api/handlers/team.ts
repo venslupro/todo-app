@@ -48,7 +48,8 @@ export class TeamHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      throw new SuccessResponse({members: result.value});
+      const success = new SuccessResponse({members: result.value});
+      return success.getResponse();
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||
@@ -88,7 +89,8 @@ export class TeamHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      throw new SuccessResponse({share: result.value});
+      const success = new SuccessResponse({share: result.value});
+      return success.getResponse();
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof InternalServerException) {
@@ -128,7 +130,8 @@ export class TeamHandler {
         throw new NotFoundException(result.error.message);
       }
 
-      throw new SuccessResponse({share: result.value});
+      const success = new SuccessResponse({share: result.value});
+      return success.getResponse();
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||
@@ -159,7 +162,8 @@ export class TeamHandler {
         throw new NotFoundException(result.error.message);
       }
 
-      throw new SuccessResponse({message: 'Share removed successfully'});
+      const success = new SuccessResponse({message: 'Share removed successfully'});
+      return success.getResponse();
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||

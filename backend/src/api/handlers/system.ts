@@ -21,7 +21,8 @@ export class SystemHandler {
    */
   async healthCheck() {
     const result = await this.systemService.getHealthStatus();
-    throw new SuccessResponse(result);
+    const success = new SuccessResponse(result);
+    return success.getResponse();
   }
 
   /**
@@ -29,7 +30,8 @@ export class SystemHandler {
    */
   async version() {
     const result = await this.systemService.getVersionInfo();
-    throw new SuccessResponse(result);
+    const success = new SuccessResponse(result);
+    return success.getResponse();
   }
 }
 

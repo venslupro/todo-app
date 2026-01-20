@@ -48,7 +48,8 @@ export class MediaHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      throw new SuccessResponse({media: result.value});
+      const success = new SuccessResponse({media: result.value});
+      return success.getResponse();
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||
@@ -87,7 +88,8 @@ export class MediaHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      throw new SuccessResponse(result.value);
+      const success = new SuccessResponse(result.value);
+      return success.getResponse();
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||
@@ -130,7 +132,8 @@ export class MediaHandler {
         throw new NotFoundException(result.error.message);
       }
 
-      throw new SuccessResponse({media: result.value});
+      const success = new SuccessResponse({media: result.value});
+      return success.getResponse();
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||
