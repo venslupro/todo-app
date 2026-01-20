@@ -4,16 +4,20 @@
 import {Result, err, ok} from 'neverthrow';
 import {SupabaseDriver} from './supabase/supabase';
 import {TeamMember, TodoShare} from '../models/types';
+import {Logger} from '../../shared/utils/logger';
 
 interface TeamDriverOptions {
   supabase: SupabaseDriver;
+  logger: Logger;
 }
 
 export class TeamDriver {
   private readonly supabase: SupabaseDriver;
+  private readonly logger: Logger;
 
   constructor(options: TeamDriverOptions) {
     this.supabase = options.supabase;
+    this.logger = options.logger;
   }
 
   /**
@@ -24,6 +28,7 @@ export class TeamDriver {
     todoId?: string,
   ): Promise<Result<TeamMember[], Error>> {
     try {
+      this.logger.debug('TeamDriver: Getting team members', {userId, todoId});
       let query = this.supabase
         .getAnonClient()
         .from('todo_shares')
@@ -39,10 +44,12 @@ export class TeamDriver {
       const {data: shares, error} = await query;
 
       if (error) {
+        this.logger.error('TeamDriver: Get team members failed', {userId, todoId, error: error.message});
         return err(new Error(`Get team members failed: ${error.message}`));
       }
 
       if (!shares || shares.length === 0) {
+        this.logger.debug('TeamDriver: No team members found', {userId, todoId});
         return ok([]);
       }
 
@@ -57,10 +64,12 @@ export class TeamDriver {
         .in('id', userIds);
 
       if (userError) {
+        this.logger.error('TeamDriver: Get user details failed', {userId, error: userError.message});
         return err(new Error(`Get user details failed: ${userError.message}`));
       }
 
       if (!users) {
+        this.logger.debug('TeamDriver: No users found for shares', {userId});
         return ok([]);
       }
 
@@ -74,6 +83,7 @@ export class TeamDriver {
       }]));
 
       // Combine share information with user details
+      this.logger.debug('TeamDriver: Processing team member shares', {userId, shareCount: shares.length, userCount: users.length});
       const members: TeamMember[] = shares.map((share) => {
         const userDetails = userMap.get(share.user_id) || {
           email: '',
@@ -95,8 +105,10 @@ export class TeamDriver {
         };
       });
 
+      this.logger.debug('TeamDriver: Got team members successfully', {userId, memberCount: members.length});
       return ok(members);
     } catch (error) {
+      this.logger.error('TeamDriver: Get team members error', {userId, error: (error as Error).message});
       return err(new Error(`Get team members error: ${(error as Error).message}`));
     }
   }
@@ -111,6 +123,7 @@ export class TeamDriver {
     permission: 'view' | 'edit',
   ): Promise<Result<TodoShare, Error>> {
     try {
+      this.logger.debug('TeamDriver: Sharing todo with user', {todoId, userId, sharedBy, permission});
       const {data: share, error} = await this.supabase
         .getAnonClient()
         .from('todo_shares')
@@ -124,11 +137,14 @@ export class TeamDriver {
         .single();
 
       if (error) {
+        this.logger.error('TeamDriver: Share todo failed', {todoId, userId, sharedBy, error: error.message});
         return err(new Error(`Share todo failed: ${error.message}`));
       }
 
+      this.logger.debug('TeamDriver: Todo shared successfully', {todoId, userId, shareId: share.id});
       return ok(share as TodoShare);
     } catch (error) {
+      this.logger.error('TeamDriver: Share todo error', {todoId, userId, sharedBy, error: (error as Error).message});
       return err(new Error(`Share todo error: ${(error as Error).message}`));
     }
   }
@@ -141,6 +157,7 @@ export class TeamDriver {
     permission: 'view' | 'edit',
   ): Promise<Result<TodoShare, Error>> {
     try {
+      this.logger.debug('TeamDriver: Updating share permission', {shareId, permission});
       const {data: share, error} = await this.supabase
         .getAnonClient()
         .from('todo_shares')
@@ -150,11 +167,14 @@ export class TeamDriver {
         .single();
 
       if (error) {
+        this.logger.error('TeamDriver: Update share permission failed', {shareId, error: error.message});
         return err(new Error(`Update share permission failed: ${error.message}`));
       }
 
+      this.logger.debug('TeamDriver: Share permission updated successfully', {shareId, newPermission: permission});
       return ok(share as TodoShare);
     } catch (error) {
+      this.logger.error('TeamDriver: Update share permission error', {shareId, error: (error as Error).message});
       return err(new Error(`Update share permission error: ${(error as Error).message}`));
     }
   }
@@ -166,6 +186,7 @@ export class TeamDriver {
     shareId: string,
   ): Promise<Result<boolean, Error>> {
     try {
+      this.logger.debug('TeamDriver: Removing share', {shareId});
       const {error} = await this.supabase
         .getAnonClient()
         .from('todo_shares')
@@ -173,11 +194,14 @@ export class TeamDriver {
         .eq('id', shareId);
 
       if (error) {
+        this.logger.error('TeamDriver: Remove share failed', {shareId, error: error.message});
         return err(new Error(`Remove share failed: ${error.message}`));
       }
 
+      this.logger.debug('TeamDriver: Share removed successfully', {shareId});
       return ok(true);
     } catch (error) {
+      this.logger.error('TeamDriver: Remove share error', {shareId, error: (error as Error).message});
       return err(new Error(`Remove share error: ${(error as Error).message}`));
     }
   }
@@ -191,6 +215,7 @@ export class TeamDriver {
     requiredPermission?: 'view' | 'edit',
   ): Promise<Result<boolean, Error>> {
     try {
+      this.logger.debug('TeamDriver: Checking todo permission', {todoId, userId, requiredPermission});
       // First check if the user is the owner
       const {data: todo, error: todoError} = await this.supabase
         .getAnonClient()
@@ -200,14 +225,17 @@ export class TeamDriver {
         .single();
 
       if (todoError) {
+        this.logger.error('TeamDriver: Check todo permission failed - get todo error', {todoId, userId, error: todoError.message});
         return err(new Error(`Check todo permission failed: ${todoError.message}`));
       }
 
       if (todo.created_by === userId) {
+        this.logger.debug('TeamDriver: User is owner, permission granted', {todoId, userId});
         return ok(true);
       }
 
       // If not owner, check if they have a share with appropriate permission
+      this.logger.debug('TeamDriver: User is not owner, checking share permissions', {todoId, userId});
       const {data: share, error: shareError} = await this.supabase
         .getAnonClient()
         .from('todo_shares')
@@ -217,15 +245,20 @@ export class TeamDriver {
         .single();
 
       if (shareError) {
+        this.logger.debug('TeamDriver: No share found, permission denied', {todoId, userId});
         return ok(false);
       }
 
       if (requiredPermission === 'edit') {
-        return ok(share.permission === 'edit');
+        const hasPermission = share.permission === 'edit';
+        this.logger.debug('TeamDriver: Edit permission check result', {todoId, userId, hasPermission, actualPermission: share.permission});
+        return ok(hasPermission);
       }
 
+      this.logger.debug('TeamDriver: View permission granted', {todoId, userId, actualPermission: share.permission});
       return ok(true);
     } catch (error) {
+      this.logger.error('TeamDriver: Check todo permission error', {todoId, userId, error: (error as Error).message});
       return err(new Error(`Check todo permission error: ${(error as Error).message}`));
     }
   }

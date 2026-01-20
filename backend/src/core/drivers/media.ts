@@ -4,19 +4,23 @@
 import {Result, err, ok} from 'neverthrow';
 import {SupabaseDriver} from './supabase/supabase';
 import {Media, MediaFilterOptions} from '../models/types';
+import {Logger} from '../../shared/utils/logger';
 
 interface MediaDriverOptions {
   supabase: SupabaseDriver;
   storageBucket: string;
+  logger: Logger;
 }
 
 export class MediaDriver {
   private readonly supabase: SupabaseDriver;
   private readonly storageBucket: string;
+  private readonly logger: Logger;
 
   constructor(options: MediaDriverOptions) {
     this.supabase = options.supabase;
     this.storageBucket = options.storageBucket;
+    this.logger = options.logger;
   }
 
   /**
@@ -27,6 +31,7 @@ export class MediaDriver {
     filters: MediaFilterOptions = {},
   ): Promise<Result<Media[], Error>> {
     try {
+      this.logger.debug('MediaDriver: Getting media for user', {userId, filters});
       let query = this.supabase
         .getAnonClient()
         .from('media')
@@ -53,11 +58,14 @@ export class MediaDriver {
       const {data: media, error} = await query;
 
       if (error) {
+        this.logger.error('MediaDriver: Get media failed', {userId, error: error.message});
         return err(new Error(`Get media failed: ${error.message}`));
       }
 
+      this.logger.debug('MediaDriver: Got media successfully', {userId, count: media.length});
       return ok(media as Media[]);
     } catch (error) {
+      this.logger.error('MediaDriver: Get media error', {userId, error: (error as Error).message});
       return err(new Error(`Get media error: ${(error as Error).message}`));
     }
   }
@@ -73,6 +81,7 @@ export class MediaDriver {
     fileSize: number,
   ): Promise<Result<{ uploadUrl: string; mediaId: string }, Error>> {
     try {
+      this.logger.debug('MediaDriver: Generating upload URL', {userId, todoId, fileName});
       // Determine media type from mime type
       let mediaType: 'image' | 'video' = 'image';
       if (mimeType.startsWith('video/')) {
@@ -96,6 +105,7 @@ export class MediaDriver {
         .single();
 
       if (insertError) {
+        this.logger.error('MediaDriver: Create media record failed', {userId, todoId, error: insertError.message});
         return err(new Error(`Create media record failed: ${insertError.message}`));
       }
 
@@ -107,16 +117,19 @@ export class MediaDriver {
         .createSignedUrl(`${todoId}/${fileName}`, 3600); // 1 hour expiration
 
       if (urlError || !uploadUrl.signedUrl) {
+        this.logger.error('MediaDriver: Generate upload URL failed', {userId, todoId, error: urlError?.message});
         return err(
           new Error(`Generate upload URL failed: ${urlError?.message || 'Unknown error'}`),
         );
       }
 
+      this.logger.debug('MediaDriver: Generated upload URL successfully', {userId, mediaId: media.id});
       return ok({
         uploadUrl: uploadUrl.signedUrl,
         mediaId: media.id,
       });
     } catch (error) {
+      this.logger.error('MediaDriver: Generate upload URL error', {userId, todoId, error: (error as Error).message});
       return err(new Error(`Generate upload URL error: ${(error as Error).message}`));
     }
   }
@@ -129,6 +142,7 @@ export class MediaDriver {
     uploadSuccess: boolean,
   ): Promise<Result<Media, Error>> {
     try {
+      this.logger.debug('MediaDriver: Confirming upload', {mediaId, uploadSuccess});
       if (!uploadSuccess) {
         // If upload failed, delete the media record
         await this.supabase
@@ -137,6 +151,7 @@ export class MediaDriver {
           .delete()
           .eq('id', mediaId);
 
+        this.logger.debug('MediaDriver: Upload failed, deleted media record', {mediaId});
         return err(new Error('Upload confirmation failed: Upload was not successful'));
       }
 
@@ -149,11 +164,14 @@ export class MediaDriver {
         .single();
 
       if (error) {
+        this.logger.error('MediaDriver: Confirm upload failed', {mediaId, error: error.message});
         return err(new Error(`Confirm upload failed: ${error.message}`));
       }
 
+      this.logger.debug('MediaDriver: Upload confirmed successfully', {mediaId, todoId: media.todo_id});
       return ok(media as Media);
     } catch (error) {
+      this.logger.error('MediaDriver: Confirm upload error', {mediaId, error: (error as Error).message});
       return err(new Error(`Confirm upload error: ${(error as Error).message}`));
     }
   }

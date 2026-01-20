@@ -58,21 +58,24 @@ export default {
       url: env.supabase_url,
       anonKey: env.supabase_anon_key,
       serviceRoleKey: env.supabase_service_role_key,
+      logger,
     });
 
-    const authDriver = createAuthDriver({supabase: supabaseDriver});
-    const todoDriver = createTodoDriver({supabase: supabaseDriver});
+    const authDriver = createAuthDriver({supabase: supabaseDriver, logger});
+    const todoDriver = createTodoDriver({supabase: supabaseDriver, logger});
     const mediaDriver = createMediaDriver({
       supabase: supabaseDriver,
       storageBucket: 'media',
+      logger,
     });
-    const teamDriver = createTeamDriver({supabase: supabaseDriver});
+    const teamDriver = createTeamDriver({supabase: supabaseDriver, logger});
 
     // Initialize services
     const systemService = createSystemService({
       environment: env.environment,
       appName: 'TODO API',
       appVersion: '1.0.0',
+      logger,
     });
 
     const authService = createAuthService({
@@ -93,6 +96,7 @@ export default {
     // Auth middleware (use this for protected routes)
     const authMiddleware = createAuthMiddleware({
       supabaseDriver: supabaseDriver,
+      logger,
     });
 
     // Initialize Hono app with Bindings type

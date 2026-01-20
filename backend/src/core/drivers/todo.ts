@@ -4,16 +4,20 @@
 import {Result, err, ok} from 'neverthrow';
 import {SupabaseDriver} from './supabase/supabase';
 import {Todo, TodoFilterOptions} from '../models/types';
+import {Logger} from '../../shared/utils/logger';
 
 interface TodoDriverOptions {
   supabase: SupabaseDriver;
+  logger: Logger;
 }
 
 export class TodoDriver {
   private readonly supabase: SupabaseDriver;
+  private readonly logger: Logger;
 
   constructor(options: TodoDriverOptions) {
     this.supabase = options.supabase;
+    this.logger = options.logger;
   }
 
   /**
@@ -23,6 +27,7 @@ export class TodoDriver {
     data: Omit<Todo, 'id' | 'created_at' | 'updated_at' | 'is_deleted'>,
   ): Promise<Result<Todo, Error>> {
     try {
+      this.logger.debug('TodoDriver: Creating new todo', {name: data.name, createdBy: data.created_by});
       const {data: todo, error} = await this.supabase
         .getAnonClient()
         .from('todos')
@@ -34,11 +39,14 @@ export class TodoDriver {
         .single();
 
       if (error) {
+        this.logger.error('TodoDriver: Create todo failed', {name: data.name, createdBy: data.created_by, error: error.message});
         return err(new Error(`Create todo failed: ${error.message}`));
       }
 
+      this.logger.debug('TodoDriver: Todo created successfully', {todoId: todo.id, name: todo.name});
       return ok(todo as Todo);
     } catch (error) {
+      this.logger.error('TodoDriver: Create todo error', {name: data.name, createdBy: data.created_by, error: (error as Error).message});
       return err(new Error(`Create todo error: ${(error as Error).message}`));
     }
   }
@@ -48,6 +56,7 @@ export class TodoDriver {
    */
   async getTodoById(todoId: string): Promise<Result<Todo, Error>> {
     try {
+      this.logger.debug('TodoDriver: Getting todo by ID', {todoId});
       const {data: todo, error} = await this.supabase
         .getAnonClient()
         .from('todos')
@@ -57,11 +66,14 @@ export class TodoDriver {
         .single();
 
       if (error) {
+        this.logger.error('TodoDriver: Get todo by ID failed', {todoId, error: error.message});
         return err(new Error(`Get todo by ID failed: ${error.message}`));
       }
 
+      this.logger.debug('TodoDriver: Got todo by ID successfully', {todoId, name: todo.name});
       return ok(todo as Todo);
     } catch (error) {
+      this.logger.error('TodoDriver: Get todo by ID error', {todoId, error: (error as Error).message});
       return err(new Error(`Get todo by ID error: ${(error as Error).message}`));
     }
   }
@@ -74,6 +86,7 @@ export class TodoDriver {
     filters: TodoFilterOptions = {},
   ): Promise<Result<{ todos: Todo[]; total: number }, Error>> {
     try {
+      this.logger.debug('TodoDriver: Getting todos for user', {userId, filters});
       let query = this.supabase
         .getAnonClient()
         .from('todos')
@@ -128,14 +141,17 @@ export class TodoDriver {
       const {data: todos, error, count} = await query;
 
       if (error) {
+        this.logger.error('TodoDriver: Get todos failed', {userId, filters, error: error.message});
         return err(new Error(`Get todos failed: ${error.message}`));
       }
 
+      this.logger.debug('TodoDriver: Got todos successfully', {userId, count: todos.length, total: count || 0});
       return ok({
         todos: todos as Todo[],
         total: count || 0,
       });
     } catch (error) {
+      this.logger.error('TodoDriver: Get todos error', {userId, filters, error: (error as Error).message});
       return err(new Error(`Get todos error: ${(error as Error).message}`));
     }
   }
@@ -148,6 +164,7 @@ export class TodoDriver {
     data: Partial<Omit<Todo, 'id' | 'created_by' | 'created_at' | 'is_deleted'>>,
   ): Promise<Result<Todo, Error>> {
     try {
+      this.logger.debug('TodoDriver: Updating todo', {todoId, updateData: data});
       // If status is completed and completed_at is not set, set it to now
       const updateData = {
         ...data,
@@ -166,11 +183,14 @@ export class TodoDriver {
         .single();
 
       if (error) {
+        this.logger.error('TodoDriver: Update todo failed', {todoId, updateData: data, error: error.message});
         return err(new Error(`Update todo failed: ${error.message}`));
       }
 
+      this.logger.debug('TodoDriver: Todo updated successfully', {todoId, name: todo.name});
       return ok(todo as Todo);
     } catch (error) {
+      this.logger.error('TodoDriver: Update todo error', {todoId, updateData: data, error: (error as Error).message});
       return err(new Error(`Update todo error: ${(error as Error).message}`));
     }
   }
@@ -180,6 +200,7 @@ export class TodoDriver {
    */
   async deleteTodo(todoId: string): Promise<Result<boolean, Error>> {
     try {
+      this.logger.debug('TodoDriver: Deleting todo (soft delete)', {todoId});
       const {error} = await this.supabase
         .getAnonClient()
         .from('todos')
@@ -188,11 +209,14 @@ export class TodoDriver {
         .eq('is_deleted', false);
 
       if (error) {
+        this.logger.error('TodoDriver: Delete todo failed', {todoId, error: error.message});
         return err(new Error(`Delete todo failed: ${error.message}`));
       }
 
+      this.logger.debug('TodoDriver: Todo deleted successfully (soft delete)', {todoId});
       return ok(true);
     } catch (error) {
+      this.logger.error('TodoDriver: Delete todo error', {todoId, error: (error as Error).message});
       return err(new Error(`Delete todo error: ${(error as Error).message}`));
     }
   }
