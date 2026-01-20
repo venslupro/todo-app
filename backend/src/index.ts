@@ -5,6 +5,7 @@ import {Hono} from 'hono';
 import {cors} from 'hono/cors';
 import {logger as httpLogger} from 'hono/logger';
 import {HTTPException} from 'hono/http-exception';
+import type {ExecutionContext} from '@cloudflare/workers-types';
 import {appLogger} from './shared/utils/logger';
 
 // Drivers
@@ -45,7 +46,7 @@ type Bindings = {
 
 // Export the app as a Module Worker for Cloudflare Workers
 export default {
-  fetch: async (req: Request, env: Bindings, ctx: any) => {
+  fetch: async (req: Request, env: Bindings, ctx: ExecutionContext) => {
     // Initialize drivers with environment variables from env
     const supabaseDriver = createSupabaseDriver({
       url: env.supabase_url,
