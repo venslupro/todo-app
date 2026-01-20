@@ -95,7 +95,8 @@ export class AuthDriver {
 
       if (error) {
         this.logger.error('AuthDriver: Login failed', {email, error: error.message});
-        return err(new Error(`Auth login failed: ${error.message}`));
+        // Return the original Supabase error message for better user experience
+        return err(new Error(error.message));
       }
 
       if (!data.user || !data.session) {
