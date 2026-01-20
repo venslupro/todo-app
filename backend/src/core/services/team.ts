@@ -4,9 +4,11 @@
 import {Result, err, ok} from 'neverthrow';
 import {TeamDriver} from '../drivers/team';
 import {TeamMember, TodoShare} from '../models/types';
+import {Logger} from '../../shared/utils/logger';
 
 interface TeamServiceOptions {
   teamDriver: TeamDriver;
+  logger: Logger;
 }
 
 export class TeamService {

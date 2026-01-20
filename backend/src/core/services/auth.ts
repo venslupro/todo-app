@@ -4,24 +4,20 @@
 import {Result, err, ok} from 'neverthrow';
 import {AuthDriver} from '../drivers/auth';
 import {AuthResponse, User} from '../models/types';
-import {createLogger, LogLevel} from '../../shared/utils/logger';
+import {Logger} from '../../shared/utils/logger';
 
 interface AuthServiceOptions {
   authDriver: AuthDriver;
-  environment: string;
-  logLevel: string;
+  logger: Logger;
 }
 
 export class AuthService {
   private readonly authDriver: AuthDriver;
-  private readonly logger: ReturnType<typeof createLogger>;
+  private readonly logger: Logger;
 
   constructor(options: AuthServiceOptions) {
     this.authDriver = options.authDriver;
-    this.logger = createLogger({
-      environment: options.environment,
-      logLevel: options.logLevel as LogLevel,
-    });
+    this.logger = options.logger;
   }
 
   /**

@@ -5,10 +5,12 @@ import {Result, err, ok} from 'neverthrow';
 import {TodoDriver} from '../drivers/todo';
 import {TeamDriver} from '../drivers/team';
 import {Todo, TodoFilterOptions} from '../models/types';
+import {Logger} from '../../shared/utils/logger';
 
 interface TodoServiceOptions {
   todoDriver: TodoDriver;
   teamDriver: TeamDriver;
+  logger: Logger;
 }
 
 export class TodoService {

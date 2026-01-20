@@ -51,13 +51,13 @@ export class AuthHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      throw new SuccessResponse(result.value);
+      const success = new SuccessResponse(result.value);
+      return success.getResponse();
     } catch (error) {
       if (
         error instanceof ValidationException ||
         error instanceof UnauthorizedException ||
-        error instanceof InternalServerException ||
-        error instanceof SuccessResponse
+        error instanceof InternalServerException
       ) {
         throw error;
       }
@@ -87,13 +87,13 @@ export class AuthHandler {
         throw new UnauthorizedException(result.error.message);
       }
 
-      throw new SuccessResponse(result.value);
+      const success = new SuccessResponse(result.value);
+      return success.getResponse();
     } catch (error) {
       if (
         error instanceof ValidationException ||
         error instanceof UnauthorizedException ||
-        error instanceof InternalServerException ||
-        error instanceof SuccessResponse
+        error instanceof InternalServerException
       ) {
         throw error;
       }
@@ -120,13 +120,13 @@ export class AuthHandler {
         throw new UnauthorizedException(result.error.message);
       }
 
-      throw new SuccessResponse(result.value);
+      const success = new SuccessResponse(result.value);
+      return success.getResponse();
     } catch (error) {
       if (
         error instanceof ValidationException ||
         error instanceof UnauthorizedException ||
-        error instanceof InternalServerException ||
-        error instanceof SuccessResponse
+        error instanceof InternalServerException
       ) {
         throw error;
       }
@@ -150,13 +150,13 @@ export class AuthHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      throw new SuccessResponse({message: 'Logged out successfully'});
+      const success = new SuccessResponse(result.value);
+      return success.getResponse();
     } catch (error) {
       if (
         error instanceof ValidationException ||
         error instanceof UnauthorizedException ||
-        error instanceof InternalServerException ||
-        error instanceof SuccessResponse
+        error instanceof InternalServerException
       ) {
         throw error;
       }
@@ -179,13 +179,13 @@ export class AuthHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      throw new SuccessResponse(result.value);
+      const success = new SuccessResponse(result.value);
+      return success.getResponse();
     } catch (error) {
       if (
         error instanceof ValidationException ||
         error instanceof UnauthorizedException ||
-        error instanceof InternalServerException ||
-        error instanceof SuccessResponse
+        error instanceof InternalServerException
       ) {
         throw error;
       }

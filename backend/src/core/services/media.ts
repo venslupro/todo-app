@@ -5,10 +5,12 @@ import {Result, err, ok} from 'neverthrow';
 import {MediaDriver} from '../drivers/media';
 import {TeamDriver} from '../drivers/team';
 import {Media, MediaFilterOptions} from '../models/types';
+import {Logger} from '../../shared/utils/logger';
 
 interface MediaServiceOptions {
   mediaDriver: MediaDriver;
   teamDriver: TeamDriver;
+  logger: Logger;
 }
 
 export class MediaService {

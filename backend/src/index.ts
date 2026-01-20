@@ -47,7 +47,7 @@ type Bindings = {
 // Export the app as a Module Worker for Cloudflare Workers
 export default {
   fetch: async (req: Request, env: Bindings, ctx: ExecutionContext) => {
-    // Create a logger instance with the actual environment
+    // Create a shared logger instance with the actual environment
     const logger = createLogger({
       logLevel: env.log_level as 'error' | 'warn' | 'info' | 'debug',
       environment: env.environment,
@@ -77,12 +77,11 @@ export default {
 
     const authService = createAuthService({
       authDriver,
-      environment: env.environment,
-      logLevel: env.log_level,
+      logger,
     });
-    const todoService = createTodoService({todoDriver, teamDriver});
-    const mediaService = createMediaService({mediaDriver, teamDriver});
-    const teamService = createTeamService({teamDriver});
+    const todoService = createTodoService({todoDriver, teamDriver, logger});
+    const mediaService = createMediaService({mediaDriver, teamDriver, logger});
+    const teamService = createTeamService({teamDriver, logger});
 
     // Initialize handlers
     const systemHandler = createSystemHandler({systemService});
