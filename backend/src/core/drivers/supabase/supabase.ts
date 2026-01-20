@@ -23,7 +23,7 @@ export class SupabaseDriver {
     if (!config.serviceRoleKey) {
       throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
     }
-    
+
     this.anonClient = createClient(config.url, config.anonKey);
     this.serviceClient = createClient(config.url, config.serviceRoleKey);
   }
