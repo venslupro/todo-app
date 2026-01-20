@@ -172,7 +172,7 @@ export class MediaDriver {
       return ok(media as Media);
     } catch (error) {
       this.logger.error('MediaDriver: Confirm error', {mediaId, error: (error as Error).message});
-      return err(new Error(`Confirm upload error: ${(error as Error).message}`));
+      return err(new Error((error as Error).message));
     }
   }
 

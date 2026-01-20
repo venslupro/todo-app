@@ -217,7 +217,7 @@ export class TodoDriver {
       return ok(true);
     } catch (error) {
       this.logger.error('TodoDriver: Delete todo error', {todoId, error: (error as Error).message});
-      return err(new Error(`Delete todo error: ${(error as Error).message}`));
+      return err(new Error((error as Error).message));
     }
   }
 

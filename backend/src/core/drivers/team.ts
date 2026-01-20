@@ -259,7 +259,7 @@ export class TeamDriver {
       return ok(true);
     } catch (error) {
       this.logger.error('TeamDriver: Check error', {error: (error as Error).message});
-      return err(new Error(`Check todo permission error: ${(error as Error).message}`));
+      return err(new Error((error as Error).message));
     }
   }
 }
