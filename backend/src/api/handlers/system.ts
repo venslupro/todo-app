@@ -1,8 +1,9 @@
 // src/api/handlers/system.ts
 // System API handlers for health check and version info
 
-import {Context} from 'hono';
+
 import {SystemService} from '../../core/services/system';
+import {SuccessResponse} from '../../shared/errors/http-exception';
 
 interface SystemHandlerOptions {
   systemService: SystemService;
@@ -18,25 +19,17 @@ export class SystemHandler {
   /**
    * Health check endpoint
    */
-  async healthCheck(c: Context) {
+  async healthCheck() {
     const result = await this.systemService.getHealthStatus();
-    return c.json({
-      code: 200,
-      message: 'Success',
-      data: result,
-    });
+    throw new SuccessResponse(result);
   }
 
   /**
    * Version information endpoint
    */
-  async version(c: Context) {
+  async version() {
     const result = await this.systemService.getVersionInfo();
-    return c.json({
-      code: 200,
-      message: 'Success',
-      data: result,
-    });
+    throw new SuccessResponse(result);
   }
 }
 

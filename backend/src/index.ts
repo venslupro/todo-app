@@ -7,6 +7,18 @@ import {logger as httpLogger} from 'hono/logger';
 import {HTTPException} from 'hono/http-exception';
 import {appLogger} from './shared/utils/logger';
 
+/**
+ * Bindings for Cloudflare Workers environment variables
+ */
+type Bindings = {
+  SUPABASE_URL: string;
+  SUPABASE_ANON_KEY: string;
+  SUPABASE_SERVICE_ROLE_KEY: string;
+  JWT_SECRET: string;
+  ENVIRONMENT: string;
+  LOG_LEVEL: string;
+};
+
 // Drivers
 import {createSupabaseDriver} from './core/drivers/supabase/supabase';
 import {createAuthDriver} from './core/drivers/auth';
@@ -31,8 +43,8 @@ import {createTeamHandler} from './api/handlers/team';
 // Middleware
 import {createAuthMiddleware} from './api/middleware/auth';
 
-// Initialize Hono app
-const app = new Hono();
+// Initialize Hono app with Bindings type
+const app = new Hono<{Bindings: Bindings}>();
 
 // CORS middleware
 app.use('*', cors({
@@ -140,4 +152,7 @@ appLogger.info('Environment:', {
   logLevel: process.env.LOG_LEVEL || 'info',
 });
 
-export default app;
+// Export the app as a Module Worker for Cloudflare Workers
+export default {
+  fetch: app.fetch,
+};

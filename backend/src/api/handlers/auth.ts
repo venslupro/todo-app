@@ -5,10 +5,15 @@ import {Context} from 'hono';
 import {AuthService} from '../../core/services/auth';
 import {
   ValidationException,
-  UnauthorizedException,
   InternalServerException,
+  SuccessResponse,
+  UnauthorizedException,
 } from '../../shared/errors/http-exception';
-import {registerSchema, loginSchema, refreshTokenSchema} from '../../shared/schemas';
+import {
+  loginSchema,
+  registerSchema,
+  refreshTokenSchema,
+} from '../../shared/schemas';
 import {getUserIdFromContext} from '../../shared/utils';
 
 interface AuthHandlerOptions {
@@ -46,11 +51,7 @@ export class AuthHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: result.value,
-      });
+      throw new SuccessResponse(result.value);
     } catch (error) {
       if (
         error instanceof ValidationException ||
@@ -85,11 +86,7 @@ export class AuthHandler {
         throw new UnauthorizedException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: result.value,
-      });
+      throw new SuccessResponse(result.value);
     } catch (error) {
       if (
         error instanceof ValidationException ||
@@ -121,11 +118,7 @@ export class AuthHandler {
         throw new UnauthorizedException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: result.value,
-      });
+      throw new SuccessResponse(result.value);
     } catch (error) {
       if (
         error instanceof ValidationException ||
@@ -154,11 +147,7 @@ export class AuthHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: {message: 'Logged out successfully'},
-      });
+      throw new SuccessResponse({message: 'Logged out successfully'});
     } catch (error) {
       if (
         error instanceof ValidationException ||
@@ -186,11 +175,7 @@ export class AuthHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: result.value,
-      });
+      throw new SuccessResponse(result.value);
     } catch (error) {
       if (
         error instanceof ValidationException ||

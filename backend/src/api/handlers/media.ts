@@ -7,6 +7,7 @@ import {
   ValidationException,
   NotFoundException,
   InternalServerException,
+  SuccessResponse,
 } from '../../shared/errors/http-exception';
 import {
   generateUploadUrlSchema,
@@ -47,11 +48,7 @@ export class MediaHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: {media: result.value},
-      });
+      throw new SuccessResponse({media: result.value});
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||
@@ -90,11 +87,7 @@ export class MediaHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: result.value,
-      });
+      throw new SuccessResponse(result.value);
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||
@@ -137,11 +130,7 @@ export class MediaHandler {
         throw new NotFoundException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: {media: result.value},
-      });
+      throw new SuccessResponse({media: result.value});
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||

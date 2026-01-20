@@ -7,6 +7,7 @@ import {
   ValidationException,
   NotFoundException,
   InternalServerException,
+  SuccessResponse,
 } from '../../shared/errors/http-exception';
 import {
   createTodoSchema,
@@ -47,11 +48,7 @@ export class TodoHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: result.value,
-      });
+      throw new SuccessResponse(result.value);
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||
@@ -89,11 +86,7 @@ export class TodoHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: result.value,
-      });
+      throw new SuccessResponse(result.value);
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof InternalServerException) {
@@ -126,11 +119,7 @@ export class TodoHandler {
         throw new NotFoundException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: result.value,
-      });
+      throw new SuccessResponse(result.value);
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||
@@ -171,11 +160,7 @@ export class TodoHandler {
         throw new NotFoundException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: result.value,
-      });
+      throw new SuccessResponse(result.value);
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||
@@ -209,11 +194,7 @@ export class TodoHandler {
         throw new NotFoundException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: {message: 'TODO deleted successfully'},
-      });
+      throw new SuccessResponse({message: 'TODO deleted successfully'});
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||

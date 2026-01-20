@@ -7,6 +7,7 @@ import {
   ValidationException,
   NotFoundException,
   InternalServerException,
+  SuccessResponse,
 } from '../../shared/errors/http-exception';
 import {
   shareTodoSchema,
@@ -47,11 +48,7 @@ export class TeamHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: {members: result.value},
-      });
+      throw new SuccessResponse({members: result.value});
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||
@@ -91,11 +88,7 @@ export class TeamHandler {
         throw new InternalServerException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: {share: result.value},
-      });
+      throw new SuccessResponse({share: result.value});
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof InternalServerException) {
@@ -135,11 +128,7 @@ export class TeamHandler {
         throw new NotFoundException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: {share: result.value},
-      });
+      throw new SuccessResponse({share: result.value});
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||
@@ -170,11 +159,7 @@ export class TeamHandler {
         throw new NotFoundException(result.error.message);
       }
 
-      return c.json({
-        code: 200,
-        message: 'Success',
-        data: {message: 'Share removed successfully'},
-      });
+      throw new SuccessResponse({message: 'Share removed successfully'});
     } catch (error) {
       if (error instanceof ValidationException ||
           error instanceof NotFoundException ||
