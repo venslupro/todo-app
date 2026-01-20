@@ -56,7 +56,8 @@ export class AuthHandler {
       if (
         error instanceof ValidationException ||
         error instanceof UnauthorizedException ||
-        error instanceof InternalServerException
+        error instanceof InternalServerException ||
+        error instanceof SuccessResponse
       ) {
         throw error;
       }
@@ -91,7 +92,8 @@ export class AuthHandler {
       if (
         error instanceof ValidationException ||
         error instanceof UnauthorizedException ||
-        error instanceof InternalServerException
+        error instanceof InternalServerException ||
+        error instanceof SuccessResponse
       ) {
         throw error;
       }
@@ -123,7 +125,8 @@ export class AuthHandler {
       if (
         error instanceof ValidationException ||
         error instanceof UnauthorizedException ||
-        error instanceof InternalServerException
+        error instanceof InternalServerException ||
+        error instanceof SuccessResponse
       ) {
         throw error;
       }
@@ -152,7 +155,8 @@ export class AuthHandler {
       if (
         error instanceof ValidationException ||
         error instanceof UnauthorizedException ||
-        error instanceof InternalServerException
+        error instanceof InternalServerException ||
+        error instanceof SuccessResponse
       ) {
         throw error;
       }
@@ -180,7 +184,8 @@ export class AuthHandler {
       if (
         error instanceof ValidationException ||
         error instanceof UnauthorizedException ||
-        error instanceof InternalServerException
+        error instanceof InternalServerException ||
+        error instanceof SuccessResponse
       ) {
         throw error;
       }

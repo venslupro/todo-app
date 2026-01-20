@@ -69,7 +69,11 @@ export default {
       appVersion: '1.0.0',
     });
 
-    const authService = createAuthService({authDriver});
+    const authService = createAuthService({
+      authDriver,
+      environment: env.environment,
+      logLevel: env.log_level as any,
+    });
     const todoService = createTodoService({todoDriver, teamDriver});
     const mediaService = createMediaService({mediaDriver, teamDriver});
     const teamService = createTeamService({teamDriver});
