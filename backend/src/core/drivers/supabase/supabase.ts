@@ -14,15 +14,6 @@ export class SupabaseDriver {
   private serviceClient: SupabaseClient;
 
   constructor(config: SupabaseConfig) {
-    if (!config.url) {
-      throw new Error('supabase_url is required');
-    }
-    if (!config.anonKey) {
-      throw new Error('supabase_anon_key is required');
-    }
-    if (!config.serviceRoleKey) {
-      throw new Error('supabase_service_role_key is required');
-    }
     this.anonClient = createClient(config.url, config.anonKey);
     this.serviceClient = createClient(config.url, config.serviceRoleKey);
   }
