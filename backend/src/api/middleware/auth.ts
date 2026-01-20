@@ -7,7 +7,7 @@ import {SupabaseDriver} from '../../core/drivers/supabase/supabase';
 import {Logger} from '../../shared/utils/logger';
 
 export const createAuthMiddleware = (
-  options: { supabaseDriver: SupabaseDriver; logger: Logger }
+  options: { supabaseDriver: SupabaseDriver; logger: Logger },
 ) => {
   return async (c: Context, next: Next) => {
     try {
@@ -46,10 +46,10 @@ export const createAuthMiddleware = (
         throw error;
       }
       options.logger.error('AuthMiddleware: Token verification failed', {
-        error: (error as Error).message
+        error: (error as Error).message,
       });
       throw new UnauthorizedException(
-        `Token verification failed: ${(error as Error).message}`
+        `Token verification failed: ${(error as Error).message}`,
       );
     }
   };
