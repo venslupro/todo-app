@@ -1,110 +1,177 @@
+// src/index.ts
+// Main application entry point
+
 import {Hono} from 'hono';
+import {cors} from 'hono/cors';
+import {logger as httpLogger} from 'hono/logger';
 import {HTTPException} from 'hono/http-exception';
-import {HonoAppType} from './shared/types/hono-types';
-import {InternalServerException, NotFoundException} from './shared/errors/http-exception';
+import type {ExecutionContext} from '@cloudflare/workers-types';
+import {createLogger} from './shared/utils/logger';
 
-import {corsMiddleware} from './api/middleware/cors';
-import {globalRateLimit} from './api/middleware/rate-limit';
-import {loggerMiddleware} from './api/middleware/logger';
+// Drivers
+import {createSupabaseDriver} from './core/drivers/supabase/supabase';
+import {createAuthDriver} from './core/drivers/auth';
+import {createTodoDriver} from './core/drivers/todo';
+import {createMediaDriver} from './core/drivers/media';
+import {createTeamDriver} from './core/drivers/team';
 
-import systemRoutes from './api/handlers/system';
-import authRoutes from './api/handlers/auth';
-import todoRoutes from './api/handlers/todo';
-import mediaRoutes from './api/handlers/media';
-import teamRoutes from './api/handlers/team';
-// import websocketRoutes from './api/handlers/websocket'; // WebSocket temporarily disabled
+// Services
+import {createSystemService} from './core/services/system';
+import {createAuthService} from './core/services/auth';
+import {createTodoService} from './core/services/todo';
+import {createMediaService} from './core/services/media';
+import {createTeamService} from './core/services/team';
 
-// Durable Objects exports (temporarily disabled)
-// export {TodoWebSocketDurableObject} from './core/durable-objects/todo-websocket';
+// Handlers
+import {createSystemHandler} from './api/handlers/system';
+import {createAuthHandler} from './api/handlers/auth';
+import {createTodoHandler} from './api/handlers/todo';
+import {createMediaHandler} from './api/handlers/media';
+import {createTeamHandler} from './api/handlers/team';
+
+// Middleware
+import {createAuthMiddleware} from './api/middleware/auth';
+import {InternalServerException} from './shared/errors/http-exception';
 
 /**
- * Application router class that organizes all routes and middleware.
+ * Bindings for Cloudflare Workers environment variables
  */
-class ApplicationRouter {
-  private app: Hono<HonoAppType>;
+type Bindings = {
+  supabase_url: string;
+  supabase_anon_key: string;
+  supabase_service_role_key: string;
+  environment: string;
+  log_level: string;
+};
 
-  constructor() {
-    this.app = new Hono<HonoAppType>();
-    this.setupGlobalMiddleware();
-    this.setupRoutes();
-    this.setupErrorHandling();
-  }
-
-  /**
-   * Sets up global middleware for the application.
-   */
-  private setupGlobalMiddleware(): void {
-    this.app.use('*', loggerMiddleware);
-    this.app.use('*', corsMiddleware);
-  }
-
-  /**
-   * Sets up all application routes.
-   */
-  private setupRoutes(): void {
-    // System routes (no authentication required)
-    this.app.route('/', systemRoutes);
-
-    // Authentication routes (no authentication required)
-    this.app.route('/api/v1/auth', authRoutes);
-
-    // Protected API routes
-    this.setupProtectedRoutes();
-
-    // WebSocket routes (temporarily disabled)
-    // this.app.route('/ws/v1', websocketRoutes);
-  }
-
-  /**
-   * Sets up protected routes with authentication and rate limiting.
-   */
-  private setupProtectedRoutes(): void {
-    const protectedRoutes = [
-      {path: '/api/v1/todos', handler: todoRoutes},
-      {path: '/api/v1/media', handler: mediaRoutes},
-      {path: '/api/v1/team', handler: teamRoutes},
-    ];
-
-    protectedRoutes.forEach((route) => {
-      this.app.use(`${route.path}/*`, globalRateLimit);
-      this.app.route(route.path, route.handler);
-    });
-  }
-
-  /**
-   * Sets up error handling for the application.
-   */
-  private setupErrorHandling(): void {
-    this.app.notFound(() => {
-      const exception = new NotFoundException('The requested resource was not found');
-      return exception.getResponse();
+// Export the app as a Module Worker for Cloudflare Workers
+export default {
+  fetch: async (req: Request, env: Bindings, ctx: ExecutionContext) => {
+    // Create a shared logger instance with the actual environment
+    const logger = createLogger({
+      logLevel: env.log_level as 'error' | 'warn' | 'info' | 'debug',
+      environment: env.environment,
     });
 
-    this.app.onError((error: unknown) => {
-      if (error instanceof HTTPException) {
-        // Log HTTP exceptions for debugging
-        // console.error('HTTPException:', error.message);
-        return error.getResponse();
+    // Initialize drivers with environment variables from env
+    const supabaseDriver = createSupabaseDriver({
+      url: env.supabase_url,
+      anonKey: env.supabase_anon_key,
+      serviceRoleKey: env.supabase_service_role_key,
+      logger,
+    });
+
+    const authDriver = createAuthDriver({supabase: supabaseDriver, logger});
+    const todoDriver = createTodoDriver({supabase: supabaseDriver, logger});
+    const mediaDriver = createMediaDriver({
+      supabase: supabaseDriver,
+      storageBucket: 'media',
+      logger,
+    });
+    const teamDriver = createTeamDriver({supabase: supabaseDriver, logger});
+
+    // Initialize services
+    const systemService = createSystemService({
+      environment: env.environment,
+      appName: 'TODO API',
+      appVersion: '1.0.0',
+      logger,
+    });
+
+    const authService = createAuthService({
+      authDriver,
+      logger,
+    });
+    const todoService = createTodoService({todoDriver, teamDriver, logger});
+    const mediaService = createMediaService({mediaDriver, teamDriver, logger});
+    const teamService = createTeamService({teamDriver, logger});
+
+    // Initialize handlers
+    const systemHandler = createSystemHandler({systemService});
+    const authHandler = createAuthHandler({authService});
+    const todoHandler = createTodoHandler({todoService});
+    const mediaHandler = createMediaHandler({mediaService});
+    const teamHandler = createTeamHandler({teamService});
+
+    // Auth middleware (use this for protected routes)
+    const authMiddleware = createAuthMiddleware({
+      supabaseDriver: supabaseDriver,
+      logger,
+    });
+
+    // Initialize Hono app with Bindings type
+    const app = new Hono<{Bindings: Bindings}>();
+
+    // CORS middleware
+    app.use('*', cors({
+      origin: ['http://localhost:3000', 'https://your-frontend-domain.com'],
+      allowHeaders: ['Authorization', 'Content-Type'],
+      allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    }));
+
+    // Hono built-in logger middleware for request logging
+    app.use(httpLogger());
+
+    // System routes (public)
+    app.get('/', systemHandler.healthCheck.bind(systemHandler));
+    app.get('/health', systemHandler.healthCheck.bind(systemHandler));
+    app.get('/version', systemHandler.version.bind(systemHandler));
+
+    // API v1 routes
+    const apiV1 = app.basePath('/api/v1');
+
+    // Auth routes (public)
+    apiV1.post('/auth/register', authHandler.register.bind(authHandler));
+    apiV1.post('/auth/login', authHandler.login.bind(authHandler));
+    apiV1.post('/auth/refresh', authHandler.refresh.bind(authHandler));
+
+    // Protected auth routes
+    apiV1.post('/auth/logout', authMiddleware, authHandler.logout.bind(authHandler));
+    apiV1.get('/auth/profile', authMiddleware, authHandler.profile.bind(authHandler));
+
+    // Protected todo routes
+    apiV1.get('/todos', authMiddleware, todoHandler.getAllTodos.bind(todoHandler));
+    apiV1.post('/todos', authMiddleware, todoHandler.createTodo.bind(todoHandler));
+    apiV1.get('/todos/:id', authMiddleware, todoHandler.getTodoById.bind(todoHandler));
+    apiV1.put('/todos/:id', authMiddleware, todoHandler.updateTodo.bind(todoHandler));
+    apiV1.delete('/todos/:id', authMiddleware, todoHandler.deleteTodo.bind(todoHandler));
+
+    // Protected media routes
+    apiV1.get('/media', authMiddleware, mediaHandler.getAllMedia.bind(mediaHandler));
+    apiV1.post('/media/upload-url', authMiddleware,
+      mediaHandler.generateUploadUrl.bind(mediaHandler));
+    apiV1.post('/media/:id/confirm', authMiddleware,
+      mediaHandler.confirmUpload.bind(mediaHandler));
+
+    // Protected team routes
+    apiV1.get('/team/members', authMiddleware,
+      teamHandler.getTeamMembers.bind(teamHandler));
+    apiV1.post('/team/share', authMiddleware, teamHandler.shareTodo.bind(teamHandler));
+    apiV1.put('/team/share/:id', authMiddleware,
+      teamHandler.updateSharePermission.bind(teamHandler));
+    apiV1.delete('/team/share/:id', authMiddleware,
+      teamHandler.removeShare.bind(teamHandler));
+
+    // Global error handler
+    app.onError((err) => {
+      if (err instanceof HTTPException) {
+        // Return the custom HTTP exception response
+        return err.getResponse();
       }
 
-      // Log unhandled errors for debugging
-      // console.error('Unhandled error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      const exception = new InternalServerException(errorMessage);
+      // Default error response for unexpected errors
+      const exception = new InternalServerException(err.message);
       return exception.getResponse();
     });
-  }
 
-  /**
-   * Returns the Hono application instance.
-   */
-  public getApp(): Hono<HonoAppType> {
-    return this.app;
-  }
-}
+    // Log environment info
+    logger.info('🚀 Todo API is running...');
+    logger.info('Environment:', {
+      environment: env.environment,
+      logLevel: env.log_level,
+    });
 
-// Create and export the application
-const router = new ApplicationRouter();
-const app = router.getApp();
-
-export default app;
+    // Handle request
+    return app.fetch(req, env, ctx);
+  },
+};

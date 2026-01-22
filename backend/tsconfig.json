@@ -36,11 +36,13 @@
     }
   },
   "include": [
-    "**/*.ts"
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "test"
+    "test",
+    "scripts",
+    "src/__tests__"
   ]
 }
