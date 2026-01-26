@@ -37,7 +37,14 @@ export class TodoService {
           'edit',
         );
 
-        if (permissionResult.isErr() || !permissionResult.value) {
+        if (permissionResult.isErr()) {
+          if (permissionResult.error.message === 'Todo not found') {
+            return err(new Error('Invalid parent_id: Todo not found'));
+          }
+          return err(new Error('Permission denied: Cannot create subtask for this todo'));
+        }
+
+        if (!permissionResult.value) {
           return err(new Error('Permission denied: Cannot create subtask for this todo'));
         }
       }
@@ -123,7 +130,14 @@ export class TodoService {
         'edit',
       );
 
-      if (permissionResult.isErr() || !permissionResult.value) {
+      if (permissionResult.isErr()) {
+        if (permissionResult.error.message === 'Todo not found') {
+          return err(new Error('Invalid todo_id: Todo not found'));
+        }
+        return err(new Error('Permission denied: Cannot update this todo'));
+      }
+
+      if (!permissionResult.value) {
         return err(new Error('Permission denied: Cannot update this todo'));
       }
 
@@ -135,7 +149,14 @@ export class TodoService {
           'edit',
         );
 
-        if (parentPermissionResult.isErr() || !parentPermissionResult.value) {
+        if (parentPermissionResult.isErr()) {
+          if (parentPermissionResult.error.message === 'Todo not found') {
+            return err(new Error('Invalid parent_id: Todo not found'));
+          }
+          return err(new Error('Permission denied: Cannot assign to this parent todo'));
+        }
+
+        if (!parentPermissionResult.value) {
           return err(new Error('Permission denied: Cannot assign to this parent todo'));
         }
       }
