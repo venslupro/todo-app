@@ -84,6 +84,10 @@ export class TodoHandler {
       });
 
       if (result.isErr()) {
+        // Check if the error is about an invalid parent_id
+        if (result.error.message.includes('Invalid parent_id')) {
+          throw new ValidationException(result.error.message);
+        }
         throw new InternalServerException(result.error.message);
       }
 
@@ -160,6 +164,14 @@ export class TodoHandler {
       const result = await this.todoService.updateTodo(todoId, userId, validated.data);
 
       if (result.isErr()) {
+        // Check if the error is about an invalid parent_id or todo_id
+        const errorMessage = result.error.message;
+        if (
+          errorMessage.includes('Invalid parent_id') ||
+          errorMessage.includes('Invalid todo_id')
+        ) {
+          throw new ValidationException(result.error.message);
+        }
         throw new NotFoundException(result.error.message);
       }
 

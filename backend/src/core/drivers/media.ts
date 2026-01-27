@@ -110,9 +110,9 @@ export class MediaDriver {
         return err(new Error(`${insertError.message}`));
       }
 
-      // Generate presigned upload URL
+      // Generate presigned upload URL using service client for better permissions
       const {data: uploadUrl, error: urlError} = await this.supabase
-        .getAnonClient()
+        .getServiceClient()
         .storage
         .from(this.storageBucket)
         .createSignedUrl(`${todoId}/${fileName}`, 3600); // 1 hour expiration

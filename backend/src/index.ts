@@ -40,6 +40,7 @@ type Bindings = {
   supabase_url: string;
   supabase_anon_key: string;
   supabase_service_role_key: string;
+  storage_bucket: string;
   environment: string;
   log_level: string;
 };
@@ -65,7 +66,7 @@ export default {
     const todoDriver = createTodoDriver({supabase: supabaseDriver, logger});
     const mediaDriver = createMediaDriver({
       supabase: supabaseDriver,
-      storageBucket: 'media',
+      storageBucket: env.storage_bucket,
       logger,
     });
     const teamDriver = createTeamDriver({supabase: supabaseDriver, logger});

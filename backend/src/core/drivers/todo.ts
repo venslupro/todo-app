@@ -87,12 +87,36 @@ export class TodoDriver {
   ): Promise<Result<{ todos: Todo[]; total: number }, Error>> {
     try {
       this.logger.debug('TodoDriver: Getting todos for user', {userId, filters});
+
+      // First, get all todo IDs that the user has access to (created by user or shared with user)
+      const {data: sharedTodos, error: sharedTodosError} = await this.supabase
+        .getAnonClient()
+        .from('todo_shares')
+        .select('todo_id')
+        .eq('user_id', userId);
+
+      if (sharedTodosError) {
+        const errorMsg = sharedTodosError.message;
+        this.logger.error('TodoDriver: Get shared todos failed', {userId, error: errorMsg});
+        return err(new Error(`${errorMsg}`));
+      }
+
+      // Get shared todo IDs as an array
+      const sharedTodoIds = sharedTodos?.map((share) => share.todo_id) || [];
+
+      // Build the or condition for created_by and shared todos
+      let orCondition = `created_by.eq.${userId}`;
+      if (sharedTodoIds.length > 0) {
+        orCondition += `,id.in.(${sharedTodoIds.map((id) => `'${id}'`).join(',')})`;
+      }
+
+      // Build the query
       let query = this.supabase
         .getAnonClient()
         .from('todos')
         .select('*', {count: 'exact'})
         .eq('is_deleted', false)
-        .or(`created_by.eq.${userId},id.in.(${this.getSharedTodosQuery(userId)})`);
+        .or(orCondition);
 
       // Apply filters
       if (filters.status) {
@@ -219,13 +243,6 @@ export class TodoDriver {
       this.logger.error('TodoDriver: Delete todo error', {todoId, error: (error as Error).message});
       return err(new Error(`${(error as Error).message}`));
     }
-  }
-
-  /**
-   * Get shared todos subquery for the user
-   */
-  private getSharedTodosQuery(userId: string): string {
-    return `(SELECT todo_id FROM todo_shares WHERE user_id = '${userId}')`;
   }
 }
 

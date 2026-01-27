@@ -225,6 +225,11 @@ export class TeamDriver {
         .single();
 
       if (todoError) {
+        // Check if the error is about the todo not existing
+        if (todoError.code === 'PGRST116') {
+          this.logger.error('TeamDriver: Todo not found', {todoId});
+          return err(new Error('Todo not found'));
+        }
         this.logger.error('TeamDriver: Check failed', {error: todoError.message});
         return err(new Error(`${todoError.message}`));
       }
